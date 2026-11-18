@@ -26,16 +26,16 @@ final class MemoryAlerts {
         if d.bool(forKey: Prefs.alertSwapEnabled) {
             let limit = Double(d.integer(forKey: Prefs.alertSwapPercent)) / 100
             if m.swapTotal > 0, m.swapFraction >= limit {
-                fire("swap", title: "Swap %\(Int(m.swapFraction * 100)) dolu",
-                     body: "\(Fmt.bytes(m.swapUsed)) bellek diske taşmış durumda. Kullanmadığın uygulamaları kapatmak sistemi hızlandırır.")
+                fire("swap", title: L("Swap %\(Int(m.swapFraction * 100)) dolu", "Swap is \(Int(m.swapFraction * 100))% full"),
+                     body: L("\(Fmt.bytes(m.swapUsed)) bellek diske taşmış durumda. Kullanmadığın uygulamaları kapatmak sistemi hızlandırır.", "\(Fmt.bytes(m.swapUsed)) of memory has spilled to disk. Quitting apps you don't use will speed things up."))
             }
         }
 
         if d.bool(forKey: Prefs.alertPressureEnabled) {
             let onWarning = d.bool(forKey: Prefs.alertPressureOnWarning)
             if m.pressure == .critical || (onWarning && m.pressure == .warning) {
-                fire("pressure", title: "Bellek baskısı \(m.pressure.title.lowercased())",
-                     body: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda. MultiMac menüsünden ağır uygulamaları kapatabilirsin.")
+                fire("pressure", title: L("Bellek baskısı \(m.pressure.title.lowercased())", "Memory pressure is \(m.pressure.title.lowercased())"),
+                     body: L("\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda. MultiMac menüsünden ağır uygulamaları kapatabilirsin.", "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) in use. You can quit heavy apps from the MultiMac menu."))
             }
         }
 
@@ -44,8 +44,8 @@ final class MemoryAlerts {
             let limit = UInt64(max(1, d.integer(forKey: Prefs.alertAppGB))) * 1_000_000_000
             let groups = await Task.detached(priority: .utility) { ProcessInspector.snapshot() }.value
             for g in groups where !g.isProtected && g.total >= limit {
-                fire("app:" + g.id, title: "\(g.name) \(Fmt.bytes(g.total)) bellek kullanıyor",
-                     body: "Belirlediğin \(d.integer(forKey: Prefs.alertAppGB)) GB sınırını aştı (\(g.processes.count) süreç).")
+                fire("app:" + g.id, title: L("\(g.name) \(Fmt.bytes(g.total)) bellek kullanıyor", "\(g.name) is using \(Fmt.bytes(g.total)) of memory"),
+                     body: L("Belirlediğin \(d.integer(forKey: Prefs.alertAppGB)) GB sınırını aştı (\(g.processes.count) süreç).", "It passed your \(d.integer(forKey: Prefs.alertAppGB)) GB limit (\(g.processes.count) processes)."))
             }
         }
     }

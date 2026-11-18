@@ -60,12 +60,12 @@ struct MenuBarPanel: View {
 
     private var header: some View {
         HStack {
-            IconTile(symbol: "sparkles", color: .indigo, size: 24)
+            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 26, height: 26)
             Text("MultiMac").font(.headline)
             Spacer()
             Button { open(.settings) } label: { Image(systemName: "gearshape") }
                 .buttonStyle(.borderless)
-                .help("Ayarlar")
+                .help(L("Ayarlar", "Settings"))
         }
     }
 
@@ -74,7 +74,7 @@ struct MenuBarPanel: View {
         let d = monitor.disk
         return HStack(spacing: 8) {
             StatTile(title: "RAM", value: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))",
-                     caption: "Baskı: \(m.pressure.title)", fraction: m.usedFraction, color: m.pressure.color)
+                     caption: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)"), fraction: m.usedFraction, color: m.pressure.color)
                 .hoverHighlight(cornerRadius: 10)
                 .onTapGesture { open(.memory) }
             StatTile(title: "Swap", value: Fmt.bytes(m.swapUsed),
@@ -82,7 +82,7 @@ struct MenuBarPanel: View {
                      color: m.swapFraction > 0.7 ? .red : m.swapFraction > 0.4 ? .orange : .green)
                 .hoverHighlight(cornerRadius: 10)
                 .onTapGesture { open(.memory) }
-            StatTile(title: "Disk", value: "\(Fmt.bytes(d.available)) boş",
+            StatTile(title: "Disk", value: L("\(Fmt.bytes(d.available)) boş", "\(Fmt.bytes(d.available)) free"),
                      caption: "/ \(Fmt.bytes(d.total))", fraction: d.usedFraction,
                      color: d.available < 15_000_000_000 ? .red : d.available < 40_000_000_000 ? .orange : .green)
                 .hoverHighlight(cornerRadius: 10)
@@ -106,7 +106,7 @@ struct MenuBarPanel: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .controlSize(.large)
             .disabled(cleanup.isBusy)
 
@@ -118,28 +118,28 @@ struct MenuBarPanel: View {
 
     private var quickTitle: String {
         switch cleanup.quickState {
-        case .scanning: "Taranıyor…"
-        case .cleaning: "Temizleniyor…"
-        default: cleanup.isScanning || cleanup.isCleaning ? "Detaylı temizlik sürüyor…" : "Hızlı Temizlik"
+        case .scanning: L("Taranıyor…", "Scanning…")
+        case .cleaning: L("Temizleniyor…", "Cleaning…")
+        default: cleanup.isScanning || cleanup.isCleaning ? L("Detaylı temizlik sürüyor…", "Detailed cleanup running…") : L("Hızlı Temizlik", "Quick Clean")
         }
     }
 
     private var quickSubtitle: String {
         if case let .done(freed, items) = cleanup.quickState {
-            return freed > 0 ? "✓ \(Fmt.bytes(freed)) yer açıldı (\(items) öğe)" : "✓ Temizlenecek bir şey kalmamış"
+            return freed > 0 ? L("✓ \(Fmt.bytes(freed)) yer açıldı (\(items) öğe)", "✓ Freed \(Fmt.bytes(freed)) (\(items) items)") : L("✓ Temizlenecek bir şey kalmamış", "✓ Nothing left to clean")
         }
         if let date = cleanup.lastAutoDate {
-            return "Son temizlik \(Fmt.relative(date)) · \(Fmt.bytes(cleanup.lastAutoBytes))"
+            return L("Son temizlik \(Fmt.relative(date)) · \(Fmt.bytes(cleanup.lastAutoBytes))", "Last cleaned \(Fmt.relative(date)) · \(Fmt.bytes(cleanup.lastAutoBytes))")
         }
-        return "Önbellekleri ve güvenli build kalıntılarını siler"
+        return L("Önbellekleri ve güvenli build kalıntılarını siler", "Deletes caches and safe build leftovers")
     }
 
     private var topApps: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("En çok bellek kullananlar").font(.subheadline.weight(.semibold))
+                Text(L("En çok bellek kullananlar", "Using the most memory")).font(.subheadline.weight(.semibold))
                 Spacer()
-                Button("Tümü") { open(.memory) }.buttonStyle(.link).font(.caption)
+                Button(L("Tümü", "All")) { open(.memory) }.buttonStyle(.link).font(.caption)
             }
             if processes.groups.isEmpty {
                 ProgressView().controlSize(.small).frame(maxWidth: .infinity)
@@ -155,12 +155,12 @@ struct MenuBarPanel: View {
 
     private var footer: some View {
         HStack(spacing: 6) {
-            Button { open(.overview) } label: { Label("Genel Bakış", systemImage: "gauge.with.dots.needle.67percent") }
-            Button { open(.cleanup) } label: { Label("Temizlik", systemImage: "list.bullet.rectangle") }
-            Button { open(.storage) } label: { Label("Depolama", systemImage: "square.grid.3x3.square") }
+            Button { open(.overview) } label: { Label(L("Genel Bakış", "Overview"), systemImage: "gauge.with.dots.needle.67percent") }
+            Button { open(.cleanup) } label: { Label(L("Temizlik", "Cleanup"), systemImage: "list.bullet.rectangle") }
+            Button { open(.storage) } label: { Label(L("Depolama", "Storage"), systemImage: "square.grid.3x3.square") }
             Spacer()
-            Button { NSApp.terminate(nil) } label: { Label("Çık", systemImage: "power") }
-                .help("MultiMac'ten çık")
+            Button { NSApp.terminate(nil) } label: { Label(L("Çık", "Quit"), systemImage: "power") }
+                .help(L("MultiMac'ten çık", "Quit MultiMac"))
         }
         .buttonStyle(.borderless)
         .font(.caption)
@@ -196,11 +196,11 @@ private struct ProcessQuickRow: View {
             Text(Fmt.percent(fraction)).font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(.blue)
             Text(Fmt.bytes(group.total)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .frame(minWidth: 58, alignment: .trailing)
-            Button("Kapat", action: quit)
+            Button(L("Kapat", "Quit"), action: quit)
                 .controlSize(.mini)
                 .opacity(hovering && !group.isProtected ? 1 : 0)
                 .disabled(group.isProtected)
-                .help("Uygulamayı düzgünce kapat")
+                .help(L("Uygulamayı düzgünce kapat", "Quit the app gracefully"))
         }
         .padding(.vertical, 1)
         .contentShape(Rectangle())

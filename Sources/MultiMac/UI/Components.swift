@@ -103,13 +103,13 @@ struct AppIconView: View {
 func memoryAdvice(_ m: MemorySnapshot, top: ProcessGroup?) -> String? {
     var parts: [String] = []
     switch m.pressure {
-    case .critical: parts.append("Bellek baskısı kritik, sistem yoğun şekilde swap kullanıyor.")
-    case .warning: parts.append("Bellek baskısı yüksek.")
+    case .critical: parts.append(L("Bellek baskısı kritik, sistem yoğun şekilde swap kullanıyor.", "Memory pressure is critical and the system is swapping heavily."))
+    case .warning: parts.append(L("Bellek baskısı yüksek.", "Memory pressure is high."))
     case .normal: break
     }
     guard !parts.isEmpty else { return nil }
     if let top {
-        parts.append("En çok kullanan: \(top.name) (\(Fmt.bytes(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.")
+        parts.append(L("En çok kullanan: \(top.name) (\(Fmt.bytes(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.", "Top user: \(top.name) (\(Fmt.bytes(top.total))). Quitting apps you don't use reduces swap."))
     }
     return parts.joined(separator: " ")
 }
@@ -139,28 +139,28 @@ func swapInsight(_ m: MemorySnapshot, history: [HistoryPoint], groups: [ProcessG
     let suggestion = (longRunning.isEmpty ? apps : longRunning).max { $0.total < $1.total }
     let restartHint = suggestion.map { g in
         let hours = Int((g.uptime ?? 0) / 3600)
-        let age = hours >= 1 ? ", \(hours) saattir açık" : ""
-        return " En çok fayda: \(g.name) (\(Fmt.bytes(g.total))\(age)) uygulamasını yeniden başlatmak."
+        let age = hours >= 1 ? L(", \(hours) saattir açık", ", open for \(hours) hours") : ""
+        return L(" En çok fayda: \(g.name) (\(Fmt.bytes(g.total))\(age)) uygulamasını yeniden başlatmak.", " Biggest win: restart \(g.name) (\(Fmt.bytes(g.total))\(age)).")
     } ?? ""
 
     if movedGB > 0.75 {
         return SwapInsight(
             level: .churning,
-            title: "Swap çalkantılı",
-            text: "Sistem RAM'e sığmayan veriyi sürekli diske yazıp geri okuyor; takılmanın asıl nedeni bu. Son 5 dakikada ~\(String(format: "%.1f", movedGB)) GB veri RAM ile disk arasında taşındı.\(restartHint)",
+            title: L("Swap çalkantılı", "Swap is churning"),
+            text: L("Sistem RAM'e sığmayan veriyi sürekli diske yazıp geri okuyor; takılmanın asıl nedeni bu. Son 5 dakikada ~\(String(format: "%.1f", movedGB)) GB veri RAM ile disk arasında taşındı.\(restartHint)", "The system keeps writing data that doesn't fit in RAM to disk and reading it back; this is what causes the stutter. ~\(String(format: "%.1f", movedGB)) GB moved between RAM and disk in the last 5 minutes.\(restartHint)"),
             suggestion: suggestion)
     }
     if m.pressure != .normal {
         return SwapInsight(
             level: .churning,
-            title: "Bellek sıkışık",
-            text: "RAM dolu: macOS verinin \(Fmt.bytes(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.bytes(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)",
+            title: L("Bellek sıkışık", "Memory is tight"),
+            text: L("RAM dolu: macOS verinin \(Fmt.bytes(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.bytes(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)", "RAM is full: macOS is compressing \(Fmt.bytes(m.compressed)) of data to make it fit, and \(Fmt.bytes(m.swapUsed)) is in swap. Swap is steady right now, so nothing is moving to disk, but opening something new may cause stutters. Quitting apps you don't use or restarting one that has been open for a long time frees memory.\(restartHint)"),
             suggestion: suggestion)
     }
     return SwapInsight(
         level: .calm,
-        title: "Swap durgun, endişelenme",
-        text: "Swap'te \(Fmt.bytes(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)",
+        title: L("Swap durgun, endişelenme", "Swap is calm, don't worry"),
+        text: L("Swap'te \(Fmt.bytes(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)", "There is \(Fmt.bytes(m.swapUsed)) in swap, but it isn't changing and memory pressure is normal. This is data nobody has used for a while: it only takes disk space and moves back to RAM by itself the moment an app touches it. macOS has no safe way to force it back into RAM; restarting the app is enough if you want it gone.\(restartHint)"),
         suggestion: suggestion)
 }
 
@@ -187,7 +187,7 @@ struct SwapInsightCard: View {
                     Button {
                         restart(g)
                     } label: {
-                        Label("\(g.name) uygulamasını yeniden başlat", systemImage: "arrow.clockwise")
+                        Label(L("\(g.name) uygulamasını yeniden başlat", "Restart \(g.name)"), systemImage: "arrow.clockwise")
                     }
                     .controlSize(.small)
                     .padding(.top, 2)

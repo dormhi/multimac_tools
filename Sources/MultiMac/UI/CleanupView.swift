@@ -5,7 +5,7 @@ struct CleanupView: View {
     enum Mode: String, CaseIterable, Identifiable {
         case categories, projects
         var id: String { rawValue }
-        var title: String { self == .categories ? "Kategoriler" : "Projeler" }
+        var title: String { self == .categories ? L("Kategoriler", "Categories") : L("Projeler", "Projects") }
     }
 
     @EnvironmentObject private var state: AppState
@@ -19,22 +19,22 @@ struct CleanupView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Detaylı Temizlik", subtitle: subtitle, symbol: "sparkles", color: .green) {
+            PageHeader(title: L("Detaylı Temizlik", "Detailed Cleanup"), subtitle: subtitle, symbol: "sparkles", color: .green) {
                 HStack {
                     Button {
                         Task { await cleanup.scanAll() }
                     } label: {
-                        Label("Yeniden Tara", systemImage: "arrow.clockwise")
+                        Label(L("Yeniden Tara", "Rescan"), systemImage: "arrow.clockwise")
                     }
                     .disabled(cleanup.isBusy)
 
                     Button {
                         confirm = true
                     } label: {
-                        Label("\(toTrash ? "Çöpe Taşı" : "Temizle") (\(Fmt.bytes(cleanup.selectedSize)))",
+                        Label(L("\(toTrash ? "Çöpe Taşı" : "Temizle") (\(Fmt.bytes(cleanup.selectedSize)))", "\(toTrash ? "Move to Trash" : "Clean") (\(Fmt.bytes(cleanup.selectedSize)))"),
                               systemImage: toTrash ? "trash" : "trash.slash")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
                     .disabled(cleanup.selectedCount == 0 || cleanup.isBusy)
                 }
             }
@@ -57,34 +57,34 @@ struct CleanupView: View {
         }
         .onAppear(perform: handleRequest)
         .onChange(of: state.cleanupRequest) { _, _ in handleRequest() }
-        .alert(toTrash ? "Seçilenler Çöp Kutusuna taşınsın mı?" : "Seçilenler kalıcı olarak silinsin mi?",
+        .alert(toTrash ? L("Seçilenler Çöp Kutusuna taşınsın mı?", "Move the selected items to the Trash?") : L("Seçilenler kalıcı olarak silinsin mi?", "Permanently delete the selected items?"),
                isPresented: $confirm) {
-            Button(toTrash ? "Çöpe Taşı" : "Kalıcı Olarak Sil", role: .destructive) {
+            Button(toTrash ? L("Çöpe Taşı", "Move to Trash") : L("Kalıcı Olarak Sil", "Delete Permanently"), role: .destructive) {
                 Task { await cleanup.cleanSelected() }
             }
-            Button("Vazgeç", role: .cancel) {}
+            Button(L("Vazgeç", "Cancel"), role: .cancel) {}
         } message: {
             Text(confirmMessage)
         }
     }
 
     private var confirmMessage: String {
-        let base = "\(cleanup.selectedCount) öğe, toplam \(Fmt.bytes(cleanup.selectedSize))."
+        let base = L("\(cleanup.selectedCount) öğe, toplam \(Fmt.bytes(cleanup.selectedSize)).", "\(cleanup.selectedCount) items, \(Fmt.bytes(cleanup.selectedSize)) in total.")
         if toTrash {
-            return base + " Çöp Kutusu'ndan geri alınabilir, ancak Çöp Kutusu boşaltılana kadar yer açılmaz."
+            return base + L(" Çöp Kutusu'ndan geri alınabilir, ancak Çöp Kutusu boşaltılana kadar yer açılmaz.", " They can be restored from the Trash, but no space is freed until the Trash is emptied.")
         }
         let risky = cleanup.selectedItems.filter { $0.category == .largeFiles || $0.category == .downloads || $0.category == .trash || $0.sensitive }
-        var msg = base + " Önbellekler ve build kalıntıları gerektiğinde yeniden oluşturulur."
+        var msg = base + L(" Önbellekler ve build kalıntıları gerektiğinde yeniden oluşturulur.", " Caches and build leftovers are recreated when needed.")
         if !risky.isEmpty {
-            msg += "\n\n⚠️ Seçimde geri getirilemeyecek \(risky.count) kişisel dosya/veri var (\(Fmt.bytes(risky.reduce(0) { $0 + $1.size }))). Emin değilsen silme yöntemini \"Çöp Kutusuna taşı\" yap."
+            msg += L("\n\n⚠️ Seçimde geri getirilemeyecek \(risky.count) kişisel dosya/veri var (\(Fmt.bytes(risky.reduce(0) { $0 + $1.size }))). Emin değilsen silme yöntemini \"Çöp Kutusuna taşı\" yap.", "\n\n⚠️ The selection includes \(risky.count) personal files or data that can't be recovered (\(Fmt.bytes(risky.reduce(0) { $0 + $1.size }))). If you're not sure, set the delete method to \"Move to Trash\".")
         }
         return msg
     }
 
     private var subtitle: String {
-        if cleanup.isScanning { return "Taranıyor… (büyük dosya araması biraz sürebilir)" }
-        if cleanup.isCleaning { return toTrash ? "Çöpe taşınıyor…" : "Temizleniyor…" }
-        return "Bulunan: \(Fmt.bytes(cleanup.totalSize)) · Seçili: \(cleanup.selectedCount) öğe"
+        if cleanup.isScanning { return L("Taranıyor… (büyük dosya araması biraz sürebilir)", "Scanning… (the large file search may take a while)") }
+        if cleanup.isCleaning { return toTrash ? L("Çöpe taşınıyor…", "Moving to Trash…") : L("Temizleniyor…", "Cleaning…") }
+        return L("Bulunan: \(Fmt.bytes(cleanup.totalSize)) · Seçili: \(cleanup.selectedCount) öğe", "Found: \(Fmt.bytes(cleanup.totalSize)) · Selected: \(cleanup.selectedCount) items")
     }
 
     /// Genel Bakış'tan veya menüden gelen "şurayı aç" isteğini uygula.
@@ -137,7 +137,7 @@ struct CleanupView: View {
 
     private var presetBar: some View {
         HStack(spacing: 10) {
-            Text("Kip").foregroundStyle(.secondary)
+            Text(L("Kip", "Preset")).foregroundStyle(.secondary)
             Picker("", selection: Binding(get: { cleanup.preset }, set: { cleanup.apply($0) })) {
                 ForEach(CleanupPreset.allCases.filter { $0 != .custom || cleanup.preset == .custom }) {
                     Text($0.title).tag($0)
@@ -151,12 +151,12 @@ struct CleanupView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
             Spacer()
-            Picker("Silme", selection: $toTrash) {
-                Text("Kalıcı sil").tag(false)
-                Text("Çöp Kutusuna taşı").tag(true)
+            Picker(L("Silme", "Delete"), selection: $toTrash) {
+                Text(L("Kalıcı sil", "Delete permanently")).tag(false)
+                Text(L("Çöp Kutusuna taşı", "Move to Trash")).tag(true)
             }
             .frame(width: 210)
-            .help("Çöp Kutusuna taşınanlar geri alınabilir ama yer açmaz")
+            .help(L("Çöp Kutusuna taşınanlar geri alınabilir ama yer açmaz", "Items moved to the Trash can be restored but don't free space"))
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
@@ -172,12 +172,12 @@ struct CleanupView: View {
             .labelsHidden()
             .frame(width: 180)
 
-            TextField("Ara (ad, yol, not)", text: $filter.search)
+            TextField(L("Ara (ad, yol, not)", "Search (name, path, note)"), text: $filter.search)
                 .textFieldStyle(.roundedBorder)
                 .frame(minWidth: 140, maxWidth: 220)
 
-            Picker("Boyut", selection: $filter.minSize) {
-                Text("Tüm boyutlar").tag(Int64(0))
+            Picker(L("Boyut", "Size"), selection: $filter.minSize) {
+                Text(L("Tüm boyutlar", "All sizes")).tag(Int64(0))
                 Text("> 10 MB").tag(Int64(10_000_000))
                 Text("> 100 MB").tag(Int64(100_000_000))
                 Text("> 500 MB").tag(Int64(500_000_000))
@@ -185,24 +185,24 @@ struct CleanupView: View {
             }
             .frame(width: 150)
 
-            Picker("Yaş", selection: $filter.minAgeDays) {
-                Text("Tüm tarihler").tag(0)
-                Text("30+ gün").tag(30)
-                Text("90+ gün").tag(90)
-                Text("180+ gün").tag(180)
-                Text("1+ yıl").tag(365)
+            Picker(L("Yaş", "Age"), selection: $filter.minAgeDays) {
+                Text(L("Tüm tarihler", "Any date")).tag(0)
+                Text(L("30+ gün", "30+ days")).tag(30)
+                Text(L("90+ gün", "90+ days")).tag(90)
+                Text(L("180+ gün", "180+ days")).tag(180)
+                Text(L("1+ yıl", "1+ year")).tag(365)
             }
             .frame(width: 140)
-            .help("Son kullanım tarihi bilinen öğeler arasında filtreler")
+            .help(L("Son kullanım tarihi bilinen öğeler arasında filtreler", "Filters among items with a known last-used date"))
 
-            Picker("Sırala", selection: $filter.sort) {
+            Picker(L("Sırala", "Sort"), selection: $filter.sort) {
                 ForEach(CleanupFilter.Sort.allCases) { Text($0.title).tag($0) }
             }
             .frame(width: 160)
 
-            Toggle("Seçililer", isOn: $filter.onlySelected).toggleStyle(.checkbox)
+            Toggle(L("Seçililer", "Selected"), isOn: $filter.onlySelected).toggleStyle(.checkbox)
             if filter.isActive {
-                Button("Sıfırla") { filter = CleanupFilter(sort: filter.sort) }.buttonStyle(.link)
+                Button(L("Sıfırla", "Reset")) { filter = CleanupFilter(sort: filter.sort) }.buttonStyle(.link)
             }
             Spacer(minLength: 0)
         }
@@ -215,12 +215,12 @@ struct CleanupView: View {
         HStack {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
             if r.trashed {
-                Text("\(Fmt.bytes(r.freed)) Çöp Kutusuna taşındı · \(r.cleanedItems) öğe. Yer açmak için Çöp Kutusu'nu boşalt.")
+                Text(L("\(Fmt.bytes(r.freed)) Çöp Kutusuna taşındı · \(r.cleanedItems) öğe. Yer açmak için Çöp Kutusu'nu boşalt.", "Moved \(Fmt.bytes(r.freed)) to the Trash · \(r.cleanedItems) items. Empty the Trash to free the space."))
             } else {
-                Text("\(Fmt.bytes(r.freed)) yer açıldı · \(r.cleanedItems) öğe temizlendi")
+                Text(L("\(Fmt.bytes(r.freed)) yer açıldı · \(r.cleanedItems) öğe temizlendi", "Freed \(Fmt.bytes(r.freed)) · cleaned \(r.cleanedItems) items"))
             }
             if !r.failedPaths.isEmpty {
-                Text("· \(r.failedPaths.count) öğe silinemedi (izin, kullanımda veya hariç tutulan içerik)")
+                Text(L("· \(r.failedPaths.count) öğe silinemedi (izin, kullanımda veya hariç tutulan içerik)", "· \(r.failedPaths.count) items couldn't be deleted (permissions, in use or excluded content)"))
                     .foregroundStyle(.orange)
                     .help(r.failedPaths.joined(separator: "\n"))
             }
@@ -237,10 +237,10 @@ struct CleanupView: View {
         VStack(spacing: 10) {
             if cleanup.isScanning {
                 ProgressView()
-                Text("Önbellekler, build kalıntıları, indirilenler ve büyük dosyalar taranıyor…").foregroundStyle(.secondary)
+                Text(L("Önbellekler, build kalıntıları, indirilenler ve büyük dosyalar taranıyor…", "Scanning caches, build leftovers, downloads and large files…")).foregroundStyle(.secondary)
             } else {
                 Image(systemName: "checkmark.seal.fill").font(.largeTitle).foregroundStyle(.green)
-                Text("Temizlenecek bir şey bulunamadı").foregroundStyle(.secondary)
+                Text(L("Temizlenecek bir şey bulunamadı", "Nothing to clean")).foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -287,7 +287,7 @@ struct CleanupView: View {
         let projects = cleanup.projects(filter: filter)
         return List {
             if projects.isEmpty {
-                Text("Proje klasörlerinde build kalıntısı bulunamadı. Proje klasörlerini Ayarlar'dan ekleyebilirsin.")
+                Text(L("Proje klasörlerinde build kalıntısı bulunamadı. Proje klasörlerini Ayarlar'dan ekleyebilirsin.", "No build leftovers in your project folders. You can add project folders in Settings."))
                     .foregroundStyle(.secondary)
             }
             ForEach(projects) { project in
@@ -298,14 +298,14 @@ struct CleanupView: View {
                     groupHeader(symbol: project.inUse ? "bolt.horizontal.circle.fill" : "folder.fill",
                                 color: project.inUse ? .red : .orange,
                                 title: project.name,
-                                subtitle: "\(Fmt.displayPath(project.path))\(days.map { " · \($0) gündür dokunulmadı" } ?? "")\(project.inUse ? " · çalışan süreç var" : "")",
+                                subtitle: L("\(Fmt.displayPath(project.path))\(days.map { " · \($0) gündür dokunulmadı" } ?? "")\(project.inUse ? " · çalışan süreç var" : "")", "\(Fmt.displayPath(project.path))\(days.map { " · untouched for \($0) days" } ?? "")\(project.inUse ? " · process running" : "")"),
                                 items: project.items)
                 }
                 .contextMenu {
-                    Button("Finder'da Göster") {
+                    Button(L("Finder'da Göster", "Show in Finder")) {
                         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: project.path)])
                     }
-                    Button("Bu projeye asla dokunma") { cleanup.exclude(path: project.path) }
+                    Button(L("Bu projeye asla dokunma", "Never touch this project")) { cleanup.exclude(path: project.path) }
                 }
             }
         }
@@ -315,7 +315,7 @@ struct CleanupView: View {
 
     @ViewBuilder private var emptyFilterNote: some View {
         if filter.isActive && CleanupCategory.allCases.allSatisfy({ cleanup.items(in: $0, filter: filter).isEmpty }) {
-            Text("Filtreyle eşleşen öğe yok").foregroundStyle(.secondary)
+            Text(L("Filtreyle eşleşen öğe yok", "No items match the filter")).foregroundStyle(.secondary)
         }
     }
 
@@ -344,12 +344,12 @@ struct CleanupView: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 1) {
                 Text(Fmt.bytes(size)).font(.headline).monospacedDigit()
-                Text("\(items.count) öğe · \(Fmt.bytes(selectedSize)) seçili")
+                Text(L("\(items.count) öğe · \(Fmt.bytes(selectedSize)) seçili", "\(items.count) items · \(Fmt.bytes(selectedSize)) selected"))
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 GeometryReader { g in
                     Capsule().fill(Color.primary.opacity(0.07))
                         .overlay(alignment: .leading) {
-                            Capsule().fill(color.gradient)
+                            Capsule().fill(color)
                                 .frame(width: size > 0 ? g.size.width * CGFloat(Double(selectedSize) / Double(size)) : 0)
                         }
                 }
@@ -377,11 +377,11 @@ struct CleanupView: View {
             exclude: { cleanup.exclude(path: $0) })
         if isOpen {
             if cleanup.loadingSubs.contains(item.id) {
-                HStack { ProgressView().controlSize(.small); Text("İçerik ölçülüyor…").font(.caption) }
+                HStack { ProgressView().controlSize(.small); Text(L("İçerik ölçülüyor…", "Measuring contents…")).font(.caption) }
                     .padding(.leading, 60)
             } else if let subs = cleanup.subItems[item.id] {
                 if subs.isEmpty {
-                    Text("Boş").font(.caption).foregroundStyle(.secondary).padding(.leading, 60)
+                    Text(L("Boş", "Empty")).font(.caption).foregroundStyle(.secondary).padding(.leading, 60)
                 }
                 ForEach(subs) { sub in
                     CleanupItemRow(item: sub, state: cleanup.checkState(sub) == .on || cleanup.selected.contains(item.id) ? .on : .off,
@@ -415,13 +415,13 @@ private struct CleanupItemRow: View {
             .buttonStyle(.plain)
             .opacity(expandable ? 1 : 0)
             .disabled(!expandable)
-            .help("İçeriğini göster ve tek tek seç")
+            .help(L("İçeriğini göster ve tek tek seç", "Show contents and pick items one by one"))
 
             Checkbox(state: state, action: toggle)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(item.title).lineLimit(1).truncationMode(.middle)
-                    if item.autoEligible { Badge(text: "Otomatik", color: .green, symbol: "bolt.fill") }
+                    if item.autoEligible { Badge(text: L("Otomatik", "Auto"), color: .green, symbol: "bolt.fill") }
                     if let note = item.note { Badge(text: note, color: item.inUse ? .red : .orange) }
                 }
                 if item.parentID == nil {
@@ -437,26 +437,26 @@ private struct CleanupItemRow: View {
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting(item.urls)
             } label: {
-                Label("Göster", systemImage: "folder")
+                Label(L("Göster", "Show"), systemImage: "folder")
             }
             .buttonStyle(.borderless)
             .font(.caption)
-            .help("Finder'da göster")
+            .help(L("Finder'da göster", "Show in Finder"))
         }
         .padding(.leading, 4)
         .contentShape(Rectangle())
         .onTapGesture(perform: toggle)
         .contextMenu {
-            Button("Finder'da Göster") { NSWorkspace.shared.activateFileViewerSelecting(item.urls) }
-            if expandable { Button(isOpen ? "İçeriği gizle" : "İçeriğini göster", action: toggleOpen) }
+            Button(L("Finder'da Göster", "Show in Finder")) { NSWorkspace.shared.activateFileViewerSelecting(item.urls) }
+            if expandable { Button(isOpen ? L("İçeriği gizle", "Hide contents") : L("İçeriğini göster", "Show contents"), action: toggleOpen) }
             Divider()
             if item.urls.count == 1 {
-                Button("Asla dokunma: \(item.urls[0].lastPathComponent)") { exclude(item.urls[0].path) }
+                Button(L("Asla dokunma: \(item.urls[0].lastPathComponent)", "Never touch: \(item.urls[0].lastPathComponent)")) { exclude(item.urls[0].path) }
             } else {
-                Button("Asla dokunma: bu öğe") { item.urls.forEach { exclude($0.path) } }
+                Button(L("Asla dokunma: bu öğe", "Never touch: this item")) { item.urls.forEach { exclude($0.path) } }
             }
             if let project = item.project {
-                Button("Asla dokunma: \((project as NSString).lastPathComponent) projesinin tamamı") { exclude(project) }
+                Button(L("Asla dokunma: \((project as NSString).lastPathComponent) projesinin tamamı", "Never touch: the whole \((project as NSString).lastPathComponent) project")) { exclude(project) }
             }
         }
     }

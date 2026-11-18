@@ -1,25 +1,51 @@
 import Foundation
 
 enum Fmt {
+    /// Finder gibi 1000 tabanlı birimler; ondalık ayırıcı ve "Sıfır KB" uygulama diline göre.
     static func bytes(_ b: Int64) -> String {
-        ByteCountFormatter.string(fromByteCount: max(0, b), countStyle: .file)
+        let v = Double(max(0, b))
+        if v == 0 { return L("Sıfır KB", "Zero KB") }
+        if v < 1000 { return "\(Int(v)) " + L("bayt", "bytes") }
+        var x = v / 1000
+        var unit = 0
+        while x >= 1000 && unit < 3 { x /= 1000; unit += 1 }
+        let digits = unit == 0 ? 0 : unit == 1 ? 1 : 2
+        let f = Lang.isTurkish ? trNumber[digits] : enNumber[digits]
+        return (f.string(from: NSNumber(value: x)) ?? String(x)) + " " + ["KB", "MB", "GB", "TB"][unit]
     }
 
     static func bytes(_ b: UInt64) -> String { bytes(Int64(clamping: b)) }
 
+    private static func numberFormatters(_ id: String) -> [NumberFormatter] {
+        (0...2).map { digits in
+            let f = NumberFormatter()
+            f.locale = Locale(identifier: id)
+            f.numberStyle = .decimal
+            f.maximumFractionDigits = digits
+            f.minimumFractionDigits = 0
+            return f
+        }
+    }
+    nonisolated(unsafe) private static let trNumber = numberFormatters("tr_TR")
+    nonisolated(unsafe) private static let enNumber = numberFormatters("en_US")
+
+    /// Türkçede "%80", İngilizcede "80%".
     static func percent(_ v: Double) -> String {
-        "%" + String(Int((max(0, v) * 100).rounded()))
+        let n = String(Int((max(0, v) * 100).rounded()))
+        return Lang.isTurkish ? "%" + n : n + "%"
     }
 
-    private static let relativeFormatter: RelativeDateTimeFormatter = {
+    private static func relativeFormatter(_ id: String) -> RelativeDateTimeFormatter {
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "tr_TR")
+        f.locale = Locale(identifier: id)
         f.unitsStyle = .full
         return f
-    }()
+    }
+    nonisolated(unsafe) private static let trRelative = relativeFormatter("tr_TR")
+    nonisolated(unsafe) private static let enRelative = relativeFormatter("en_US")
 
     static func relative(_ d: Date) -> String {
-        relativeFormatter.localizedString(for: d, relativeTo: Date())
+        (Lang.isTurkish ? trRelative : enRelative).localizedString(for: d, relativeTo: Date())
     }
 
     static let home = NSHomeDirectory()
@@ -39,6 +65,8 @@ enum Fmt {
 }
 
 enum Prefs {
+    static let appearance = "appearance"        // system / light / dark
+    static let appLanguage = "appLanguage"      // system / tr / en
     static let autoCleanEnabled = "autoCleanEnabled"   // eski; yalnızca geçiş için okunur
     /// Otomatik önbellek temizliğinin ana anahtarı. Zamanlama ve disk eşiği bunun altında çalışır.
     static let autoStorageEnabled = "autoStorage.enabled"
@@ -91,6 +119,8 @@ enum Prefs {
         migrateAutoStorage()
         UserDefaults.standard.register(defaults: [
             autoStorageEnabled: false,
+            appearance: "system",
+            appLanguage: "system",
             autoCleanEnabled: true,
             autoCleanIntervalHours: 6,
             lowDiskEnabled: true,
@@ -150,4 +180,87 @@ enum Exclusions {
     static func containsExcluded(_ path: String, in list: [String] = all) -> Bool {
         list.contains { $0.hasPrefix(path + "/") }
     }
+}
+
+// MARK: - Dil
+
+/// Uygulamanın dili. "Sistem": macOS dili Türkçeyse Türkçe, değilse İngilizce.
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case system, tr, en
+    var id: String { rawValue }
+
+    /// Dil adları her zaman kendi dilinde yazılır ki yanlış dilde kalan kullanıcı da bulabilsin.
+    var title: String {
+        switch self {
+        case .system: L("Sistem dili", "System language")
+        case .tr: "Türkçe"
+        case .en: "English"
+        }
+    }
+}
+
+enum Lang {
+    /// Her metin çağrısında UserDefaults okumamak için önbellek; `sync` ile güncellenir.
+    nonisolated(unsafe) private(set) static var isTurkish = resolve(UserDefaults.standard.string(forKey: Prefs.appLanguage))
+
+    static func resolve(_ raw: String?) -> Bool {
+        switch AppLanguage(rawValue: raw ?? "") ?? .system {
+        case .tr: return true
+        case .en: return false
+        case .system: return Locale.preferredLanguages.first?.hasPrefix("tr") ?? false
+        }
+    }
+
+    /// Kök görünümler body içinde çağırır; dil değişince bütün arayüz yeni dille yeniden çizilir.
+    @discardableResult
+    static func sync(_ raw: String) -> Bool {
+        isTurkish = resolve(raw)
+        return isTurkish
+    }
+
+    static var locale: Locale { Locale(identifier: isTurkish ? "tr_TR" : "en_US") }
+}
+
+/// Arayüz metni: Türkçesi ve İngilizcesi yan yana yazılır, o anki dile göre biri döner.
+func L(_ tr: String, _ en: String) -> String {
+    Lang.isTurkish ? tr : en
+}
+
+/// Sabit tablolarda (statik kurallar) Türkçe tutulan metinleri kullanıldığı anda çevirir.
+/// Önce sözlüğe, sonra "X önbelleği" → "X cache" gibi kalıplara bakar; bulamazsa metni olduğu gibi döner.
+func LT(_ tr: String) -> String {
+    if Lang.isTurkish { return tr }
+    if let en = Glossary.english[tr] ?? SafetyText.english[tr] { return en }
+    for (suffix, en) in Glossary.suffixes where tr.hasSuffix(suffix) {
+        return String(tr.dropLast(suffix.count)) + en
+    }
+    return tr
+}
+
+enum Glossary {
+    static let suffixes: [(String, String)] = [
+        (" önbelleği", " cache"), (" indirmeleri", " downloads"), (" deposu", " repository"),
+        (" tarayıcıları", " browsers"), (" modelleri", " models"), (" başlıkları", " headers"),
+        (" paketleri", " packages"), (" günlükleri", " logs"), (" sürümleri", " versions"),
+    ]
+
+    static let english: [String: String] = [
+        "Sonraki kurulumda paketler yeniden indirilir": "Packages are downloaded again on the next install",
+        "Expo native modül önbelleği": "Expo native module cache",
+        "Expo simülatör önbelleği": "Expo simulator cache",
+        "Expo sürüm önbelleği": "Expo version cache",
+        "Yeniden derleme uzun sürer": "Rebuilding takes a long time",
+        "Bağımlılıklar yeniden indirilir": "Dependencies are downloaded again",
+        "Testler için yeniden indirilmesi gerekir": "Must be downloaded again for tests",
+        "Yeniden indirilmesi gerekir": "Must be downloaded again",
+        "İndirilmiş yapay zekâ modelleri": "Downloaded AI models",
+        "Bağımlılıklar": "Dependencies",
+        "Framework önbelleği": "Framework cache",
+        "Build çıktısı": "Build output",
+        "Python araç önbelleği": "Python tool cache",
+        "Python sanal ortamı": "Python virtual environment",
+        "Paketler yeniden kurulmalı": "Packages must be reinstalled",
+        "npm/pnpm install ile geri gelir": "npm/pnpm install brings it back",
+        "pod install ile geri gelir": "pod install brings it back",
+    ]
 }

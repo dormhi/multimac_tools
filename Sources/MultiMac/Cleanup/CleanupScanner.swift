@@ -260,9 +260,9 @@ enum CleanupScanner {
             let url = ctx.home.appendingPathComponent(rule.path)
             guard exists(url) else { continue }
             covered.insert(url.path)
-            var item = CleanupItem(urls: [url], title: rule.title, category: .devCaches,
+            var item = CleanupItem(urls: [url], title: LT(rule.title), category: .devCaches,
                                    autoEligible: rule.auto, defaultSelected: rule.selected,
-                                   contentsOnly: rule.contentsOnly, note: rule.note)
+                                   contentsOnly: rule.contentsOnly, note: rule.note.map(LT))
             item.sensitive = rule.sensitive
             items.append(item)
         }
@@ -271,7 +271,7 @@ enum CleanupScanner {
             guard !covered.contains(dir.path) else { continue }
             var item = CleanupItem(urls: [dir], title: "~/.cache/\(dir.lastPathComponent)", category: .devCaches,
                                    autoEligible: false, defaultSelected: false, contentsOnly: true,
-                                   note: "Tanınmayan araç verisi, içeriğini kontrol et")
+                                   note: L("Tanınmayan araç verisi, içeriğini kontrol et", "Unrecognized tool data, check its contents"))
             item.sensitive = true
             items.append(item)
         }
@@ -288,7 +288,7 @@ enum CleanupScanner {
             let isApple = name.hasPrefix("com.apple.")
             let running = ctx.isAppRunning(name: name)
             var note: String?
-            if isApple { note = "Apple sistem önbelleği" } else if running { note = "Uygulama açık" }
+            if isApple { note = L("Apple sistem önbelleği", "Apple system cache") } else if running { note = L("Uygulama açık", "App is running") }
             items.append(CleanupItem(
                 urls: [dir], title: cacheTitle(name), category: .appCaches,
                 autoEligible: !isApple, defaultSelected: !isApple,
@@ -347,10 +347,10 @@ enum CleanupScanner {
             guard !dirs.isEmpty else { continue }
             let running = ctx.isAppRunning(name: root.appName)
             items.append(CleanupItem(
-                urls: dirs, title: "\(root.name) tarayıcı önbelleği",
-                detail: Fmt.displayPath(rootURL.path) + " · \(dirs.count) önbellek klasörü (geçmiş ve çerezlere dokunulmaz)",
+                urls: dirs, title: L("\(root.name) tarayıcı önbelleği", "\(root.name) browser cache"),
+                detail: Fmt.displayPath(rootURL.path) + L(" · \(dirs.count) önbellek klasörü (geçmiş ve çerezlere dokunulmaz)", " · \(dirs.count) cache folders (history and cookies are never touched)"),
                 category: .appCaches, autoEligible: true, defaultSelected: true, contentsOnly: true,
-                note: running ? "Uygulama açık" : nil, inUse: running))
+                note: running ? L("Uygulama açık", "App is running") : nil, inUse: running))
         }
         return items
     }
@@ -358,7 +358,7 @@ enum CleanupScanner {
     private static func savedState(_ ctx: CleanupContext) -> [CleanupItem] {
         let url = ctx.home.appendingPathComponent("Library/Saved Application State")
         guard exists(url) else { return [] }
-        return [CleanupItem(urls: [url], title: "Kayıtlı pencere durumları (30+ gün)", category: .logs,
+        return [CleanupItem(urls: [url], title: L("Kayıtlı pencere durumları (30+ gün)", "Saved window states (30+ days)"), category: .logs,
                             autoEligible: true, defaultSelected: true, contentsOnly: true)]
     }
 
@@ -371,10 +371,10 @@ enum CleanupScanner {
             guard !dirs.isEmpty else { continue }
             let running = ctx.isAppRunning(name: app.lastPathComponent)
             items.append(CleanupItem(
-                urls: dirs, title: "\(app.lastPathComponent) (web önbelleği)",
+                urls: dirs, title: L("\(app.lastPathComponent) (web önbelleği)", "\(app.lastPathComponent) (web cache)"),
                 detail: Fmt.displayPath(app.path) + " · " + dirs.map(\.lastPathComponent).joined(separator: ", "),
                 category: .appCaches, autoEligible: true, defaultSelected: true,
-                contentsOnly: true, note: running ? "Uygulama açık" : nil, inUse: running))
+                contentsOnly: true, note: running ? L("Uygulama açık", "App is running") : nil, inUse: running))
         }
         return items
     }
@@ -383,11 +383,11 @@ enum CleanupScanner {
         let dev = ctx.home.appendingPathComponent("Library/Developer")
         let rules: [(String, String, Bool, Bool, String?)] = [
             ("Xcode/DerivedData", "DerivedData", true, true, nil),
-            ("Xcode/iOS DeviceSupport", "iOS cihaz sembolleri", false, true, "Cihaz yeniden bağlanınca yeniden oluşturulur"),
-            ("Xcode/watchOS DeviceSupport", "watchOS cihaz sembolleri", false, true, nil),
-            ("Xcode/Archives", "Xcode arşivleri", false, false, "Yayınlanmış sürümlerin arşivleri"),
-            ("CoreSimulator/Caches", "Simülatör önbelleği", true, true, nil),
-            ("Xcode/UserData/Previews", "SwiftUI önizleme verisi", true, true, nil),
+            ("Xcode/iOS DeviceSupport", L("iOS cihaz sembolleri", "iOS device symbols"), false, true, L("Cihaz yeniden bağlanınca yeniden oluşturulur", "Recreated when the device reconnects")),
+            ("Xcode/watchOS DeviceSupport", L("watchOS cihaz sembolleri", "watchOS device symbols"), false, true, nil),
+            ("Xcode/Archives", L("Xcode arşivleri", "Xcode archives"), false, false, L("Yayınlanmış sürümlerin arşivleri", "Archives of released builds")),
+            ("CoreSimulator/Caches", L("Simülatör önbelleği", "Simulator cache"), true, true, nil),
+            ("Xcode/UserData/Previews", L("SwiftUI önizleme verisi", "SwiftUI preview data"), true, true, nil),
         ]
         return rules.compactMap { path, title, auto, selected, note in
             let url = dev.appendingPathComponent(path)
@@ -395,7 +395,7 @@ enum CleanupScanner {
             let xcodeRunning = ctx.isAppRunning(name: "xcode") || ctx.isAppRunning(name: "simulator")
             var item = CleanupItem(urls: [url], title: title, category: .xcode, autoEligible: auto,
                                    defaultSelected: selected, contentsOnly: true,
-                                   note: xcodeRunning ? "Xcode veya simülatör açık" : note, inUse: xcodeRunning)
+                                   note: xcodeRunning ? L("Xcode veya simülatör açık", "Xcode or Simulator is running") : note, inUse: xcodeRunning)
             item.sensitive = path.hasSuffix("Archives")
             return item
         }
@@ -404,14 +404,14 @@ enum CleanupScanner {
     private static func logs(_ ctx: CleanupContext) -> [CleanupItem] {
         let url = ctx.home.appendingPathComponent("Library/Logs")
         guard exists(url) else { return [] }
-        return [CleanupItem(urls: [url], title: "Kullanıcı günlükleri (\(AutoSettings.logDays)+ gün)", category: .logs,
+        return [CleanupItem(urls: [url], title: L("Kullanıcı günlükleri (\(AutoSettings.logDays)+ gün)", "User logs (\(AutoSettings.logDays)+ days)"), category: .logs,
                             autoEligible: true, defaultSelected: true, contentsOnly: true)]
     }
 
     private static func trash(_ ctx: CleanupContext) -> [CleanupItem] {
         let url = ctx.home.appendingPathComponent(".Trash")
         guard exists(url) else { return [] }
-        return [CleanupItem(urls: [url], title: "Çöp Kutusu", category: .trash, autoEligible: false,
+        return [CleanupItem(urls: [url], title: L("Çöp Kutusu", "Trash"), category: .trash, autoEligible: false,
                             defaultSelected: false, contentsOnly: true)]
     }
 
@@ -428,9 +428,9 @@ enum CleanupScanner {
             guard isInstaller || age >= 90 else { continue }
             items.append(CleanupItem(
                 urls: [url], title: url.lastPathComponent,
-                detail: "~/Downloads · \(age) gün önce indirildi", category: .downloads,
+                detail: L("~/Downloads · \(age) gün önce indirildi", "~/Downloads · downloaded \(age) days ago"), category: .downloads,
                 autoEligible: false, defaultSelected: isInstaller, contentsOnly: false,
-                note: isInstaller ? "Kurulum dosyası" : nil, lastUsed: date))
+                note: isInstaller ? L("Kurulum dosyası", "Installer") : nil, lastUsed: date))
         }
         return items
     }
@@ -503,11 +503,11 @@ enum CleanupScanner {
                     let rel = dir.path.hasPrefix(root.path) ? String(dir.path.dropFirst(root.path.count + 1)) : dir.lastPathComponent
                     let projectName = rel.isEmpty ? dir.lastPathComponent : rel
                     var notes: [String] = []
-                    if busy { notes.append("Projede çalışan süreç var") }
-                    if let n = rule.note { notes.append(n) }
+                    if busy { notes.append(L("Projede çalışan süreç var", "A process is running in the project")) }
+                    if let n = rule.note { notes.append(LT(n)) }
                     items.append(CleanupItem(
                         urls: [entry], title: "\(projectName) › \(name)",
-                        detail: "\(rule.kind) · \(Fmt.displayPath(entry.path)) · \(idleDays) gündür dokunulmadı",
+                        detail: L("\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · \(idleDays) gündür dokunulmadı", "\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · untouched for \(idleDays) days"),
                         category: .buildArtifacts,
                         autoEligible: rule.auto,
                         defaultSelected: !busy && (rule.selectAlways || (stale && rule.selectWhenStale)),

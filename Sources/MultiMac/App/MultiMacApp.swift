@@ -7,12 +7,12 @@ enum MainTab: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .overview: "Genel Bakış"
-        case .cleanup: "Temizlik"
-        case .storage: "Depolama"
-        case .memory: "Bellek"
-        case .automation: "Otomasyon"
-        case .settings: "Ayarlar"
+        case .overview: L("Genel Bakış", "Overview")
+        case .cleanup: L("Temizlik", "Cleanup")
+        case .storage: L("Depolama", "Storage")
+        case .memory: L("Bellek", "Memory")
+        case .automation: L("Otomasyon", "Automation")
+        case .settings: L("Ayarlar", "Settings")
         }
     }
 
@@ -97,6 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         MainActor.assumeIsolated {
+            AppAppearance.apply()
             let state = AppState.shared
             state.monitor.start()
             state.cleanup.startAutoSchedule()
@@ -122,6 +123,7 @@ extension View {
             .environmentObject(state.servers)
             .environmentObject(state.overview)
             .environmentObject(state.relief)
+            .buttonStyle(.glass)
     }
 }
 
@@ -132,16 +134,29 @@ struct MultiMacApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarPanel().withStores(state)
+            LanguageRoot { MenuBarPanel().withStores(state) }
         } label: {
             MenuBarLabel(monitor: state.monitor)
         }
         .menuBarExtraStyle(.window)
 
         Window("MultiMac", id: "main") {
-            MainWindow().withStores(state)
+            LanguageRoot { MainWindow().withStores(state) }
         }
         .defaultSize(width: 1180, height: 760)
         .defaultLaunchBehavior(.presented)
+    }
+}
+
+/// Dil değişince altındaki her şeyi yeni dille baştan çizer.
+struct LanguageRoot<Content: View>: View {
+    @AppStorage(Prefs.appLanguage) private var language = AppLanguage.system.rawValue
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        let _ = Lang.sync(language)
+        content()
+            .id(language)
+            .environment(\.locale, Lang.locale)
     }
 }

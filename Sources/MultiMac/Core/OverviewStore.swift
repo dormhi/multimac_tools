@@ -47,21 +47,21 @@ final class OverviewStore: ObservableObject {
         let roots = Set(Prefs.roots)
 
         var groups: [String: Group] = [
-            "apps": Group(id: "apps", title: "Uygulamalar", subtitle: "/Applications", symbol: "app.badge.fill",
+            "apps": Group(id: "apps", title: L("Uygulamalar", "Applications"), subtitle: "/Applications", symbol: "app.badge.fill",
                           color: .blue, path: "/Applications", paths: ["/Applications"]),
-            "library": Group(id: "library", title: "Kütüphane", subtitle: "Uygulama verisi, önbellekler · ~/Library",
+            "library": Group(id: "library", title: L("Kütüphane", "Library"), subtitle: L("Uygulama verisi, önbellekler · ~/Library", "App data, caches · ~/Library"),
                              symbol: "books.vertical.fill", color: .purple, path: home + "/Library", paths: []),
-            "projects": Group(id: "projects", title: "Projeler", subtitle: "Kod ve build kalıntıları",
+            "projects": Group(id: "projects", title: L("Projeler", "Projects"), subtitle: L("Kod ve build kalıntıları", "Code and build leftovers"),
                               symbol: "chevron.left.forwardslash.chevron.right", color: .orange, path: nil, paths: []),
-            "downloads": Group(id: "downloads", title: "İndirilenler", subtitle: "~/Downloads",
+            "downloads": Group(id: "downloads", title: L("İndirilenler", "Downloads"), subtitle: "~/Downloads",
                                symbol: "arrow.down.circle.fill", color: .green, path: home + "/Downloads", paths: []),
-            "documents": Group(id: "documents", title: "Belgeler ve Masaüstü", subtitle: "~/Documents, ~/Desktop",
+            "documents": Group(id: "documents", title: L("Belgeler ve Masaüstü", "Documents and Desktop"), subtitle: "~/Documents, ~/Desktop",
                                symbol: "doc.fill", color: .teal, path: home + "/Documents", paths: []),
-            "media": Group(id: "media", title: "Medya", subtitle: "Resimler, Filmler, Müzik",
+            "media": Group(id: "media", title: L("Medya", "Media"), subtitle: L("Resimler, Filmler, Müzik", "Pictures, Movies, Music"),
                            symbol: "photo.fill", color: .pink, path: home + "/Pictures", paths: []),
-            "hidden": Group(id: "hidden", title: "Geliştirici araçları", subtitle: "~/.npm, ~/.cache, ~/.cargo… gizli klasörler",
+            "hidden": Group(id: "hidden", title: L("Geliştirici araçları", "Developer tools"), subtitle: L("~/.npm, ~/.cache, ~/.cargo… gizli klasörler", "~/.npm, ~/.cache, ~/.cargo… hidden folders"),
                             symbol: "wrench.and.screwdriver.fill", color: .indigo, path: home, paths: []),
-            "otherHome": Group(id: "otherHome", title: "Diğer ev dosyaları", subtitle: "Ev klasöründeki diğer her şey",
+            "otherHome": Group(id: "otherHome", title: L("Diğer ev dosyaları", "Other home files"), subtitle: L("Ev klasöründeki diğer her şey", "Everything else in your home folder"),
                                symbol: "house.fill", color: .mint, path: home, paths: []),
         ]
 
@@ -82,7 +82,7 @@ final class OverviewStore: ObservableObject {
         }
         // Proje kökleri ev klasörünün doğrudan altında değilse (ör. ~/Documents/GitHub) zaten Belgeler içinde sayılır.
         if let first = groups["projects"]?.paths.first, groups["projects"]?.paths.count == 1 {
-            groups["projects"] = Group(id: "projects", title: "Projeler", subtitle: Fmt.displayPath(first),
+            groups["projects"] = Group(id: "projects", title: L("Projeler", "Projects"), subtitle: Fmt.displayPath(first),
                                        symbol: "chevron.left.forwardslash.chevron.right", color: .orange,
                                        path: first, paths: [first])
         }
@@ -116,8 +116,8 @@ final class OverviewStore: ObservableObject {
         segments.removeAll { $0.bytes < 50_000_000 }
         segments.sort { $0.bytes > $1.bytes }
         segments.append(UsageSegment(
-            id: "system", title: "macOS ve sistem verisi",
-            subtitle: "Sistem birimi, swap, anlık görüntüler, diğer kullanıcılar",
+            id: "system", title: L("macOS ve sistem verisi", "macOS and system data"),
+            subtitle: L("Sistem birimi, swap, anlık görüntüler, diğer kullanıcılar", "System volume, swap, snapshots, other users"),
             symbol: "gearshape.2.fill", color: .gray, bytes: max(0, disk.used - measured), path: nil))
         measuredAt = Date()
         isMeasuring = false

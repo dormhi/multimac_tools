@@ -7,10 +7,10 @@ enum SafetyLevel: Int, Comparable {
 
     var title: String {
         switch self {
-        case .protected: "Sistem / Korunan"
-        case .caution: "Dikkat"
-        case .junk: "Silinebilir"
-        case .normal: "Kullanıcı dosyası"
+        case .protected: L("Sistem / Korunan", "System / Protected")
+        case .caution: L("Dikkat", "Caution")
+        case .junk: L("Silinebilir", "Safe to delete")
+        case .normal: L("Kullanıcı dosyası", "Your file")
         }
     }
 
@@ -36,6 +36,12 @@ enum SafetyLevel: Int, Comparable {
 struct SafetyInfo {
     let level: SafetyLevel
     let reason: String
+
+    /// Gerekçeler kaynakta Türkçe yazılı (sabit tablolarda da); uygulama İngilizceyse burada çevrilir.
+    init(level: SafetyLevel, reason: String) {
+        self.level = level
+        self.reason = Lang.isTurkish ? reason : (SafetyText.english[reason] ?? reason)
+    }
 }
 
 enum SafetyClassifier {
@@ -179,4 +185,72 @@ enum SafetyClassifier {
         }
         return SafetyInfo(level: .normal, reason: "Kişisel dosya")
     }
+}
+
+/// SafetyClassifier gerekçelerinin İngilizcesi (anahtar: Türkçe metin).
+enum SafetyText {
+    static let english: [String: String] = [
+        "macOS sistem dosyaları (SIP korumalı)": "macOS system files (SIP protected)",
+        "Unix sistem araçları": "Unix system tools",
+        "Swap ve uyku görüntüsü. macOS yönetir, RAM baskısı azalınca küçülür": "Swap and sleep image. Managed by macOS, shrinks when memory pressure drops",
+        "Sistem veritabanları": "System databases",
+        "Sistem yapılandırması": "System configuration",
+        "Root kullanıcısının verisi": "Root user's data",
+        "Apple sistem bileşenleri": "Apple system components",
+        "Çekirdek uzantıları": "Kernel extensions",
+        "Sistem servisleri": "System services",
+        "Sistem anahtar zinciri": "System keychain",
+        "Güvenlik bileşenleri": "Security components",
+        "Spotlight dizini": "Spotlight index",
+        "Dosya sistemi olay kaydı": "File system event log",
+        "Belge sürüm geçmişi": "Document version history",
+        "Sistem güncelleme bilgisi": "System update information",
+        "Parolalar ve sertifikalar": "Passwords and certificates",
+        "iCloud Drive": "iCloud Drive",
+        "Bulut depolama klasörleri": "Cloud storage folders",
+        "Uygulama ayarları": "App settings",
+        "E-posta arşivi": "Mail archive",
+        "Mesaj arşivi": "Messages archive",
+        "Uygulamaların paylaşılan verisi": "Shared app data",
+        "SSH anahtarları": "SSH keys",
+        "GPG anahtarları": "GPG keys",
+        "Önbellek. Uygulamalar gerektiğinde yeniden oluşturur": "Cache. Apps recreate it when needed",
+        "Günlük dosyaları": "Log files",
+        "Xcode build kalıntıları": "Xcode build leftovers",
+        "Eski iOS cihaz sembolleri": "Old iOS device symbols",
+        "Simülatör önbelleği": "Simulator cache",
+        "npm önbelleği": "npm cache",
+        "npx önbelleği": "npx cache",
+        "pnpm paket deposu": "pnpm package store",
+        "Gradle önbelleği": "Gradle cache",
+        "Araç önbellekleri": "Tool caches",
+        "Çöp Kutusu": "Trash",
+        "Bağımlılıklar. npm/pnpm install ile geri gelir": "Dependencies. npm/pnpm install brings them back",
+        "Next.js build önbelleği": "Next.js build cache",
+        "Nuxt build önbelleği": "Nuxt build cache",
+        "Turborepo önbelleği": "Turborepo cache",
+        "Parcel önbelleği": "Parcel cache",
+        "SvelteKit build çıktısı": "SvelteKit build output",
+        "Python bytecode önbelleği": "Python bytecode cache",
+        "pytest önbelleği": "pytest cache",
+        "mypy önbelleği": "mypy cache",
+        "ruff önbelleği": "ruff cache",
+        "Swift build kalıntıları": "Swift build leftovers",
+        "Temel sistem klasörü. Asla tümüyle silinmemeli": "Core system folder. Never delete it as a whole",
+        "Unix sistem dosyaları": "Unix system files",
+        "Fotoğraflar arşivi": "Photos library",
+        "İçeriği silinebilir ama klasörün kendisi kalmalı": "Its contents can be deleted, but the folder itself must stay",
+        "Uygulama önbelleği": "App cache",
+        "Kurulum dosyası. Uygulama kurulduysa gereksiz": "Installer. Not needed once the app is installed",
+        "Geçici dosyalar. macOS yönetir, açık uygulamalar kullanıyor olabilir": "Temporary files. Managed by macOS, running apps may be using them",
+        "Uygulama verisi. Silmek uygulamayı sıfırlayabilir veya veri kaybettirebilir": "App data. Deleting it can reset the app or lose data",
+        "Uygulama. Silmek onu kaldırır (ayar/veri dosyaları kalır)": "App. Deleting it uninstalls it (settings and data files stay)",
+        "Uygulama paketinin parçası": "Part of an app bundle",
+        "Sistem genelinde kurulu yazılım veya veri": "Software or data installed system-wide",
+        "Kişisel ana klasör. İçindekileri tek tek inceleyin": "Personal home folder. Review its contents one by one",
+        "Gizli yapılandırma klasörü": "Hidden configuration folder",
+        "Kişisel dosya": "Personal file",
+        "Bu klasördeki küçük dosyaların toplamı": "All the small files in this folder",
+        "macOS sistem birimi, APFS anlık görüntüleri, swap ve okunamayan alanlar": "macOS system volume, APFS snapshots, swap and unreadable areas",
+    ]
 }

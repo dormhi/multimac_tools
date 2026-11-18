@@ -92,7 +92,7 @@ enum DiskScanner {
 
         func finalize(_ node: FileNode) {
             if node.smallCount > 0 {
-                let s = FileNode(name: "\(node.smallCount) küçük dosya", kind: .smallFiles, size: node.smallBytes)
+                let s = FileNode(name: L("\(node.smallCount) küçük dosya", "\(node.smallCount) small files"), kind: .smallFiles, size: node.smallBytes)
                 s.fileCount = node.smallCount
                 s.parent = node
                 node.children.append(s)
@@ -100,7 +100,7 @@ enum DiskScanner {
             node.children.sort { $0.size > $1.size }
             if node.children.count > maxChildren {
                 let rest = node.children[maxChildren...]
-                let other = FileNode(name: "Diğer \(rest.count) öğe", kind: .smallFiles,
+                let other = FileNode(name: L("Diğer \(rest.count) öğe", "\(rest.count) other items"), kind: .smallFiles,
                                      size: rest.reduce(0) { $0 + $1.size })
                 other.fileCount = rest.reduce(0) { $0 + $1.fileCount }
                 other.parent = node
