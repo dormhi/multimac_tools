@@ -75,7 +75,7 @@ system files**, and stays out of the way in the menu bar.
 | 🤖 **Automation** | Eight cache rules you can toggle one by one, a schedule, low-disk trigger, *what would be deleted?* preview, and optional RAM relief that closes the apps you chose when memory stays tight. |
 | 🛡️ **Never touch list** | Right-click any item or whole project to exclude it forever. Respected by every scan, preset, the automation and the deletion engine itself. |
 | 🌓 **Light, Dark or System** | Apple-toned interface with soft tinted icons, glass-edged cards and buttons that fade in on hover. Pick the theme in *Settings › Appearance and language*. |
-| 🌐 **Turkish and English** | Follows your Mac's language (Turkish if macOS is Turkish, English otherwise) and can be switched in Settings at any time, no restart needed. |
+| 🌐 **Turkish, English and Russian** | Follows your Mac's language (Turkish or Russian if macOS uses it, English otherwise) and can be switched in Settings at any time, no restart needed. |
 | 🪶 **Tiny footprint** | Native SwiftUI, ~55 MB RAM, < 1 % CPU when idle. No root, no helper, no background daemon. Builds without Xcode. |
 
 ## Screenshots

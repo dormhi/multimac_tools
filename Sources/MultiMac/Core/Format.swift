@@ -4,14 +4,15 @@ enum Fmt {
     /// Finder gibi 1000 tabanlı birimler; ondalık ayırıcı ve "Sıfır KB" uygulama diline göre.
     static func bytes(_ b: Int64) -> String {
         let v = Double(max(0, b))
-        if v == 0 { return L("Sıfır KB", "Zero KB") }
-        if v < 1000 { return "\(Int(v)) " + L("bayt", "bytes") }
+        if v == 0 { return L("Sıfır KB", "Zero KB", "Ноль КБ") }
+        if v < 1000 { return "\(Int(v)) " + L("bayt", "bytes", "байт") }
         var x = v / 1000
         var unit = 0
         while x >= 1000 && unit < 3 { x /= 1000; unit += 1 }
         let digits = unit == 0 ? 0 : unit == 1 ? 1 : 2
-        let f = Lang.isTurkish ? trNumber[digits] : enNumber[digits]
-        return (f.string(from: NSNumber(value: x)) ?? String(x)) + " " + ["KB", "MB", "GB", "TB"][unit]
+        let f = numberFormatters[Lang.localeID]?[digits] ?? enNumber[digits]
+        let units = Lang.isRussian ? ["КБ", "МБ", "ГБ", "ТБ"] : ["KB", "MB", "GB", "TB"]
+        return (f.string(from: NSNumber(value: x)) ?? String(x)) + " " + units[unit]
     }
 
     static func bytes(_ b: UInt64) -> String { bytes(Int64(clamping: b)) }
@@ -26,10 +27,12 @@ enum Fmt {
             return f
         }
     }
-    nonisolated(unsafe) private static let trNumber = numberFormatters("tr_TR")
     nonisolated(unsafe) private static let enNumber = numberFormatters("en_US")
+    nonisolated(unsafe) private static let numberFormatters: [String: [NumberFormatter]] = [
+        "tr_TR": numberFormatters("tr_TR"), "en_US": enNumber, "ru_RU": numberFormatters("ru_RU"),
+    ]
 
-    /// Türkçede "%80", İngilizcede "80%".
+    /// Türkçede "%80", İngilizce ve Rusçada "80%".
     static func percent(_ v: Double) -> String {
         let n = String(Int((max(0, v) * 100).rounded()))
         return Lang.isTurkish ? "%" + n : n + "%"
@@ -41,11 +44,12 @@ enum Fmt {
         f.unitsStyle = .full
         return f
     }
-    nonisolated(unsafe) private static let trRelative = relativeFormatter("tr_TR")
-    nonisolated(unsafe) private static let enRelative = relativeFormatter("en_US")
+    nonisolated(unsafe) private static let relativeFormatters: [String: RelativeDateTimeFormatter] = [
+        "tr_TR": relativeFormatter("tr_TR"), "en_US": relativeFormatter("en_US"), "ru_RU": relativeFormatter("ru_RU"),
+    ]
 
     static func relative(_ d: Date) -> String {
-        (Lang.isTurkish ? trRelative : enRelative).localizedString(for: d, relativeTo: Date())
+        (relativeFormatters[Lang.localeID] ?? relativeFormatter("en_US")).localizedString(for: d, relativeTo: Date())
     }
 
     static let home = NSHomeDirectory()
@@ -184,64 +188,104 @@ enum Exclusions {
 
 // MARK: - Dil
 
-/// Uygulamanın dili. "Sistem": macOS dili Türkçeyse Türkçe, değilse İngilizce.
+/// Uygulamanın dili. "Sistem": macOS dili Türkçe veya Rusçaysa o, değilse İngilizce.
 enum AppLanguage: String, CaseIterable, Identifiable {
-    case system, tr, en
+    case system, tr, en, ru
     var id: String { rawValue }
 
     /// Dil adları her zaman kendi dilinde yazılır ki yanlış dilde kalan kullanıcı da bulabilsin.
     var title: String {
         switch self {
-        case .system: L("Sistem dili", "System language")
+        case .system: L("Sistem dili", "System language", "Язык системы")
         case .tr: "Türkçe"
         case .en: "English"
+        case .ru: "Русский"
         }
     }
 }
 
+/// Arayüzün o anki dili (Sistem seçeneği çözülmüş hali).
+enum UILanguage {
+    case tr, en, ru
+}
+
 enum Lang {
     /// Her metin çağrısında UserDefaults okumamak için önbellek; `sync` ile güncellenir.
-    nonisolated(unsafe) private(set) static var isTurkish = resolve(UserDefaults.standard.string(forKey: Prefs.appLanguage))
+    nonisolated(unsafe) private(set) static var current = resolve(UserDefaults.standard.string(forKey: Prefs.appLanguage))
 
-    static func resolve(_ raw: String?) -> Bool {
+    static var isTurkish: Bool { current == .tr }
+    static var isRussian: Bool { current == .ru }
+
+    static func resolve(_ raw: String?) -> UILanguage {
         switch AppLanguage(rawValue: raw ?? "") ?? .system {
-        case .tr: return true
-        case .en: return false
-        case .system: return Locale.preferredLanguages.first?.hasPrefix("tr") ?? false
+        case .tr: return .tr
+        case .en: return .en
+        case .ru: return .ru
+        case .system:
+            let first = Locale.preferredLanguages.first ?? ""
+            if first.hasPrefix("tr") { return .tr }
+            if first.hasPrefix("ru") { return .ru }
+            return .en
         }
     }
 
     /// Kök görünümler body içinde çağırır; dil değişince bütün arayüz yeni dille yeniden çizilir.
     @discardableResult
-    static func sync(_ raw: String) -> Bool {
-        isTurkish = resolve(raw)
-        return isTurkish
+    static func sync(_ raw: String) -> UILanguage {
+        current = resolve(raw)
+        return current
     }
 
-    static var locale: Locale { Locale(identifier: isTurkish ? "tr_TR" : "en_US") }
+    static var localeID: String {
+        switch current {
+        case .tr: "tr_TR"
+        case .en: "en_US"
+        case .ru: "ru_RU"
+        }
+    }
+
+    static var locale: Locale { Locale(identifier: localeID) }
 }
 
-/// Arayüz metni: Türkçesi ve İngilizcesi yan yana yazılır, o anki dile göre biri döner.
-func L(_ tr: String, _ en: String) -> String {
-    Lang.isTurkish ? tr : en
+/// Arayüz metni: Türkçesi, İngilizcesi ve Rusçası yan yana yazılır, o anki dile göre biri döner.
+/// Rusçası verilmemişse İngilizcesi kullanılır.
+func L(_ tr: String, _ en: String, _ ru: String? = nil) -> String {
+    switch Lang.current {
+    case .tr: tr
+    case .en: en
+    case .ru: ru ?? en
+    }
 }
 
 /// Sabit tablolarda (statik kurallar) Türkçe tutulan metinleri kullanıldığı anda çevirir.
-/// Önce sözlüğe, sonra "X önbelleği" → "X cache" gibi kalıplara bakar; bulamazsa metni olduğu gibi döner.
+/// Önce sözlüğe, sonra "X önbelleği" → "X cache" / "Кэш X" gibi kalıplara bakar; bulamazsa metni olduğu gibi döner.
 func LT(_ tr: String) -> String {
-    if Lang.isTurkish { return tr }
-    if let en = Glossary.english[tr] ?? SafetyText.english[tr] { return en }
-    for (suffix, en) in Glossary.suffixes where tr.hasSuffix(suffix) {
-        return String(tr.dropLast(suffix.count)) + en
+    switch Lang.current {
+    case .tr:
+        return tr
+    case .en:
+        if let en = Glossary.english[tr] ?? SafetyText.english[tr] { return en }
+        for rule in Glossary.suffixes where tr.hasSuffix(rule.tr) {
+            return String(tr.dropLast(rule.tr.count)) + rule.en
+        }
+    case .ru:
+        if let ru = Glossary.russian[tr] ?? SafetyText.russian[tr] { return ru }
+        for rule in Glossary.suffixes where tr.hasSuffix(rule.tr) {
+            return rule.ru + String(tr.dropLast(rule.tr.count))
+        }
+        if let en = Glossary.english[tr] ?? SafetyText.english[tr] { return en }
     }
     return tr
 }
 
 enum Glossary {
-    static let suffixes: [(String, String)] = [
-        (" önbelleği", " cache"), (" indirmeleri", " downloads"), (" deposu", " repository"),
-        (" tarayıcıları", " browsers"), (" modelleri", " models"), (" başlıkları", " headers"),
-        (" paketleri", " packages"), (" günlükleri", " logs"), (" sürümleri", " versions"),
+    /// İngilizcede sona, Rusçada başa gelir: "npm önbelleği" → "npm cache" / "Кэш npm".
+    static let suffixes: [(tr: String, en: String, ru: String)] = [
+        (" önbelleği", " cache", "Кэш "), (" indirmeleri", " downloads", "Загрузки "),
+        (" deposu", " repository", "Хранилище "), (" tarayıcıları", " browsers", "Браузеры "),
+        (" modelleri", " models", "Модели "), (" başlıkları", " headers", "Заголовки "),
+        (" paketleri", " packages", "Пакеты "), (" günlükleri", " logs", "Журналы "),
+        (" sürümleri", " versions", "Версии "),
     ]
 
     static let english: [String: String] = [
@@ -262,5 +306,28 @@ enum Glossary {
         "Paketler yeniden kurulmalı": "Packages must be reinstalled",
         "npm/pnpm install ile geri gelir": "npm/pnpm install brings it back",
         "pod install ile geri gelir": "pod install brings it back",
+    ]
+
+    static let russian: [String: String] = [
+        "Sonraki kurulumda paketler yeniden indirilir": "Пакеты будут скачаны заново при следующей установке",
+        "Expo native modül önbelleği": "Кэш нативных модулей Expo",
+        "Expo simülatör önbelleği": "Кэш симулятора Expo",
+        "Expo sürüm önbelleği": "Кэш версий Expo",
+        "Yeniden derleme uzun sürer": "Пересборка займёт много времени",
+        "Bağımlılıklar yeniden indirilir": "Зависимости будут скачаны заново",
+        "Testler için yeniden indirilmesi gerekir": "Для тестов придётся скачать заново",
+        "Yeniden indirilmesi gerekir": "Придётся скачать заново",
+        "İndirilmiş yapay zekâ modelleri": "Скачанные модели ИИ",
+        "Bağımlılıklar": "Зависимости",
+        "Framework önbelleği": "Кэш фреймворка",
+        "Build çıktısı": "Результаты сборки",
+        "Python araç önbelleği": "Кэш инструментов Python",
+        "Python sanal ortamı": "Виртуальное окружение Python",
+        "Paketler yeniden kurulmalı": "Пакеты нужно будет переустановить",
+        "npm/pnpm install ile geri gelir": "Восстанавливается через npm/pnpm install",
+        "pod install ile geri gelir": "Восстанавливается через pod install",
+        "node-gyp başlıkları": "Заголовки node-gyp",
+        "npx paketleri": "Пакеты npx",
+        "Gradle sürümleri": "Версии Gradle",
     ]
 }

@@ -103,13 +103,13 @@ struct AppIconView: View {
 func memoryAdvice(_ m: MemorySnapshot, top: ProcessGroup?) -> String? {
     var parts: [String] = []
     switch m.pressure {
-    case .critical: parts.append(L("Bellek baskısı kritik, sistem yoğun şekilde swap kullanıyor.", "Memory pressure is critical and the system is swapping heavily."))
-    case .warning: parts.append(L("Bellek baskısı yüksek.", "Memory pressure is high."))
+    case .critical: parts.append(L("Bellek baskısı kritik, sistem yoğun şekilde swap kullanıyor.", "Memory pressure is critical and the system is swapping heavily.", "Нагрузка на память критическая, система активно использует своп."))
+    case .warning: parts.append(L("Bellek baskısı yüksek.", "Memory pressure is high.", "Нагрузка на память высокая."))
     case .normal: break
     }
     guard !parts.isEmpty else { return nil }
     if let top {
-        parts.append(L("En çok kullanan: \(top.name) (\(Fmt.bytes(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.", "Top user: \(top.name) (\(Fmt.bytes(top.total))). Quitting apps you don't use reduces swap."))
+        parts.append(L("En çok kullanan: \(top.name) (\(Fmt.bytes(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.", "Top user: \(top.name) (\(Fmt.bytes(top.total))). Quitting apps you don't use reduces swap.", "Больше всех: \(top.name) (\(Fmt.bytes(top.total))). Закрытие неиспользуемых приложений уменьшит своп."))
     }
     return parts.joined(separator: " ")
 }
@@ -139,28 +139,28 @@ func swapInsight(_ m: MemorySnapshot, history: [HistoryPoint], groups: [ProcessG
     let suggestion = (longRunning.isEmpty ? apps : longRunning).max { $0.total < $1.total }
     let restartHint = suggestion.map { g in
         let hours = Int((g.uptime ?? 0) / 3600)
-        let age = hours >= 1 ? L(", \(hours) saattir açık", ", open for \(hours) hours") : ""
-        return L(" En çok fayda: \(g.name) (\(Fmt.bytes(g.total))\(age)) uygulamasını yeniden başlatmak.", " Biggest win: restart \(g.name) (\(Fmt.bytes(g.total))\(age)).")
+        let age = hours >= 1 ? L(", \(hours) saattir açık", ", open for \(hours) hours", ", открыто \(hours) ч") : ""
+        return L(" En çok fayda: \(g.name) (\(Fmt.bytes(g.total))\(age)) uygulamasını yeniden başlatmak.", " Biggest win: restart \(g.name) (\(Fmt.bytes(g.total))\(age)).", " Больше всего даст перезапуск \(g.name) (\(Fmt.bytes(g.total))\(age)).")
     } ?? ""
 
     if movedGB > 0.75 {
         return SwapInsight(
             level: .churning,
-            title: L("Swap çalkantılı", "Swap is churning"),
-            text: L("Sistem RAM'e sığmayan veriyi sürekli diske yazıp geri okuyor; takılmanın asıl nedeni bu. Son 5 dakikada ~\(String(format: "%.1f", movedGB)) GB veri RAM ile disk arasında taşındı.\(restartHint)", "The system keeps writing data that doesn't fit in RAM to disk and reading it back; this is what causes the stutter. ~\(String(format: "%.1f", movedGB)) GB moved between RAM and disk in the last 5 minutes.\(restartHint)"),
+            title: L("Swap çalkantılı", "Swap is churning", "Своп активно работает"),
+            text: L("Sistem RAM'e sığmayan veriyi sürekli diske yazıp geri okuyor; takılmanın asıl nedeni bu. Son 5 dakikada ~\(String(format: "%.1f", movedGB)) GB veri RAM ile disk arasında taşındı.\(restartHint)", "The system keeps writing data that doesn't fit in RAM to disk and reading it back; this is what causes the stutter. ~\(String(format: "%.1f", movedGB)) GB moved between RAM and disk in the last 5 minutes.\(restartHint)", "Система постоянно записывает на диск данные, которые не помещаются в RAM, и читает их обратно — именно это вызывает подтормаживания. За последние 5 минут между RAM и диском перемещено ~\(String(format: "%.1f", movedGB)) ГБ.\(restartHint)"),
             suggestion: suggestion)
     }
     if m.pressure != .normal {
         return SwapInsight(
             level: .churning,
-            title: L("Bellek sıkışık", "Memory is tight"),
-            text: L("RAM dolu: macOS verinin \(Fmt.bytes(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.bytes(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)", "RAM is full: macOS is compressing \(Fmt.bytes(m.compressed)) of data to make it fit, and \(Fmt.bytes(m.swapUsed)) is in swap. Swap is steady right now, so nothing is moving to disk, but opening something new may cause stutters. Quitting apps you don't use or restarting one that has been open for a long time frees memory.\(restartHint)"),
+            title: L("Bellek sıkışık", "Memory is tight", "Памяти мало"),
+            text: L("RAM dolu: macOS verinin \(Fmt.bytes(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.bytes(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)", "RAM is full: macOS is compressing \(Fmt.bytes(m.compressed)) of data to make it fit, and \(Fmt.bytes(m.swapUsed)) is in swap. Swap is steady right now, so nothing is moving to disk, but opening something new may cause stutters. Quitting apps you don't use or restarting one that has been open for a long time frees memory.\(restartHint)", "RAM заполнена: macOS сжимает \(Fmt.bytes(m.compressed)) данных, чтобы всё поместилось, а в свопе \(Fmt.bytes(m.swapUsed)). Сейчас своп не меняется, так что обмена с диском нет, но при открытии чего-то нового возможны подтормаживания. Освободить память поможет закрытие неиспользуемых приложений или перезапуск давно открытого.\(restartHint)"),
             suggestion: suggestion)
     }
     return SwapInsight(
         level: .calm,
-        title: L("Swap durgun, endişelenme", "Swap is calm, don't worry"),
-        text: L("Swap'te \(Fmt.bytes(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)", "There is \(Fmt.bytes(m.swapUsed)) in swap, but it isn't changing and memory pressure is normal. This is data nobody has used for a while: it only takes disk space and moves back to RAM by itself the moment an app touches it. macOS has no safe way to force it back into RAM; restarting the app is enough if you want it gone.\(restartHint)"),
+        title: L("Swap durgun, endişelenme", "Swap is calm, don't worry", "Своп спокоен, не волнуйтесь"),
+        text: L("Swap'te \(Fmt.bytes(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)", "There is \(Fmt.bytes(m.swapUsed)) in swap, but it isn't changing and memory pressure is normal. This is data nobody has used for a while: it only takes disk space and moves back to RAM by itself the moment an app touches it. macOS has no safe way to force it back into RAM; restarting the app is enough if you want it gone.\(restartHint)", "В свопе \(Fmt.bytes(m.swapUsed)), но объём не меняется и нагрузка на память нормальная. Это данные, которые давно никто не использовал: они только занимают место на диске и сами вернутся в RAM, как только приложение к ним обратится. Безопасного способа принудительно вернуть их в RAM в macOS нет; если хотите от них избавиться, достаточно перезапустить приложение.\(restartHint)"),
         suggestion: suggestion)
 }
 
@@ -187,7 +187,7 @@ struct SwapInsightCard: View {
                     Button {
                         restart(g)
                     } label: {
-                        Label(L("\(g.name) uygulamasını yeniden başlat", "Restart \(g.name)"), systemImage: "arrow.clockwise")
+                        Label(L("\(g.name) uygulamasını yeniden başlat", "Restart \(g.name)", "Перезапустить \(g.name)"), systemImage: "arrow.clockwise")
                     }
                     .controlSize(.small)
                     .padding(.top, 2)

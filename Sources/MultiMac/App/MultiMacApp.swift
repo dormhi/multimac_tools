@@ -7,12 +7,12 @@ enum MainTab: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .overview: L("Genel Bakış", "Overview")
-        case .cleanup: L("Temizlik", "Cleanup")
-        case .storage: L("Depolama", "Storage")
-        case .memory: L("Bellek", "Memory")
-        case .automation: L("Otomasyon", "Automation")
-        case .settings: L("Ayarlar", "Settings")
+        case .overview: L("Genel Bakış", "Overview", "Обзор")
+        case .cleanup: L("Temizlik", "Cleanup", "Очистка")
+        case .storage: L("Depolama", "Storage", "Хранилище")
+        case .memory: L("Bellek", "Memory", "Память")
+        case .automation: L("Otomasyon", "Automation", "Автоматизация")
+        case .settings: L("Ayarlar", "Settings", "Настройки")
         }
     }
 
@@ -58,6 +58,19 @@ final class AppState: ObservableObject {
     let overview = OverviewStore()
     let alerts = MemoryAlerts()
     let relief = MemoryRelief()
+
+    private var appliedLanguage = Lang.current
+
+    /// Dil değişince tarama sonuçlarındaki metinleri (öğe adları, notlar, klasör grupları) yeni dille üretir.
+    /// Menü paneli ve ana pencere ayrı ayrı haber verir; yalnızca ilki işlenir.
+    func languageDidChange() {
+        guard Lang.current != appliedLanguage else { return }
+        appliedLanguage = Lang.current
+        Task {
+            await cleanup.refreshForLanguage()
+            if overview.measuredAt != nil { await overview.measure() }
+        }
+    }
 
     private init() {
         cleanup.onDiskChanged = { [weak self] in
@@ -158,5 +171,6 @@ struct LanguageRoot<Content: View>: View {
         content()
             .id(language)
             .environment(\.locale, Lang.locale)
+            .onChange(of: language) { AppState.shared.languageDidChange() }
     }
 }

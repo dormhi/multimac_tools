@@ -7,10 +7,10 @@ enum SafetyLevel: Int, Comparable {
 
     var title: String {
         switch self {
-        case .protected: L("Sistem / Korunan", "System / Protected")
-        case .caution: L("Dikkat", "Caution")
-        case .junk: L("Silinebilir", "Safe to delete")
-        case .normal: L("Kullanıcı dosyası", "Your file")
+        case .protected: L("Sistem / Korunan", "System / Protected", "Система / Защищено")
+        case .caution: L("Dikkat", "Caution", "Осторожно")
+        case .junk: L("Silinebilir", "Safe to delete", "Можно удалить")
+        case .normal: L("Kullanıcı dosyası", "Your file", "Ваш файл")
         }
     }
 
@@ -40,7 +40,7 @@ struct SafetyInfo {
     /// Gerekçeler kaynakta Türkçe yazılı (sabit tablolarda da); uygulama İngilizceyse burada çevrilir.
     init(level: SafetyLevel, reason: String) {
         self.level = level
-        self.reason = Lang.isTurkish ? reason : (SafetyText.english[reason] ?? reason)
+        self.reason = LT(reason)
     }
 }
 
@@ -252,5 +252,70 @@ enum SafetyText {
         "Kişisel dosya": "Personal file",
         "Bu klasördeki küçük dosyaların toplamı": "All the small files in this folder",
         "macOS sistem birimi, APFS anlık görüntüleri, swap ve okunamayan alanlar": "macOS system volume, APFS snapshots, swap and unreadable areas",
+    ]
+
+    static let russian: [String: String] = [
+        "macOS sistem dosyaları (SIP korumalı)": "Системные файлы macOS (защищены SIP)",
+        "Unix sistem araçları": "Системные утилиты Unix",
+        "Swap ve uyku görüntüsü. macOS yönetir, RAM baskısı azalınca küçülür": "Своп и образ сна. Управляется macOS, уменьшается при снижении нагрузки на память",
+        "Sistem veritabanları": "Системные базы данных",
+        "Sistem yapılandırması": "Системная конфигурация",
+        "Root kullanıcısının verisi": "Данные пользователя root",
+        "Apple sistem bileşenleri": "Системные компоненты Apple",
+        "Çekirdek uzantıları": "Расширения ядра",
+        "Sistem servisleri": "Системные службы",
+        "Sistem anahtar zinciri": "Системная связка ключей",
+        "Güvenlik bileşenleri": "Компоненты безопасности",
+        "Spotlight dizini": "Индекс Spotlight",
+        "Dosya sistemi olay kaydı": "Журнал событий файловой системы",
+        "Belge sürüm geçmişi": "История версий документов",
+        "Sistem güncelleme bilgisi": "Сведения об обновлениях системы",
+        "Parolalar ve sertifikalar": "Пароли и сертификаты",
+        "iCloud Drive": "iCloud Drive",
+        "Bulut depolama klasörleri": "Папки облачных хранилищ",
+        "Uygulama ayarları": "Настройки приложений",
+        "E-posta arşivi": "Архив почты",
+        "Mesaj arşivi": "Архив сообщений",
+        "Uygulamaların paylaşılan verisi": "Общие данные приложений",
+        "SSH anahtarları": "Ключи SSH",
+        "GPG anahtarları": "Ключи GPG",
+        "Önbellek. Uygulamalar gerektiğinde yeniden oluşturur": "Кэш. Приложения создадут его заново при необходимости",
+        "Günlük dosyaları": "Файлы журналов",
+        "Xcode build kalıntıları": "Остатки сборок Xcode",
+        "Eski iOS cihaz sembolleri": "Старые символы устройств iOS",
+        "Simülatör önbelleği": "Кэш Симулятора",
+        "npm önbelleği": "Кэш npm",
+        "npx önbelleği": "Кэш npx",
+        "pnpm paket deposu": "Хранилище пакетов pnpm",
+        "Gradle önbelleği": "Кэш Gradle",
+        "Araç önbellekleri": "Кэши инструментов",
+        "Çöp Kutusu": "Корзина",
+        "Bağımlılıklar. npm/pnpm install ile geri gelir": "Зависимости. Восстанавливаются через npm/pnpm install",
+        "Next.js build önbelleği": "Кэш сборки Next.js",
+        "Nuxt build önbelleği": "Кэш сборки Nuxt",
+        "Turborepo önbelleği": "Кэш Turborepo",
+        "Parcel önbelleği": "Кэш Parcel",
+        "SvelteKit build çıktısı": "Результаты сборки SvelteKit",
+        "Python bytecode önbelleği": "Кэш байт-кода Python",
+        "pytest önbelleği": "Кэш pytest",
+        "mypy önbelleği": "Кэш mypy",
+        "ruff önbelleği": "Кэш ruff",
+        "Swift build kalıntıları": "Остатки сборок Swift",
+        "Temel sistem klasörü. Asla tümüyle silinmemeli": "Основная системная папка. Никогда не удаляйте её целиком",
+        "Unix sistem dosyaları": "Системные файлы Unix",
+        "Fotoğraflar arşivi": "Медиатека Фото",
+        "İçeriği silinebilir ama klasörün kendisi kalmalı": "Содержимое можно удалить, но сама папка должна остаться",
+        "Uygulama önbelleği": "Кэш приложения",
+        "Kurulum dosyası. Uygulama kurulduysa gereksiz": "Установщик. Не нужен, если приложение уже установлено",
+        "Geçici dosyalar. macOS yönetir, açık uygulamalar kullanıyor olabilir": "Временные файлы. Управляются macOS, могут использоваться запущенными приложениями",
+        "Uygulama verisi. Silmek uygulamayı sıfırlayabilir veya veri kaybettirebilir": "Данные приложения. Удаление может сбросить приложение или привести к потере данных",
+        "Uygulama. Silmek onu kaldırır (ayar/veri dosyaları kalır)": "Приложение. Удаление деинсталлирует его (файлы настроек и данных останутся)",
+        "Uygulama paketinin parçası": "Часть пакета приложения",
+        "Sistem genelinde kurulu yazılım veya veri": "Программы или данные, установленные для всей системы",
+        "Kişisel ana klasör. İçindekileri tek tek inceleyin": "Личная домашняя папка. Проверяйте содержимое по отдельности",
+        "Gizli yapılandırma klasörü": "Скрытая папка конфигурации",
+        "Kişisel dosya": "Личный файл",
+        "Bu klasördeki küçük dosyaların toplamı": "Все мелкие файлы в этой папке",
+        "macOS sistem birimi, APFS anlık görüntüleri, swap ve okunamayan alanlar": "Системный том macOS, снимки APFS, своп и недоступные области",
     ]
 }

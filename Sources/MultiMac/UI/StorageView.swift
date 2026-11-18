@@ -39,15 +39,15 @@ struct StorageView: View {
         .alert(deleteTitle, isPresented: Binding(get: { pendingDelete != nil },
                                                  set: { if !$0 { pendingDelete = nil } }),
                presenting: pendingDelete) { node in
-            Button(L("Çöp Kutusuna Taşı", "Move to Trash")) { storage.delete(node, permanently: false) }
-            Button(L("Kalıcı Olarak Sil", "Delete Permanently"), role: .destructive) { storage.delete(node, permanently: true) }
-            Button(L("Vazgeç", "Cancel"), role: .cancel) {}
+            Button(L("Çöp Kutusuna Taşı", "Move to Trash", "Переместить в Корзину")) { storage.delete(node, permanently: false) }
+            Button(L("Kalıcı Olarak Sil", "Delete Permanently", "Удалить навсегда"), role: .destructive) { storage.delete(node, permanently: true) }
+            Button(L("Vazgeç", "Cancel", "Отмена"), role: .cancel) {}
         } message: { node in
             Text(deleteMessage(node))
         }
-        .alert(L("Silinemedi", "Couldn't Delete"), isPresented: Binding(get: { storage.lastError != nil },
+        .alert(L("Silinemedi", "Couldn't Delete", "Не удалось удалить"), isPresented: Binding(get: { storage.lastError != nil },
                                                   set: { if !$0 { storage.lastError = nil } })) {
-            Button(L("Tamam", "OK"), role: .cancel) {}
+            Button(L("Tamam", "OK", "ОК"), role: .cancel) {}
         } message: {
             Text(storage.lastError ?? "")
         }
@@ -60,8 +60,8 @@ struct StorageView: View {
         HStack(spacing: 12) {
             IconTile(symbol: "square.grid.3x3.square", color: .orange, size: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("Depolama Haritası", "Storage Map")).font(.title2.bold())
-                Text(storage.scannedAt.map { L("Taranma: \(Fmt.relative($0))", "Scanned \(Fmt.relative($0))") } ?? L("Neyin ne kadar yer kapladığını gör", "See what takes up how much space"))
+                Text(L("Depolama Haritası", "Storage Map", "Карта хранилища")).font(.title2.bold())
+                Text(storage.scannedAt.map { L("Taranma: \(Fmt.relative($0))", "Scanned \(Fmt.relative($0))", "Сканировано \(Fmt.relative($0))") } ?? L("Neyin ne kadar yer kapladığını gör", "See what takes up how much space", "Смотрите, что сколько места занимает"))
                     .font(.callout).foregroundStyle(.secondary)
             }
             Spacer()
@@ -75,15 +75,15 @@ struct StorageView: View {
                 if new == .custom && storage.customURL == nil { storage.chooseFolder() }
             }
             if storage.scope == .custom {
-                Button(L("Seç…", "Choose…")) { storage.chooseFolder() }
+                Button(L("Seç…", "Choose…", "Выбрать…")) { storage.chooseFolder() }
             }
             if storage.isScanning {
-                Button(L("Durdur", "Stop"), role: .cancel) { storage.cancel() }
+                Button(L("Durdur", "Stop", "Остановить"), role: .cancel) { storage.cancel() }
             } else {
                 Button {
                     storage.startScan()
                 } label: {
-                    Label(storage.root == nil ? L("Taramayı Başlat", "Start Scan") : L("Yeniden Tara", "Rescan"), systemImage: "magnifyingglass")
+                    Label(storage.root == nil ? L("Taramayı Başlat", "Start Scan", "Начать сканирование") : L("Yeniden Tara", "Rescan", "Сканировать снова"), systemImage: "magnifyingglass")
                 }
                 .buttonStyle(.glassProminent)
             }
@@ -95,7 +95,7 @@ struct StorageView: View {
     private var scanning: some View {
         VStack(spacing: 12) {
             ProgressView()
-            Text(L("\(storage.progress.files.formatted(.number.locale(Lang.locale))) dosya · \(Fmt.bytes(storage.progress.bytes))", "\(storage.progress.files.formatted(.number.locale(Lang.locale))) files · \(Fmt.bytes(storage.progress.bytes))"))
+            Text(L("\(storage.progress.files.formatted(.number.locale(Lang.locale))) dosya · \(Fmt.bytes(storage.progress.bytes))", "\(storage.progress.files.formatted(.number.locale(Lang.locale))) files · \(Fmt.bytes(storage.progress.bytes))", "Файлов: \(storage.progress.files.formatted(.number.locale(Lang.locale))) · \(Fmt.bytes(storage.progress.bytes))"))
                 .font(.title3.monospacedDigit())
             Text(Fmt.displayPath(storage.progress.current))
                 .font(.caption.monospaced())
@@ -110,16 +110,16 @@ struct StorageView: View {
     private var empty: some View {
         let home = NSHomeDirectory()
         let quick: [(String, String, String, Color, String?)] = [
-            (L("Tüm Disk", "Entire Disk"), L("Her şey; birkaç dakika sürebilir", "Everything; may take a few minutes"), "internaldrive.fill", .orange, nil),
-            (L("Ev Klasörü", "Home Folder"), L("~ altındaki tüm dosyalar", "Everything under ~"), "house.fill", .blue, home),
-            (L("Projeler", "Projects"), Prefs.roots.first.map(Fmt.displayPath) ?? L("Proje klasörü", "Project folder"), "hammer.fill", .purple, Prefs.roots.first),
-            (L("İndirilenler", "Downloads"), "~/Downloads", "arrow.down.circle.fill", .green, home + "/Downloads"),
+            (L("Tüm Disk", "Entire Disk", "Весь диск"), L("Her şey; birkaç dakika sürebilir", "Everything; may take a few minutes", "Всё; может занять несколько минут"), "internaldrive.fill", .orange, nil),
+            (L("Ev Klasörü", "Home Folder", "Домашняя папка"), L("~ altındaki tüm dosyalar", "Everything under ~", "Всё внутри ~"), "house.fill", .blue, home),
+            (L("Projeler", "Projects", "Проекты"), Prefs.roots.first.map(Fmt.displayPath) ?? L("Proje klasörü", "Project folder", "Папка проектов"), "hammer.fill", .purple, Prefs.roots.first),
+            (L("İndirilenler", "Downloads", "Загрузки"), "~/Downloads", "arrow.down.circle.fill", .green, home + "/Downloads"),
         ]
         return VStack(spacing: 22) {
             VStack(spacing: 6) {
                 Image(systemName: "square.grid.3x3.square.fill").font(.system(size: 52)).foregroundStyle(.orange)
-                Text(L("Neyin ne kadar yer kapladığını gör", "See what takes up how much space")).font(.title2.bold())
-                Text(L("Her blok bir klasör veya dosya; büyüklüğü kapladığı alanla orantılı. Çift tıklayarak içine gir.", "Each block is a folder or file, sized by the space it takes. Double-click to go inside."))
+                Text(L("Neyin ne kadar yer kapladığını gör", "See what takes up how much space", "Смотрите, что сколько места занимает")).font(.title2.bold())
+                Text(L("Her blok bir klasör veya dosya; büyüklüğü kapladığı alanla orantılı. Çift tıklayarak içine gir.", "Each block is a folder or file, sized by the space it takes. Double-click to go inside.", "Каждый блок — папка или файл, размер блока пропорционален занятому месту. Двойной щелчок — войти внутрь."))
                     .foregroundStyle(.secondary)
             }
             HStack(spacing: 14) {
@@ -155,9 +155,9 @@ struct StorageView: View {
     private func fdaBanner(count: Int) -> some View {
         HStack {
             Image(systemName: "lock.fill").foregroundStyle(.orange)
-            Text(L("\(count) klasör okunamadı. Tüm diski görmek için MultiMac'e Tam Disk Erişimi ver.", "\(count) folders couldn't be read. Give MultiMac Full Disk Access to see the whole disk."))
+            Text(L("\(count) klasör okunamadı. Tüm diski görmek için MultiMac'e Tam Disk Erişimi ver.", "\(count) folders couldn't be read. Give MultiMac Full Disk Access to see the whole disk.", "Не удалось прочитать папок: \(count). Дайте MultiMac полный доступ к диску, чтобы видеть весь диск."))
             Spacer()
-            Button(L("Sistem Ayarlarını Aç", "Open System Settings")) { FullDiskAccess.openSettings() }
+            Button(L("Sistem Ayarlarını Aç", "Open System Settings", "Открыть Системные настройки")) { FullDiskAccess.openSettings() }
         }
         .font(.callout)
         .padding(.horizontal, 20)
@@ -167,9 +167,9 @@ struct StorageView: View {
 
     private func breadcrumb(_ focus: FileNode) -> some View {
         HStack(spacing: 4) {
-            Button { storage.goUp() } label: { Label(L("Yukarı", "Up"), systemImage: "chevron.up") }
+            Button { storage.goUp() } label: { Label(L("Yukarı", "Up", "Вверх"), systemImage: "chevron.up") }
                 .disabled(focus.parent == nil)
-                .help(L("Üst klasör", "Parent folder"))
+                .help(L("Üst klasör", "Parent folder", "Родительская папка"))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 2) {
                     ForEach(Array(focus.ancestors.enumerated()), id: \.element.id) { i, node in
@@ -207,7 +207,7 @@ private struct StorageStatusBar: View {
                 Spacer()
                 Text(Fmt.bytes(h.size)).monospacedDigit()
             } else {
-                Text(L("Tıkla: seç · Çift tıkla: klasöre gir", "Click: select · Double-click: open folder")).foregroundStyle(.secondary)
+                Text(L("Tıkla: seç · Çift tıkla: klasöre gir", "Click: select · Double-click: open folder", "Щелчок: выбрать · Двойной щелчок: открыть папку")).foregroundStyle(.secondary)
                 Spacer()
             }
         }
@@ -223,9 +223,9 @@ extension StorageView {
     private var deleteTitle: String {
         guard let n = pendingDelete else { return "" }
         switch n.safety.level {
-        case .protected: return L("⚠️ Sistem öğesi: \(n.displayName)", "⚠️ System item: \(n.displayName)")
-        case .caution: return L("Dikkat: \(n.displayName) silinsin mi?", "Careful: delete \(n.displayName)?")
-        default: return L("\(n.displayName) silinsin mi?", "Delete \(n.displayName)?")
+        case .protected: return L("⚠️ Sistem öğesi: \(n.displayName)", "⚠️ System item: \(n.displayName)", "⚠️ Системный объект: \(n.displayName)")
+        case .caution: return L("Dikkat: \(n.displayName) silinsin mi?", "Careful: delete \(n.displayName)?", "Осторожно: удалить \(n.displayName)?")
+        default: return L("\(n.displayName) silinsin mi?", "Delete \(n.displayName)?", "Удалить \(n.displayName)?")
         }
     }
 
@@ -233,8 +233,8 @@ extension StorageView {
         var lines: [String] = []
         switch n.safety.level {
         case .protected:
-            lines.append(L("BU BİR SİSTEM / KORUNAN ÖĞE. \(n.safety.reason).", "THIS IS A SYSTEM / PROTECTED ITEM. \(n.safety.reason)."))
-            lines.append(L("Silmek macOS'u, uygulamaları veya kişisel verilerini bozabilir. Ne yaptığından emin değilsen vazgeç.", "Deleting it can break macOS, apps or your personal data. If you're not sure what you're doing, cancel."))
+            lines.append(L("BU BİR SİSTEM / KORUNAN ÖĞE. \(n.safety.reason).", "THIS IS A SYSTEM / PROTECTED ITEM. \(n.safety.reason).", "ЭТО СИСТЕМНЫЙ / ЗАЩИЩЁННЫЙ ОБЪЕКТ. \(n.safety.reason)."))
+            lines.append(L("Silmek macOS'u, uygulamaları veya kişisel verilerini bozabilir. Ne yaptığından emin değilsen vazgeç.", "Deleting it can break macOS, apps or your personal data. If you're not sure what you're doing, cancel.", "Удаление может повредить macOS, приложения или ваши личные данные. Если не уверены, отмените."))
         case .caution:
             lines.append("\(n.safety.reason).")
         case .junk:
@@ -243,7 +243,7 @@ extension StorageView {
             break
         }
         lines.append("\(Fmt.displayPath(n.path)) · \(Fmt.bytes(n.size))")
-        lines.append(L("Not: Çöp Kutusuna taşımak yer açmaz, Çöp Kutusu boşaltılınca açılır.", "Note: moving to the Trash doesn't free space until the Trash is emptied."))
+        lines.append(L("Not: Çöp Kutusuna taşımak yer açmaz, Çöp Kutusu boşaltılınca açılır.", "Note: moving to the Trash doesn't free space until the Trash is emptied.", "Примечание: перемещение в Корзину не освобождает место, пока Корзина не очищена."))
         return lines.joined(separator: "\n\n")
     }
 }
@@ -260,9 +260,9 @@ struct StorageInspector: View {
                 .padding(14)
             Divider()
             HStack {
-                Text(L("İçindekiler", "Contents")).font(.headline)
+                Text(L("İçindekiler", "Contents", "Содержимое")).font(.headline)
                 Spacer()
-                Text(L("\(focus.children.count) öğe", "\(focus.children.count) items")).font(.caption).foregroundStyle(.secondary)
+                Text(L("\(focus.children.count) öğe", "\(focus.children.count) items", "Объектов: \(focus.children.count)")).font(.caption).foregroundStyle(.secondary)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -272,11 +272,11 @@ struct StorageInspector: View {
                     .onTapGesture(count: 2) { storage.open(child) }
                     .simultaneousGesture(TapGesture().onEnded { storage.selection = child })
                     .contextMenu {
-                        if child.canOpen { Button(L("Aç", "Open")) { storage.open(child) } }
+                        if child.canOpen { Button(L("Aç", "Open", "Открыть")) { storage.open(child) } }
                         if child.isDeletable {
-                            Button(L("Finder'da Göster", "Show in Finder")) { storage.reveal(child) }
+                            Button(L("Finder'da Göster", "Show in Finder", "Показать в Finder")) { storage.reveal(child) }
                             Divider()
-                            Button(L("Sil…", "Delete…"), role: .destructive) { pendingDelete = child }
+                            Button(L("Sil…", "Delete…", "Удалить…"), role: .destructive) { pendingDelete = child }
                         }
                     }
             }
@@ -313,10 +313,10 @@ struct StorageInspector: View {
             HStack(spacing: 6) {
                 Badge(text: safety.level.title, color: safety.level.color, symbol: safety.level.symbol)
                 if node.fileCount > 0 {
-                    Text(L("\(node.fileCount.formatted(.number.locale(Lang.locale))) dosya", "\(node.fileCount.formatted(.number.locale(Lang.locale))) files")).font(.caption).foregroundStyle(.secondary)
+                    Text(L("\(node.fileCount.formatted(.number.locale(Lang.locale))) dosya", "\(node.fileCount.formatted(.number.locale(Lang.locale))) files", "Файлов: \(node.fileCount.formatted(.number.locale(Lang.locale)))")).font(.caption).foregroundStyle(.secondary)
                 }
                 if node.isInaccessible {
-                    Badge(text: L("Okunamadı", "Unreadable"), color: .orange, symbol: "lock.fill")
+                    Badge(text: L("Okunamadı", "Unreadable", "Нет доступа"), color: .orange, symbol: "lock.fill")
                 }
             }
             Text(safety.reason).font(.caption).foregroundStyle(.secondary)
@@ -324,13 +324,13 @@ struct StorageInspector: View {
 
             HStack {
                 if node.canOpen && node !== focus {
-                    Button { storage.open(node) } label: { Label(L("Aç", "Open"), systemImage: "arrow.down.right.and.arrow.up.left") }
+                    Button { storage.open(node) } label: { Label(L("Aç", "Open", "Открыть"), systemImage: "arrow.down.right.and.arrow.up.left") }
                 }
                 if node.isDeletable {
                     Button { storage.reveal(node) } label: { Label("Finder", systemImage: "folder") }
                     Spacer()
                     Button(role: .destructive) { pendingDelete = node } label: {
-                        Label(L("Sil…", "Delete…"), systemImage: "trash")
+                        Label(L("Sil…", "Delete…", "Удалить…"), systemImage: "trash")
                     }
                     .tint(safety.level == .protected ? .red : nil)
                 }

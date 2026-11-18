@@ -90,9 +90,9 @@ struct CleanupFilter: Equatable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .size: L("Boyut", "Size")
-            case .name: L("Ad", "Name")
-            case .date: L("Son kullanım", "Last used")
+            case .size: L("Boyut", "Size", "Размер")
+            case .name: L("Ad", "Name", "Имя")
+            case .date: L("Son kullanım", "Last used", "Последнее использование")
             }
         }
     }
@@ -340,6 +340,19 @@ final class CleanupStore: ObservableObject {
         isScanning = false
     }
 
+    /// Öğe başlıkları ve notları tarama anında o dille yazılır. Dil değişince yeniden tarar,
+    /// kullanıcının seçimini ve kipini korur.
+    func refreshForLanguage() async {
+        if lastScan != nil, !isScanning, !isCleaning {
+            let keepSelection = selected
+            let keepPreset = preset
+            await scanAll()
+            selected = keepSelection.intersection(Set(items.map(\.id)))
+            preset = keepPreset
+        }
+        if autoPreview != nil { await previewAuto() }
+    }
+
     func cleanSelected() async {
         let targets = selectedItems
         guard !targets.isEmpty, !isCleaning else { return }
@@ -374,8 +387,8 @@ final class CleanupStore: ObservableObject {
         UserDefaults.standard.set(Int(result.freed), forKey: Prefs.lastAutoCleanBytes)
         onDiskChanged?()
         if automatic, result.freed > 50_000_000, UserDefaults.standard.bool(forKey: Prefs.notifyAfterClean) {
-            Notifier.post(title: L("Otomatik temizlik tamamlandı", "Automatic cleanup finished"),
-                          body: L("\(Fmt.bytes(result.freed)) yer açıldı (\(result.cleanedItems) öğe).", "Freed \(Fmt.bytes(result.freed)) (\(result.cleanedItems) items)."))
+            Notifier.post(title: L("Otomatik temizlik tamamlandı", "Automatic cleanup finished", "Автоочистка завершена"),
+                          body: L("\(Fmt.bytes(result.freed)) yer açıldı (\(result.cleanedItems) öğe).", "Freed \(Fmt.bytes(result.freed)) (\(result.cleanedItems) items).", "Освобождено \(Fmt.bytes(result.freed)) (объектов: \(result.cleanedItems))."))
         }
         if !items.isEmpty { await scanAll() }
         return result

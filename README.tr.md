@@ -73,7 +73,7 @@ MultiMac bunun tersi: alanın ve belleğin tam olarak nereye gittiğini göstere
 | 🤖 **Otomasyon** | Tek tek açılıp kapatılabilen sekiz önbellek kuralı, zamanlama, disk azalınca tetikleme, *ne silinir?* önizlemesi ve bellek sıkıştığında senin seçtiğin uygulamaları kapatan isteğe bağlı RAM rahatlatma. |
 | 🛡️ **Asla dokunma listesi** | Bir öğeye veya projenin tamamına sağ tıklayıp kalıcı olarak hariç tut. Her tarama, kip, otomasyon ve silme motorunun kendisi buna uyar. |
 | 🌓 **Açık, Koyu veya Sistem** | Yumuşak renkli ikonlar, cam kenarlı kartlar ve üzerine gelince belirginleşen butonlarla Apple tonlarında arayüz. Tema *Ayarlar › Görünüm ve dil* bölümünden seçilir. |
-| 🌐 **Türkçe ve İngilizce** | Mac'in diline uyar (macOS Türkçeyse Türkçe, değilse İngilizce); Ayarlar'dan istediğin an değiştirilebilir, yeniden başlatma gerekmez. |
+| 🌐 **Türkçe, İngilizce ve Rusça** | Mac'in diline uyar (macOS Türkçe veya Rusçaysa o dil, değilse İngilizce); Ayarlar'dan istediğin an değiştirilebilir, yeniden başlatma gerekmez. |
 | 🪶 **Hafif** | Yerel SwiftUI, ~55 MB RAM, boştayken < %1 CPU. Root yok, yardımcı yok, arka plan servisi yok. Xcode olmadan derlenir. |
 
 ## Ekran görüntüleri

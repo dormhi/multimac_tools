@@ -40,9 +40,9 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: L("Sistem", "System")
-        case .light: L("Açık", "Light")
-        case .dark: L("Koyu", "Dark")
+        case .system: L("Sistem", "System", "Система")
+        case .light: L("Açık", "Light", "Светлая")
+        case .dark: L("Koyu", "Dark", "Тёмная")
         }
     }
 
