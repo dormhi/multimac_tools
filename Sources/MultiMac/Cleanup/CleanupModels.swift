@@ -159,6 +159,20 @@ enum AutoRule: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Otomasyon ekranındaki kutucuklar için kısa ad.
+    var shortTitle: String {
+        switch self {
+        case .appCaches: "Uygulama önbellekleri"
+        case .browserCaches: "Tarayıcı önbellekleri"
+        case .devToolCaches: "Geliştirici araçları"
+        case .packageDownloads: "Paket indirmeleri"
+        case .frameworkCaches: "Proje önbellekleri"
+        case .xcodeCaches: "Xcode"
+        case .logs: "Eski günlükler"
+        case .savedState: "Eski pencere durumları"
+        }
+    }
+
     var detail: String {
         switch self {
         case .appCaches: "~/Library/Caches altındaki üçüncü parti uygulama önbellekleri (Apple'ınkiler hariç)"

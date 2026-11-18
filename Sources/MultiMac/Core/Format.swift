@@ -39,7 +39,9 @@ enum Fmt {
 }
 
 enum Prefs {
-    static let autoCleanEnabled = "autoCleanEnabled"
+    static let autoCleanEnabled = "autoCleanEnabled"   // eski; yalnızca geçiş için okunur
+    /// Otomatik önbellek temizliğinin ana anahtarı. Zamanlama ve disk eşiği bunun altında çalışır.
+    static let autoStorageEnabled = "autoStorage.enabled"
     static let autoCleanIntervalHours = "autoCleanIntervalHours"
     static let lowDiskEnabled = "lowDiskEnabled"
     static let lowDiskThresholdGB = "lowDiskThresholdGB"
@@ -67,6 +69,18 @@ enum Prefs {
     static let protectedApps = "protectedApps"
     static let menuTopCount = "menuTopCount"
 
+    /// Eski sürümde zamanlama ve disk eşiği ayrı ayrı açılıyordu. Kullanıcı birini açıkça açtıysa
+    /// yeni ana anahtar da açık başlasın; hiç dokunmadıysa kapalı kalsın.
+    private static func migrateAutoStorage() {
+        let d = UserDefaults.standard
+        guard d.object(forKey: autoStorageEnabled) == nil,
+              let saved = d.persistentDomain(forName: Bundle.main.bundleIdentifier ?? "") else { return }
+        let wasOn = (saved[autoCleanEnabled] as? Bool) == true || (saved[lowDiskEnabled] as? Bool) == true
+        if saved[autoCleanEnabled] != nil || saved[lowDiskEnabled] != nil { d.set(wasOn, forKey: autoStorageEnabled) }
+        // Yalnızca disk eşiği açıktı: zamanlama yeni modelde "zamanlama yok" olur.
+        if wasOn, (saved[autoCleanEnabled] as? Bool) == false { d.set(0, forKey: autoCleanIntervalHours) }
+    }
+
     static func register() {
         AutoSettings.register()
         MemoryRelief.registerDefaults()
@@ -74,7 +88,9 @@ enum Prefs {
         let candidates = ["Projects", "Developer", "Code", "dev", "src", "GitHub", "Documents/GitHub"]
             .map { home + "/" + $0 }
             .filter { FileManager.default.fileExists(atPath: $0) }
+        migrateAutoStorage()
         UserDefaults.standard.register(defaults: [
+            autoStorageEnabled: false,
             autoCleanEnabled: true,
             autoCleanIntervalHours: 6,
             lowDiskEnabled: true,

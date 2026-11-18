@@ -147,8 +147,15 @@ Every button says what it does, and the destructive ones are red:
 ### Automation
 
 <p align="center">
-  <img src="docs/images/automation.png" width="820" alt="Automation screen: schedule and per-rule toggles">
+  <img src="docs/images/automation.png" width="820" alt="Automation screen: two task cards with question-style rules, rule chips with sizes and collapsible sections">
 </p>
+
+The tab holds exactly two jobs, each a card with one on/off switch and a plain question-and-answer rule:
+
+- **Önbellekleri kendiliğinden temizle** (clean caches on their own): *When?* (hourly … weekly, or no schedule) · *If the disk fills up?* (clean right away below 5–50 GB free) · *What?* (rule chips showing how much each would free; hover for details). The footer says when it runs next and what it did last; **Ne silinir?** lists exactly what would go, **Şimdi çalıştır** runs it now.
+- **Bellek sıkışınca uygulama kapat** (quit apps when memory is tight): *When?* (pressure high / critical / swap above X %, for N minutes) · *Which apps?* (your list) · *Which of them?* (only those unused for N minutes). The footer shows whether the condition is met right now and who is next.
+
+*Never touched*, *Advanced* (notifications, running apps, log age, cooldown) and *History* are folded away until you need them. Both jobs are **off by default**.
 
 ## Automation rules
 
@@ -259,7 +266,7 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 | Cleanup | Pick a preset or tick items, then **Temizle** (clean). Right-click › *Asla dokunma* (never touch) |
 | Storage | Choose *Tüm Disk / Ev Klasörü / Klasör…*, scan, double-click blocks to dive in |
 | Memory | *Yeniden Başlat* restarts an app, *Kapat* quits, *Zorla Kapat* force quits. Right-click an app › add to protected apps. *Durdur* stops a dev server |
-| Automation | Toggle rules, set the schedule, **Şimdi ne silinir?** previews, **Şimdi çalıştır** runs |
+| Automation | Turn a job on, answer its questions, click chips to pick what gets cleaned. **Ne silinir?** previews, **Şimdi çalıştır** runs |
 | Settings | Project folders, stale-project threshold, large/old file thresholds, alerts, protected apps, menu bar style, launch at login |
 
 ## How it works

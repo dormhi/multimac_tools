@@ -47,10 +47,11 @@ enum CleanupScanner {
     private static let minimumSize: Int64 = 1_000_000
 
     /// Tüm adayları bulur ve boyutlarını ölçer. autoOnly: yalnızca otomatik temizliğe uygunlar.
-    static func scan(context: CleanupContext, autoOnly: Bool) async -> [CleanupItem] {
+    /// allRules: kuralın açık/kapalı olmasına bakma (Otomasyon ekranı kapalı kuralların boyutunu da gösterir).
+    static func scan(context: CleanupContext, autoOnly: Bool, allRules: Bool = false) async -> [CleanupItem] {
         let excluded = Exclusions.all
         var items = await Task.detached(priority: .utility) { candidates(context, autoOnly: autoOnly) }.value
-        assignRules(&items, context)
+        assignRules(&items, context, allRules: allRules)
         if autoOnly { items = items.filter(\.autoEligible) }
         items = items.filter { item in !item.urls.contains { Exclusions.isExcluded($0.path, in: excluded) } }
         let measured = await measure(items)
@@ -93,7 +94,7 @@ enum CleanupScanner {
     ]
 
     /// Her öğeye kuralını ve yaş sınırını atar; ayarlara göre otomatik temizliğe girip girmeyeceğine karar verir.
-    static func assignRules(_ items: inout [CleanupItem], _ ctx: CleanupContext) {
+    static func assignRules(_ items: inout [CleanupItem], _ ctx: CleanupContext, allRules: Bool = false) {
         let home = ctx.home.path + "/"
         for i in items.indices {
             // Kaynağı "otomatik olabilir" demeyen öğeler (node_modules, indirilenler, büyük dosyalar…) asla kurala girmez.
@@ -122,7 +123,7 @@ enum CleanupScanner {
             // açık uygulamaların önbelleği ayara bağlı.
             let alwaysGuard = rule == .frameworkCaches || rule == .xcodeCaches
             let blocked = items[i].inUse && (alwaysGuard || AutoSettings.skipsRunningApps)
-            items[i].autoEligible = AutoSettings.isEnabled(rule) && !blocked
+            items[i].autoEligible = (allRules || AutoSettings.isEnabled(rule)) && !blocked
         }
     }
 
