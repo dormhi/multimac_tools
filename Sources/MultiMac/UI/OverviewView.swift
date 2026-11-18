@@ -113,7 +113,7 @@ private struct OverviewHealthCard: View {
         .card(padding: 20)
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(LinearGradient(colors: [color.opacity(0.14), .clear], startPoint: .leading, endPoint: .center))
+                .fill(color.opacity(0.07))
                 .allowsHitTesting(false)
         )
     }

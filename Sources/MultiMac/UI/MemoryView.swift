@@ -1,16 +1,14 @@
 import SwiftUI
 import Charts
 
+/// Bellek sayfası. Her kart kendi verisini ayrı izler: RAM her 3 sn'de, süreç listesi her 3 sn'de ve
+/// dev server'lar her 5 sn'de değişiyor. Hepsi tek görünümdeyken her değişiklik 190 satırlık listeyi ve
+/// grafiği birlikte yeniden çizdiriyordu (yenileme başına ~0,5 sn ana thread).
 struct MemoryView: View {
     @EnvironmentObject private var state: AppState
-    @EnvironmentObject private var monitor: SystemMonitor
-    @EnvironmentObject private var processes: ProcessStore
-    @EnvironmentObject private var servers: DevServerStore
-    @State private var showAppServers = false
     @State private var search = ""
     @State private var devOnly = false
     @State private var expanded: Set<String> = []
-    @State private var confirmForce: ProcessGroup?
     @State private var scrollTarget: String?
 
     private func handleRequest() {
@@ -18,39 +16,26 @@ struct MemoryView: View {
         state.memoryRequest = nil
         search = r.search ?? ""
         devOnly = false
-        if let q = r.search, let g = processes.groups.first(where: { $0.name == q }) { expanded.insert(g.id) }
+        if let q = r.search, let g = state.processes.groups.first(where: { $0.name == q }) { expanded.insert(g.id) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             scrollTarget = r.servers ? "servers" : (r.search != nil ? "processes" : nil)
         }
     }
 
     var body: some View {
-        let m = monitor.memory
         VStack(spacing: 0) {
-            PageHeader(title: L("Bellek", "Memory", "Память"), subtitle: L("Baskı: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda", "Pressure: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) in use", "Нагрузка: \(m.pressure.title) · используется \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))"),
-                       symbol: "memorychip", color: .blue) {
-                Badge(text: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), color: m.pressure.color, symbol: "circle.fill")
-            }
+            MemoryHeader()
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        if let insight = swapInsight(m, history: monitor.history, groups: processes.groups) {
-                            SwapInsightCard(insight: insight) { processes.restart($0) }
-                        } else if let advice = memoryAdvice(m, top: processes.groups.first(where: { !$0.isProtected })) {
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: "lightbulb.fill").foregroundStyle(.orange)
-                                Text(advice).font(.callout)
-                            }
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-                        }
+                        MemoryInsightSection()
                         HStack(alignment: .top, spacing: 16) {
-                            breakdown(m).card()
-                            chart.card()
+                            MemoryBreakdownCard().card()
+                            MemoryChartCard().card()
                         }
-                        serverList.card().id("servers")
-                        processList.card().id("processes")
+                        MemoryServersCard().card().id("servers")
+                        MemoryProcessesCard(search: $search, devOnly: $devOnly, expanded: $expanded)
+                            .card().id("processes")
                     }
                     .padding(20)
                 }
@@ -64,17 +49,47 @@ struct MemoryView: View {
         }
         .onAppear(perform: handleRequest)
         .onChange(of: state.memoryRequest) { _, _ in handleRequest() }
-        .task { await processes.autoRefresh(every: 3) }
-        .task { await servers.autoRefresh(every: 5) }
-        .alert(L("Zorla kapatılsın mı?", "Force quit?", "Завершить принудительно?"), isPresented: Binding(get: { confirmForce != nil },
-                                                           set: { if !$0 { confirmForce = nil } }),
-               presenting: confirmForce) { g in
-            Button(L("Zorla Kapat", "Force Quit", "Завершить принудительно"), role: .destructive) { processes.quit(g, force: true) }
-            Button(L("Vazgeç", "Cancel", "Отмена"), role: .cancel) {}
-        } message: { g in
-            Text(L("\(g.name) kaydedilmemiş verileriyle birlikte hemen sonlandırılır.", "\(g.name) will be terminated immediately, along with any unsaved data.", "\(g.name) будет немедленно завершено вместе с несохранёнными данными."))
+        .task { await state.processes.autoRefresh(every: 3) }
+        .task { await state.servers.autoRefresh(every: 5) }
+    }
+}
+
+private struct MemoryHeader: View {
+    @EnvironmentObject private var monitor: SystemMonitor
+
+    var body: some View {
+        let m = monitor.memory
+        PageHeader(title: L("Bellek", "Memory", "Память"), subtitle: L("Baskı: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda", "Pressure: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) in use", "Нагрузка: \(m.pressure.title) · используется \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))"),
+                   symbol: "memorychip", color: .blue) {
+            Badge(text: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), color: m.pressure.color, symbol: "circle.fill")
         }
     }
+}
+
+private struct MemoryInsightSection: View {
+    @EnvironmentObject private var monitor: SystemMonitor
+    @EnvironmentObject private var processes: ProcessStore
+
+    var body: some View {
+        let m = monitor.memory
+        if let insight = swapInsight(m, history: monitor.history, groups: processes.groups) {
+            SwapInsightCard(insight: insight) { processes.restart($0) }
+        } else if let advice = memoryAdvice(m, top: processes.groups.first(where: { !$0.isProtected })) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "lightbulb.fill").foregroundStyle(.orange)
+                Text(advice).font(.callout)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+        }
+    }
+}
+
+private struct MemoryBreakdownCard: View {
+    @EnvironmentObject private var monitor: SystemMonitor
+
+    var body: some View { breakdown(monitor.memory) }
 
     private func breakdown(_ m: MemorySnapshot) -> some View {
         let items: [(String, UInt64, Color, String)] = [
@@ -109,6 +124,13 @@ struct MemoryView: View {
         }
     }
 
+}
+
+private struct MemoryChartCard: View {
+    @EnvironmentObject private var monitor: SystemMonitor
+
+    var body: some View { chart }
+
     private var chart: some View {
         VStack(alignment: .leading, spacing: 6) {
             CardHeader(title: L("Son 30 dakika", "Last 30 minutes", "Последние 30 минут"), symbol: "waveform.path.ecg", color: .red,
@@ -137,6 +159,14 @@ struct MemoryView: View {
         let step = Int((Double(h.count) / 150).rounded(.up))
         return stride(from: 0, to: h.count, by: step).map { h[$0] } + [h[h.count - 1]]
     }
+
+}
+
+private struct MemoryServersCard: View {
+    @EnvironmentObject private var servers: DevServerStore
+    @State private var showAppServers = false
+
+    var body: some View { serverList }
 
     private var visibleServers: [ListeningServer] {
         servers.servers.filter { showAppServers || !$0.isApp }
@@ -197,6 +227,27 @@ struct MemoryView: View {
         }
     }
 
+}
+
+private struct MemoryProcessesCard: View {
+    @EnvironmentObject private var processes: ProcessStore
+    @Binding var search: String
+    @Binding var devOnly: Bool
+    @Binding var expanded: Set<String>
+    @State private var confirmForce: ProcessGroup?
+
+    var body: some View {
+        processList
+            .alert(L("Zorla kapatılsın mı?", "Force quit?", "Завершить принудительно?"), isPresented: Binding(get: { confirmForce != nil },
+                                                           set: { if !$0 { confirmForce = nil } }),
+               presenting: confirmForce) { g in
+            Button(L("Zorla Kapat", "Force Quit", "Завершить принудительно"), role: .destructive) { processes.quit(g, force: true) }
+            Button(L("Vazgeç", "Cancel", "Отмена"), role: .cancel) {}
+        } message: { g in
+            Text(L("\(g.name) kaydedilmemiş verileriyle birlikte hemen sonlandırılır.", "\(g.name) will be terminated immediately, along with any unsaved data.", "\(g.name) будет немедленно завершено вместе с несохранёнными данными."))
+        }
+    }
+
     private func toggleProtected(_ g: ProcessGroup) {
         var list = Prefs.list(Prefs.protectedApps)
         if list.contains(g.name) {
@@ -237,6 +288,7 @@ struct MemoryView: View {
                                     restart: { processes.restart(group) },
                                     isRestarting: processes.restarting.contains(group.id),
                                     killPID: { processes.kill($0) })
+                        .equatable()
                         .contextMenu {
                             let isUser = userProtected.contains(group.name)
                             if isUser || !group.isProtected {
@@ -256,7 +308,14 @@ struct MemoryView: View {
     }
 }
 
-private struct ProcessGroupRow: View {
+/// Satır yalnızca kendi ekranda görünen değerleri değişince yeniden çizilir (bkz. `.equatable()`).
+/// Kapanışlar karşılaştırılamadığı için SwiftUI bunu kendisi yapamıyor, her yenilemede 190 satırı da çiziyordu.
+private struct ProcessGroupRow: View, Equatable {
+    static func == (a: Self, b: Self) -> Bool {
+        a.isExpanded == b.isExpanded && a.isRestarting == b.isRestarting
+            && a.group.displayKey(expanded: a.isExpanded) == b.group.displayKey(expanded: b.isExpanded)
+    }
+
     let group: ProcessGroup
     let isExpanded: Bool
     let toggle: () -> Void
@@ -265,6 +324,7 @@ private struct ProcessGroupRow: View {
     let restart: () -> Void
     let isRestarting: Bool
     let killPID: (pid_t) -> Void
+    @State private var hovering = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -289,33 +349,40 @@ private struct ProcessGroupRow: View {
                     }
                 }
                 Spacer()
-                Text(L("\(group.processes.count) süreç", "\(group.processes.count) processes", "Процессов: \(group.processes.count)")).font(.caption).foregroundStyle(.secondary)
+                // Butonlar yalnızca fare satırın üzerindeyken çizilir: 190 satırda 570 buton (her biri fare takibi
+                // ve araç ipucuyla) her yenilemede yeniden hesaplanıyordu. Boyut sütunu yerinde kalır.
+                if hovering || isRestarting {
+                    if group.isApp {
+                        if isRestarting {
+                            ProgressView().controlSize(.small)
+                            Text(L("Yeniden başlıyor…", "Restarting…", "Перезапуск…")).font(.caption).foregroundStyle(.secondary)
+                        } else {
+                            Button { restart() } label: { Label(L("Yeniden Başlat", "Restart", "Перезапустить"), systemImage: "arrow.clockwise") }
+                                .help(L("Düzgünce kapatıp hemen tekrar açar; RAM'de ve swap'te tuttuğu her şeyi bırakır", "Quits cleanly and reopens right away, releasing everything it held in RAM and swap", "Корректно закрывает и сразу открывает снова, освобождая всё, что приложение держало в RAM и свопе"))
+                                .disabled(group.isProtected)
+                        }
+                    }
+                    Button { quit() } label: { Label(L("Kapat", "Quit", "Закрыть"), systemImage: "xmark") }
+                        .help(L("Uygulamaya kapanmasını söyler; kaydedilmemiş belge varsa uygulama sorar", "Asks the app to quit; it will ask about unsaved documents", "Просит приложение завершиться; оно спросит о несохранённых документах"))
+                        .disabled(group.isProtected)
+                    Button(role: .destructive) { forceQuit() } label: {
+                        Label(L("Zorla Kapat", "Force Quit", "Завершить принудительно"), systemImage: "exclamationmark.octagon").foregroundStyle(.red)
+                    }
+                        .help(L("Yanıt vermeyen uygulamayı anında sonlandırır; kaydedilmemiş veriler kaybolur", "Ends an unresponsive app immediately; unsaved data is lost", "Немедленно завершает зависшее приложение; несохранённые данные будут потеряны"))
+                        .disabled(group.isProtected)
+                } else {
+                    Text(L("\(group.processes.count) süreç", "\(group.processes.count) processes", "Процессов: \(group.processes.count)")).font(.caption).foregroundStyle(.secondary)
+                }
                 Text(Fmt.bytes(group.total))
                     .monospacedDigit()
                     .frame(width: 80, alignment: .trailing)
-                if group.isApp {
-                    if isRestarting {
-                        ProgressView().controlSize(.small)
-                        Text(L("Yeniden başlıyor…", "Restarting…", "Перезапуск…")).font(.caption).foregroundStyle(.secondary)
-                    } else {
-                        Button { restart() } label: { Label(L("Yeniden Başlat", "Restart", "Перезапустить"), systemImage: "arrow.clockwise") }
-                            .help(L("Düzgünce kapatıp hemen tekrar açar; RAM'de ve swap'te tuttuğu her şeyi bırakır", "Quits cleanly and reopens right away, releasing everything it held in RAM and swap", "Корректно закрывает и сразу открывает снова, освобождая всё, что приложение держало в RAM и свопе"))
-                            .disabled(group.isProtected)
-                    }
-                }
-                Button { quit() } label: { Label(L("Kapat", "Quit", "Закрыть"), systemImage: "xmark") }
-                    .help(L("Uygulamaya kapanmasını söyler; kaydedilmemiş belge varsa uygulama sorar", "Asks the app to quit; it will ask about unsaved documents", "Просит приложение завершиться; оно спросит о несохранённых документах"))
-                    .disabled(group.isProtected)
-                Button(role: .destructive) { forceQuit() } label: {
-                    Label(L("Zorla Kapat", "Force Quit", "Завершить принудительно"), systemImage: "exclamationmark.octagon").foregroundStyle(.red)
-                }
-                    .help(L("Yanıt vermeyen uygulamayı anında sonlandırır; kaydedilmemiş veriler kaybolur", "Ends an unresponsive app immediately; unsaved data is lost", "Немедленно завершает зависшее приложение; несохранённые данные будут потеряны"))
-                    .disabled(group.isProtected)
             }
             .controlSize(.small)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
+            .background(Color.primary.opacity(hovering ? 0.045 : 0))
             .contentShape(Rectangle())
+            .onHover { hovering = $0 }
             .onTapGesture(perform: toggle)
 
             if isExpanded {
@@ -347,6 +414,8 @@ private struct ProcessGroupRow: View {
 private struct ButtonLegend: View {
     var body: some View {
         HStack(spacing: 16) {
+            Label(L("Satırın üzerine gel:", "Hover a row:", "Наведите на строку:"), systemImage: "cursorarrow")
+                .foregroundStyle(.secondary)
             item("arrow.clockwise", L("Yeniden Başlat", "Restart", "Перезапустить"), L("kapatıp hemen açar, RAM ve swap'i bırakır", "quits and reopens, releasing RAM and swap", "закрывает и открывает снова, освобождая RAM и своп"), .primary)
             item("xmark", L("Kapat", "Quit", "Закрыть"), L("düzgünce kapatır, kaydetmeyi sorar", "quits cleanly, asks to save", "закрывает корректно, предлагает сохранить"), .primary)
             item("exclamationmark.octagon", L("Zorla Kapat", "Force Quit", "Завершить принудительно"), L("donmuş uygulamayı anında öldürür, kaydedilmemiş veri gider", "kills a frozen app instantly, unsaved data is lost", "мгновенно завершает зависшее приложение, несохранённое теряется"), .red)

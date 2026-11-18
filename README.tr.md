@@ -132,7 +132,7 @@ En üstteki kart durumu sade bir dille yorumlar:
 | **Bellek sıkışık** | Bellek baskısı normal değil | 3 saatten uzun süredir açık en büyük uygulamayı yeniden başlat |
 | **Swap durgun** | Swap kullanılıyor ama hareket etmiyor | Hiçbir şey; diskte bekleyen boşta sayfalar Mac'i yavaşlatmaz |
 
-Her tuş ne yaptığını söyler, geri alınamayanlar kırmızıdır:
+Her tuş ne yaptığını söyler, geri alınamayanlar kırmızıdır. Uygulama tuşları satırın üzerine gelince görünür; uzun süreç listesi böylece hafif kalır:
 
 | Tuş | Nerede | Ne yapar |
 | --- | --- | --- |
@@ -336,6 +336,9 @@ sudo rm /Library/Developer/CommandLineTools/usr/include/swift/module.modulemap
 
 # Her sekmeyi ve menü panelini PNG olarak kaydeder (bu README'deki görüntüler böyle alındı).
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --snapshot /tmp/multimac-shots
+
+# Ana pencereyi belirli bir sekmede açar (overview, cleanup, storage, memory, automation, settings); `sample` ile ölçüm için.
+/Applications/MultiMac.app/Contents/MacOS/MultiMac --tab memory
 ```
 
 ## Proje yapısı
