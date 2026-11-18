@@ -145,7 +145,8 @@ struct CleanupView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: cleanup.preset == .custom ? 320 : 250)
+            // Sabit genişlik yok: uzun dillerde (Rusça) etiketler sığmayıp yanındaki metne biniyordu.
+            .fixedSize()
             Text(cleanup.preset.help)
                 .font(.caption)
                 .foregroundStyle(.secondary)

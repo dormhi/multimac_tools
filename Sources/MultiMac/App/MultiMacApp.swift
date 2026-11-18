@@ -59,6 +59,19 @@ final class AppState: ObservableObject {
     let alerts = MemoryAlerts()
     let relief = MemoryRelief()
 
+    private var appliedLanguage = Lang.current
+
+    /// Dil değişince tarama sonuçlarındaki metinleri (öğe adları, notlar, klasör grupları) yeni dille üretir.
+    /// Menü paneli ve ana pencere ayrı ayrı haber verir; yalnızca ilki işlenir.
+    func languageDidChange() {
+        guard Lang.current != appliedLanguage else { return }
+        appliedLanguage = Lang.current
+        Task {
+            await cleanup.refreshForLanguage()
+            if overview.measuredAt != nil { await overview.measure() }
+        }
+    }
+
     private init() {
         cleanup.onDiskChanged = { [weak self] in
             self?.monitor.refreshDisk()
@@ -158,5 +171,6 @@ struct LanguageRoot<Content: View>: View {
         content()
             .id(language)
             .environment(\.locale, Lang.locale)
+            .onChange(of: language) { AppState.shared.languageDidChange() }
     }
 }

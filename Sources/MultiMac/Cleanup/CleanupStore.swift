@@ -340,6 +340,19 @@ final class CleanupStore: ObservableObject {
         isScanning = false
     }
 
+    /// Öğe başlıkları ve notları tarama anında o dille yazılır. Dil değişince yeniden tarar,
+    /// kullanıcının seçimini ve kipini korur.
+    func refreshForLanguage() async {
+        if lastScan != nil, !isScanning, !isCleaning {
+            let keepSelection = selected
+            let keepPreset = preset
+            await scanAll()
+            selected = keepSelection.intersection(Set(items.map(\.id)))
+            preset = keepPreset
+        }
+        if autoPreview != nil { await previewAuto() }
+    }
+
     func cleanSelected() async {
         let targets = selectedItems
         guard !targets.isEmpty, !isCleaning else { return }
