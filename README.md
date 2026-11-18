@@ -70,7 +70,7 @@ system files**, and stays out of the way in the menu bar.
 | 📊 **Overview** | Health summary with reasons, big RAM / swap / disk gauges, *where is the disk going?* (Library, Applications, Projects, dev tools, Downloads…), cleanable space per category and preset, memory breakdown, biggest projects and running dev servers. **Every percentage is clickable** and opens the right screen, filtered. |
 | 🧹 **Detailed cleanup** | App caches, developer caches, project build leftovers, Xcode, logs, downloads, large & old files, Trash. *Safe / Balanced / Aggressive* presets, per-project view, search, size & age filters, sorting, expand an item to pick sub-folders, delete permanently or move to Trash. |
 | 🗺️ **Storage map** | SpaceSniffer-style nested treemap of the whole disk, your home or any folder. Color-coded safety (system / caution / safe / yours) and a strong warning before deleting anything protected. Explains *System Data*. |
-| 🧠 **Memory manager** | Apps grouped with their helper processes, 30-minute RAM & swap chart, quit / force quit, protected apps, alerts for swap %, critical pressure and apps above a limit. |
+| 🧠 **Memory manager** | Apps grouped with their helper processes, 30-minute RAM & swap chart, protected apps, alerts for swap %, critical pressure and apps above a limit. A plain-language **swap insight** tells you whether swap is actually hurting and which long-running app to **restart** to get memory back. Every action button is labeled: *Yeniden Başlat* (restart), *Kapat* (quit), *Zorla Kapat* (force quit). |
 | 🛰️ **Dev server finder** | Every process listening on a TCP port with project folder, port (opens `localhost`), uptime and memory — find the `npm run dev` you forgot three days ago. |
 | 🤖 **Automation** | Eight cache rules you can toggle one by one, a schedule, low-disk trigger, *what would be deleted?* preview, and optional RAM relief that closes the apps you chose when memory stays tight. |
 | 🛡️ **Never touch list** | Right-click any item or whole project to exclude it forever. Respected by every scan, preset, the automation and the deletion engine itself. |
@@ -86,7 +86,8 @@ system files**, and stays out of the way in the menu bar.
 
 The menu bar icon turns into a warning when memory pressure is high. The panel shows RAM / swap / disk (each tile opens
 the related screen), **Quick Clean** with the result of the last run, a plain-language memory tip and the apps using the
-most memory with their share of RAM. Hover a row to quit the app; click it to open its details.
+most memory with their share of RAM. When swap is churning or memory is squeezed, a compact insight card appears with a
+one-click restart of the app that would free the most. Hover a row to quit the app; click it to open its details.
 
 ### Overview
 
@@ -122,8 +123,26 @@ color, Finder / delete actions and the folder's contents.
 ### Memory
 
 <p align="center">
-  <img src="docs/images/memory.png" width="820" alt="Memory screen: breakdown, 30 minute chart, dev servers and app list">
+  <img src="docs/images/memory.png" width="820" alt="Memory screen: swap insight card with a restart button, breakdown, 30 minute chart, dev servers and app list">
 </p>
+
+The card at the top reads the situation in plain language:
+
+| Card | When | What it suggests |
+| --- | --- | --- |
+| **Swap çalkantılı** (swap churning) | More than ~0.75 GB moved in or out of swap in the last 5 minutes | Close or restart something now, this is what makes the Mac stutter |
+| **Bellek sıkışık** (memory squeezed) | Memory pressure is not normal | Restart the biggest app that has been open for 3+ hours |
+| **Swap durgun** (swap calm) | Swap is in use but not moving | Nothing; idle pages on disk do not slow you down |
+
+Every button says what it does, and the destructive ones are red:
+
+| Button | Where | What it does |
+| --- | --- | --- |
+| **Yeniden Başlat** | Apps | Quits the app gracefully, waits for it to exit, opens it again in the background. Its memory starts fresh and its swapped-out pages are dropped |
+| **Kapat** | Apps | Asks the app to quit, like ⌘Q. It can still ask to save documents |
+| **Zorla Kapat** | Apps | Kills the app and its helpers immediately (asks for confirmation; unsaved work is lost) |
+| **Sonlandır** | Single helper process | Terminates just that process |
+| **Durdur** / **Zorla Durdur** | Dev servers | Stops a server with `SIGTERM` / kills it with `SIGKILL` |
 
 ### Automation
 
@@ -163,10 +182,20 @@ The only safe way to actually free memory is to close apps you are not using. Mu
 automatic:
 
 - **See it:** pressure, swap, a 30-minute chart, and apps grouped with all their helper processes.
-- **Act on it:** quit or force quit from the menu bar or the Memory tab; stop forgotten dev servers.
+- **Act on it:** restart, quit or force quit from the menu bar or the Memory tab; stop forgotten dev servers.
 - **RAM relief (off by default):** when memory pressure (or swap) stays high for *N* minutes, gracefully quit the apps
   *you* listed that have been in the background for at least *M* minutes. Apps can still ask to save documents; the
   frontmost app and protected apps are never closed; every action is logged and can send a notification.
+
+### Can swap be moved back into RAM?
+
+Not from an app, and not safely. macOS pages swapped-out memory back in only when the owning process touches it again;
+there is no public API to force it, and tricks like disabling the pager or allocating memory to provoke paging need
+root and make things worse. Swap that sits still costs nothing but disk space.
+
+What works: **restart the app that owns it.** Its swapped-out pages are thrown away and it comes back with a fresh,
+smaller footprint. The swap insight card points to the best candidate (the biggest app open for 3+ hours), and
+**Yeniden Başlat** does it in one click. A full macOS restart clears swap completely.
 
 ## Safety model
 
@@ -229,7 +258,7 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 | Overview | Click any percentage to open that item in the storage map or cleanup list |
 | Cleanup | Pick a preset or tick items, then **Temizle** (clean). Right-click › *Asla dokunma* (never touch) |
 | Storage | Choose *Tüm Disk / Ev Klasörü / Klasör…*, scan, double-click blocks to dive in |
-| Memory | Right-click an app › add to protected apps. *Durdur* stops a dev server |
+| Memory | *Yeniden Başlat* restarts an app, *Kapat* quits, *Zorla Kapat* force quits. Right-click an app › add to protected apps. *Durdur* stops a dev server |
 | Automation | Toggle rules, set the schedule, **Şimdi ne silinir?** previews, **Şimdi çalıştır** runs |
 | Settings | Project folders, stale-project threshold, large/old file thresholds, alerts, protected apps, menu bar style, launch at login |
 
