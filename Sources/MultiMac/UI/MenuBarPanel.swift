@@ -199,6 +199,7 @@ private struct ProcessQuickRow: View {
             Button(L("Kapat", "Quit", "Закрыть"), action: quit)
                 .controlSize(.mini)
                 .opacity(hovering && !group.isProtected ? 1 : 0)
+                .allowsHitTesting(hovering)
                 .disabled(group.isProtected)
                 .help(L("Uygulamayı düzgünce kapat", "Quit the app gracefully", "Корректно закрыть приложение"))
         }

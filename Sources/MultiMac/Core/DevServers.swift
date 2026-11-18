@@ -79,15 +79,26 @@ final class DevServerStore: ObservableObject {
     @Published private(set) var servers: [ListeningServer] = []
     @Published private(set) var loaded = false
 
+    private var lastSignature: String?
+
     func refresh() async {
-        servers = await Task.detached(priority: .utility) { DevServerFinder.scan() }.value
-        loaded = true
+        let found = await Task.detached(priority: .utility) { DevServerFinder.scan() }.value
+        // Ekranda görünen hiçbir şey değişmediyse yayınlama (kart her 5 sn'de boşuna çizilmesin).
+        let signature = found.map { "\($0.pid)|\($0.ports)|\($0.cwd ?? "")|\(Fmt.bytes($0.footprint))|\($0.uptime)" }
+            .joined(separator: "\n")
+        if signature != lastSignature {
+            lastSignature = signature
+            servers = found
+        }
+        if !loaded { loaded = true }
     }
 
+    /// Uygulama arka plandayken 10 sn'de bir yeniler.
     func autoRefresh(every seconds: Double = 5) async {
         while !Task.isCancelled {
             await refresh()
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            let interval = NSApp.isActive ? seconds : max(seconds, 10)
+            try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
         }
     }
 

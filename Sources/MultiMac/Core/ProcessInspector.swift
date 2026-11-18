@@ -186,7 +186,10 @@ final class ProcessStore: ObservableObject {
         refreshing = true
         let result = await Task.detached(priority: .utility) { ProcessInspector.snapshot() }.value
         // Ekranda görünen hiçbir şey değişmediyse yayınlama: liste ve öneri kartı boşuna yeniden çizilmesin.
-        let signature = result.map { $0.displayKey(expanded: false) }.joined(separator: "\n")
+        // PID'ler de imzada: açılmış bir satırda biten sürecin PID'i kalmasın (Kapat yanlış PID'e gitmesin).
+        let signature = result.map { g in
+            g.displayKey(expanded: false) + "|" + g.processes.map { String($0.pid) }.joined(separator: ",")
+        }.joined(separator: "\n")
         if signature != lastSignature || groups.isEmpty {
             lastSignature = signature
             groups = result
@@ -230,7 +233,8 @@ final class ProcessStore: ObservableObject {
             if app.isTerminated {
                 let config = NSWorkspace.OpenConfiguration()
                 config.activates = false
-                _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
+                NSWorkspace.shared.openApplication(at: url, configuration: config, completionHandler: nil)
+                try? await Task.sleep(nanoseconds: 500_000_000)
             }
             restarting.remove(group.id)
             try? await Task.sleep(nanoseconds: 1_500_000_000)

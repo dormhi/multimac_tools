@@ -157,15 +157,25 @@ final class StorageStore: ObservableObject {
     func delete(_ node: FileNode, permanently: Bool) {
         guard node.isDeletable else { return }
         let url = URL(fileURLWithPath: node.path)
-        do {
-            if permanently {
-                try FileManager.default.removeItem(at: url)
+        // Büyük bir klasörü (node_modules gibi) kalıcı silmek saniyeler sürebilir: arayüz donmasın diye arka planda.
+        Task {
+            let message: String? = await Task.detached(priority: .userInitiated) {
+                do {
+                    if permanently {
+                        try FileManager.default.removeItem(at: url)
+                    } else {
+                        try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                    }
+                    return nil
+                } catch {
+                    return error.localizedDescription
+                }
+            }.value
+            if let message {
+                lastError = L("\(node.displayName) silinemedi: \(message)", "Couldn't delete \(node.displayName): \(message)", "Не удалось удалить \(node.displayName): \(message)")
             } else {
-                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                removeFromTree(node)
             }
-            removeFromTree(node)
-        } catch {
-            lastError = L("\(node.displayName) silinemedi: \(error.localizedDescription)", "Couldn't delete \(node.displayName): \(error.localizedDescription)", "Не удалось удалить \(node.displayName): \(error.localizedDescription)")
         }
     }
 

@@ -27,8 +27,8 @@ enum Fmt {
             return f
         }
     }
-    nonisolated(unsafe) private static let enNumber = numberFormatters("en_US")
-    nonisolated(unsafe) private static let numberFormatters: [String: [NumberFormatter]] = [
+    private static let enNumber = numberFormatters("en_US")
+    private static let numberFormatters: [String: [NumberFormatter]] = [
         "tr_TR": numberFormatters("tr_TR"), "en_US": enNumber, "ru_RU": numberFormatters("ru_RU"),
     ]
 

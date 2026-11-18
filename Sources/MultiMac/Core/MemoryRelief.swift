@@ -127,8 +127,9 @@ final class MemoryRelief: ObservableObject {
     @discardableResult
     func relieve(reason: String, ignoreIdle: Bool) async -> Action? {
         let targets = candidates(ignoreIdle: ignoreIdle)
-        lastRun = Date()
+        // Kapatılacak uygulama yoksa bekleme süresi başlamasın: biri boşta kalınca hemen kapatılabilsin.
         guard !targets.isEmpty else { return nil }
+        lastRun = Date()
         let groups = await Task.detached(priority: .utility) { ProcessInspector.snapshot() }.value
         var freed: UInt64 = 0
         var names: [String] = []
