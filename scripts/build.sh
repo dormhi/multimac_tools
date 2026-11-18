@@ -1,12 +1,14 @@
 #!/bin/bash
 # MultiMac'i Xcode ve SwiftPM olmadan, doğrudan swiftc ile derleyip .app paketi oluşturur.
-#   ./scripts/build.sh            → build/MultiMac.app
+#   ./scripts/build.sh            → build/app.noindex/MultiMac.app
 #   ./scripts/build.sh --install  → ayrıca /Applications'a kopyalar ve başlatır
 #   DEBUG=1 ./scripts/build.sh    → optimizasyonsuz, hızlı derleme
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP="build/MultiMac.app"
+# ".noindex" klasörü Spotlight'ın bu kopyayı bulup ikinci bir "MultiMac" olarak kaydetmesini engeller.
+APP="build/app.noindex/MultiMac.app"
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 OPT="-O"
 [[ "${DEBUG:-}" == "1" ]] && OPT="-Onone -g"
 
@@ -47,6 +49,8 @@ if [[ "${1:-}" == "--install" ]]; then
     sleep 0.5
     rm -rf /Applications/MultiMac.app
     ditto "$APP" /Applications/MultiMac.app
+    # Build kopyasını LaunchServices'ten çıkar: Spotlight / "Birlikte Aç" yalnızca kurulu olanı görsün.
+    "$LSREGISTER" -u "$APP" 2>/dev/null || true
     open /Applications/MultiMac.app
     echo "✓ /Applications/MultiMac.app kuruldu ve başlatıldı"
 fi

@@ -268,7 +268,7 @@ window's minimum-size computation is cut off so live updates don't re-layout the
 ## Building from source
 
 ```bash
-./scripts/build.sh            # → build/MultiMac.app
+./scripts/build.sh            # → build/app.noindex/MultiMac.app
 ./scripts/build.sh --install  # also copy to /Applications and launch
 DEBUG=1 ./scripts/build.sh    # faster, unoptimised build
 SIGN_IDENTITY="MultiMac Local" ./scripts/build.sh --install   # keep permissions between builds

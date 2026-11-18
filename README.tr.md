@@ -268,7 +268,7 @@ yerleştirmez; uzun listeler lazy'dir.
 ## Kaynaktan derleme
 
 ```bash
-./scripts/build.sh            # → build/MultiMac.app
+./scripts/build.sh            # → build/app.noindex/MultiMac.app
 ./scripts/build.sh --install  # ayrıca /Applications'a kopyala ve başlat
 DEBUG=1 ./scripts/build.sh    # daha hızlı, optimizasyonsuz derleme
 SIGN_IDENTITY="MultiMac Local" ./scripts/build.sh --install   # izinler derlemeler arasında korunsun
