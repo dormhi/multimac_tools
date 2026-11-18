@@ -1,0 +1,30 @@
+# Build output (scripts/build.sh, scripts/make-icon.sh)
+build/
+*.app
+*.dSYM/
+
+# SwiftPM / Xcode (not used by the build, but keep editors from committing them)
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local snapshots / logs
+*.log
+snapshots/
