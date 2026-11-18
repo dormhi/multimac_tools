@@ -68,7 +68,7 @@ MultiMac bunun tersi: alanın ve belleğin tam olarak nereye gittiğini göstere
 | 📊 **Genel Bakış** | Nedenleriyle sağlık özeti, büyük RAM / swap / disk göstergeleri, *disk nereye gidiyor?* (Kütüphane, Uygulamalar, Projeler, geliştirici araçları, İndirilenler…), kategori ve kipe göre temizlenebilir alan, bellek dağılımı, en büyük projeler ve çalışan dev server'lar. **Her yüzde tıklanabilir** ve doğru ekranı, filtrelenmiş olarak açar. |
 | 🧹 **Detaylı temizlik** | Uygulama önbellekleri, geliştirici önbellekleri, proje build kalıntıları, Xcode, günlükler, İndirilenler, büyük ve eski dosyalar, Çöp Kutusu. *Güvenli / Dengeli / Agresif* kipleri, proje görünümü, arama, boyut ve yaş filtreleri, sıralama, alt klasörleri tek tek seçme, kalıcı silme veya Çöp Kutusuna taşıma. |
 | 🗺️ **Depolama haritası** | Tüm diskin, ev klasörünün veya herhangi bir klasörün SpaceSniffer tarzı iç içe treemap'i. Renkli güvenlik işaretleri (sistem / dikkat / silinebilir / senin) ve korunan bir şeyi silmeden önce güçlü uyarı. *Sistem Verisi*ni açıklar. |
-| 🧠 **Bellek yöneticisi** | Yardımcı süreçleriyle gruplanmış uygulamalar, 30 dakikalık RAM ve swap grafiği, kapat / zorla kapat, korunan uygulamalar, swap yüzdesi, kritik baskı ve sınırı aşan uygulamalar için uyarılar. |
+| 🧠 **Bellek yöneticisi** | Yardımcı süreçleriyle gruplanmış uygulamalar, 30 dakikalık RAM ve swap grafiği, korunan uygulamalar, swap yüzdesi, kritik baskı ve sınırı aşan uygulamalar için uyarılar. Sade dilli **swap yorumu** swap'in gerçekten sorun olup olmadığını ve belleği geri almak için uzun süredir açık hangi uygulamayı **yeniden başlatman** gerektiğini söyler. Her tuşun üzerinde ne yaptığı yazar: *Yeniden Başlat*, *Kapat*, *Zorla Kapat*. |
 | 🛰️ **Dev server bulucu** | TCP portu dinleyen her süreç; proje klasörü, port (`localhost`'u açar), çalışma süresi ve bellekle. Üç gün önce unuttuğun `npm run dev`'i bul. |
 | 🤖 **Otomasyon** | Tek tek açılıp kapatılabilen sekiz önbellek kuralı, zamanlama, disk azalınca tetikleme, *ne silinir?* önizlemesi ve bellek sıkıştığında senin seçtiğin uygulamaları kapatan isteğe bağlı RAM rahatlatma. |
 | 🛡️ **Asla dokunma listesi** | Bir öğeye veya projenin tamamına sağ tıklayıp kalıcı olarak hariç tut. Her tarama, kip, otomasyon ve silme motorunun kendisi buna uyar. |
@@ -84,7 +84,8 @@ MultiMac bunun tersi: alanın ve belleğin tam olarak nereye gittiğini göstere
 
 Bellek baskısı yükselince menü çubuğundaki ikon uyarı simgesine dönüşür. Panelde RAM / swap / disk (her kutu ilgili
 ekranı açar), son çalışmanın sonucuyla **Hızlı Temizlik**, sade bir bellek önerisi ve RAM payıyla birlikte en çok
-bellek kullanan uygulamalar var. Satırın üzerine gelince uygulamayı kapatabilir, tıklayınca ayrıntısını açabilirsin.
+bellek kullanan uygulamalar var. Swap çalkantılıysa veya bellek sıkışıksa, en çok yer açacak uygulamayı tek tıkla
+yeniden başlatan küçük bir yorum kartı çıkar. Satırın üzerine gelince uygulamayı kapatabilir, tıklayınca ayrıntısını açabilirsin.
 
 ### Genel Bakış
 
@@ -118,8 +119,26 @@ işlemlerini ve klasörün içeriğini gösterir.
 ### Bellek
 
 <p align="center">
-  <img src="docs/images/memory.png" width="820" alt="Bellek ekranı: dağılım, 30 dakikalık grafik, dev server'lar ve uygulama listesi">
+  <img src="docs/images/memory.png" width="820" alt="Bellek ekranı: yeniden başlat tuşlu swap yorumu, dağılım, 30 dakikalık grafik, dev server'lar ve uygulama listesi">
 </p>
+
+En üstteki kart durumu sade bir dille yorumlar:
+
+| Kart | Ne zaman | Ne önerir |
+| --- | --- | --- |
+| **Swap çalkantılı** | Son 5 dakikada swap'e ~0,75 GB'tan fazla veri girip çıktı | Şimdi bir şey kapat veya yeniden başlat; Mac'i takılatan budur |
+| **Bellek sıkışık** | Bellek baskısı normal değil | 3 saatten uzun süredir açık en büyük uygulamayı yeniden başlat |
+| **Swap durgun** | Swap kullanılıyor ama hareket etmiyor | Hiçbir şey; diskte bekleyen boşta sayfalar Mac'i yavaşlatmaz |
+
+Her tuş ne yaptığını söyler, geri alınamayanlar kırmızıdır:
+
+| Tuş | Nerede | Ne yapar |
+| --- | --- | --- |
+| **Yeniden Başlat** | Uygulamalar | Uygulamayı düzgünce kapatır, çıkmasını bekler, arka planda yeniden açar. Belleği sıfırdan başlar, swap'teki sayfaları atılır |
+| **Kapat** | Uygulamalar | ⌘Q gibi uygulamadan kapanmasını ister; kaydedilmemiş belgeler için yine sorabilir |
+| **Zorla Kapat** | Uygulamalar | Uygulamayı ve yardımcılarını anında öldürür (onay ister; kaydedilmemiş iş kaybolur) |
+| **Sonlandır** | Tek bir yardımcı süreç | Yalnızca o süreci sonlandırır |
+| **Durdur** / **Zorla Durdur** | Dev server'lar | Sunucuyu `SIGTERM` ile durdurur / `SIGKILL` ile öldürür |
 
 ### Otomasyon
 
@@ -160,11 +179,22 @@ Gerçekten bellek açmanın tek güvenli yolu kullanmadığın uygulamaları kap
 istersen otomatikleştirir:
 
 - **Gör:** baskı, swap, 30 dakikalık grafik ve tüm yardımcı süreçleriyle gruplanmış uygulamalar.
-- **Müdahale et:** menü çubuğundan veya Bellek sekmesinden kapat / zorla kapat; unutulan dev server'ları durdur.
+- **Müdahale et:** menü çubuğundan veya Bellek sekmesinden yeniden başlat, kapat / zorla kapat; unutulan dev server'ları durdur.
 - **RAM rahatlatma (varsayılan kapalı):** bellek baskısı (veya swap) *N* dakika yüksek kalırsa, *senin* listene
   eklediğin ve en az *M* dakikadır arka planda olan uygulamaları düzgünce kapatır. Uygulamalar kaydedilmemiş belgeler
   için yine sorabilir; öndeki uygulama ve korunan uygulamalar asla kapatılmaz; her işlem kaydedilir ve bildirim
   gönderebilir.
+
+### Swap tekrar RAM'e alınabilir mi?
+
+Bir uygulamadan alınamaz, güvenli bir yolu da yok. macOS swap'e atılmış belleği ancak sahibi olan süreç ona tekrar
+dokunduğunda RAM'e geri getirir; bunu zorlayan herkese açık bir API yok. Pager'ı kapatmak ya da sayfalamayı tetiklemek için
+bellek doldurmak gibi hileler root ister ve durumu kötüleştirir. Hareketsiz duran swap disk alanı dışında hiçbir şeye
+mal olmaz.
+
+İşe yarayan: **swap'in sahibi olan uygulamayı yeniden başlatmak.** Swap'teki sayfaları atılır ve uygulama daha küçük,
+taze bir bellekle geri gelir. Swap yorum kartı en iyi adayı (3 saatten uzun süredir açık en büyük uygulama) gösterir,
+**Yeniden Başlat** bunu tek tıkla yapar. macOS'u yeniden başlatmak swap'i tamamen temizler.
 
 ## Güvenlik modeli
 
@@ -228,7 +258,7 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 | Genel Bakış | Herhangi bir yüzdeye tıkla; o öğe depolama haritasında veya temizlik listesinde açılır |
 | Temizlik | Bir kip seç veya öğeleri işaretle, sonra **Temizle**. Sağ tık › *Asla dokunma* |
 | Depolama | *Tüm Disk / Ev Klasörü / Klasör…* seç, tara, bloklara çift tıklayarak içine gir |
-| Bellek | Uygulamaya sağ tık › korunanlara ekle. *Durdur* bir dev server'ı kapatır |
+| Bellek | *Yeniden Başlat* uygulamayı yeniden başlatır, *Kapat* kapatır, *Zorla Kapat* zorla kapatır. Uygulamaya sağ tık › korunanlara ekle. *Durdur* bir dev server'ı kapatır |
 | Otomasyon | Kuralları aç/kapat, zamanlamayı ayarla, **Şimdi ne silinir?** önizler, **Şimdi çalıştır** uygular |
 | Ayarlar | Proje klasörleri, kullanılmayan proje eşiği, büyük/eski dosya eşikleri, uyarılar, korunan uygulamalar, menü çubuğu görünümü, girişte başlatma |
 
