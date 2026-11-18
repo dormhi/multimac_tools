@@ -17,8 +17,11 @@ struct ProcessGroup: Identifiable {
     var processes: [ProcessEntry]
     let isProtected: Bool
     let isDeveloperTool: Bool
+    /// Ana sürecin (en eski sürecin) başlama zamanı
+    var started: Date?
 
     var total: UInt64 { processes.reduce(0) { $0 + $1.footprint } }
+    var uptime: TimeInterval? { started.map { Date().timeIntervalSince($0) } }
     var isApp: Bool { bundlePath != nil }
 }
 
@@ -134,6 +137,7 @@ enum ProcessInspector {
             .map { g in
                 var g = g
                 g.processes.sort { $0.footprint > $1.footprint }
+                g.started = g.processes.compactMap { DevServerFinder.startDate($0.pid) }.min()
                 return g
             }
             .sorted { $0.total > $1.total }
@@ -187,6 +191,32 @@ final class ProcessStore: ObservableObject {
     func quit(_ group: ProcessGroup, force: Bool = false) {
         ProcessInspector.terminate(group, force: force)
         scheduleRefresh()
+    }
+
+    @Published private(set) var restarting: Set<String> = []
+
+    /// Uygulamayı düzgünce kapatıp arka planda yeniden açar: swap'te ve RAM'de tuttuğu her şey bırakılır.
+    /// Kullanıcı kapanmayı iptal ederse (kaydedilmemiş belge) yeniden açma denenmez.
+    func restart(_ group: ProcessGroup) {
+        guard let bundle = group.bundlePath, !group.isProtected,
+              let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleURL?.path == bundle })
+        else { return }
+        let url = URL(fileURLWithPath: bundle)
+        restarting.insert(group.id)
+        app.terminate()
+        Task {
+            for _ in 0..<60 where !app.isTerminated {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+            }
+            if app.isTerminated {
+                let config = NSWorkspace.OpenConfiguration()
+                config.activates = false
+                _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
+            }
+            restarting.remove(group.id)
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await refresh()
+        }
     }
 
     func kill(_ pid: pid_t, force: Bool = false) {

@@ -167,7 +167,7 @@ struct StorageView: View {
 
     private func breadcrumb(_ focus: FileNode) -> some View {
         HStack(spacing: 4) {
-            Button { storage.goUp() } label: { Image(systemName: "chevron.up") }
+            Button { storage.goUp() } label: { Label("Yukarı", systemImage: "chevron.up") }
                 .disabled(focus.parent == nil)
                 .help("Üst klasör")
             ScrollView(.horizontal, showsIndicators: false) {

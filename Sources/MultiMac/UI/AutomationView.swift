@@ -233,7 +233,7 @@ struct AutomationView: View {
                     Button(role: .destructive) {
                         ramApps.removeAll { $0 == name }
                         Prefs.setList(MemoryRelief.appsKey, ramApps)
-                    } label: { Image(systemName: "minus.circle") }
+                    } label: { Label("Kaldır", systemImage: "minus.circle") }
                     .buttonStyle(.borderless)
                 }
             }

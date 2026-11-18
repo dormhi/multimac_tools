@@ -34,7 +34,9 @@ struct MemoryView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        if let advice = memoryAdvice(m, top: processes.groups.first(where: { !$0.isProtected })) {
+                        if let insight = swapInsight(m, history: monitor.history, groups: processes.groups) {
+                            SwapInsightCard(insight: insight) { processes.restart($0) }
+                        } else if let advice = memoryAdvice(m, top: processes.groups.first(where: { !$0.isProtected })) {
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: "lightbulb.fill").foregroundStyle(.orange)
                                 Text(advice).font(.callout)
@@ -179,8 +181,11 @@ struct MemoryView: View {
                             .help("Çalışma süresi")
                         Text(Fmt.bytes(s.footprint)).monospacedDigit().frame(width: 76, alignment: .trailing)
                         Button("Durdur") { servers.stop(s) }
-                        Button { servers.stop(s, force: true) } label: { Image(systemName: "bolt.fill") }
-                            .help("Zorla durdur")
+                            .help("Sürece kapanmasını söyler (SIGTERM); dev server düzgünce kapanır")
+                        Button(role: .destructive) { servers.stop(s, force: true) } label: {
+                            Text("Zorla Durdur").foregroundStyle(.red)
+                        }
+                            .help("Süreci anında öldürür (SIGKILL); yanıt vermeyen sunucular için")
                     }
                     .controlSize(.small)
                     .padding(.horizontal, 12)
@@ -219,6 +224,7 @@ struct MemoryView: View {
                 Toggle("Sadece geliştirici süreçleri", isOn: $devOnly).toggleStyle(.checkbox)
                 TextField("Ara", text: $search).textFieldStyle(.roundedBorder).frame(width: 180)
             }
+            ButtonLegend()
             let userProtected = Set(Prefs.list(Prefs.protectedApps))
             LazyVStack(spacing: 0) {
                 ForEach(filtered) { group in
@@ -228,6 +234,8 @@ struct MemoryView: View {
                                     },
                                     quit: { processes.quit(group) },
                                     forceQuit: { confirmForce = group },
+                                    restart: { processes.restart(group) },
+                                    isRestarting: processes.restarting.contains(group.id),
                                     killPID: { processes.kill($0) })
                         .contextMenu {
                             let isUser = userProtected.contains(group.name)
@@ -254,6 +262,8 @@ private struct ProcessGroupRow: View {
     let toggle: () -> Void
     let quit: () -> Void
     let forceQuit: () -> Void
+    let restart: () -> Void
+    let isRestarting: Bool
     let killPID: (pid_t) -> Void
 
     var body: some View {
@@ -283,9 +293,23 @@ private struct ProcessGroupRow: View {
                 Text(Fmt.bytes(group.total))
                     .monospacedDigit()
                     .frame(width: 80, alignment: .trailing)
-                Button("Kapat", action: quit).disabled(group.isProtected)
-                Button(action: forceQuit) { Image(systemName: "bolt.fill") }
-                    .help("Zorla kapat")
+                if group.isApp {
+                    if isRestarting {
+                        ProgressView().controlSize(.small)
+                        Text("Yeniden başlıyor…").font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        Button { restart() } label: { Label("Yeniden Başlat", systemImage: "arrow.clockwise") }
+                            .help("Düzgünce kapatıp hemen tekrar açar; RAM'de ve swap'te tuttuğu her şeyi bırakır")
+                            .disabled(group.isProtected)
+                    }
+                }
+                Button { quit() } label: { Label("Kapat", systemImage: "xmark") }
+                    .help("Uygulamaya kapanmasını söyler; kaydedilmemiş belge varsa uygulama sorar")
+                    .disabled(group.isProtected)
+                Button(role: .destructive) { forceQuit() } label: {
+                    Label("Zorla Kapat", systemImage: "exclamationmark.octagon").foregroundStyle(.red)
+                }
+                    .help("Yanıt vermeyen uygulamayı anında sonlandırır; kaydedilmemiş veriler kaybolur")
                     .disabled(group.isProtected)
             }
             .controlSize(.small)
@@ -304,9 +328,9 @@ private struct ProcessGroupRow: View {
                         }
                         Spacer()
                         Text(Fmt.bytes(p.footprint)).font(.caption).monospacedDigit()
-                        Button { killPID(p.pid) } label: { Image(systemName: "xmark.circle") }
-                            .buttonStyle(.borderless)
-                            .help("Bu süreci sonlandır")
+                        Button("Sonlandır") { killPID(p.pid) }
+                            .controlSize(.mini)
+                            .help("Yalnızca bu alt süreci sonlandırır (SIGTERM)")
                             .disabled(group.isProtected)
                     }
                     .padding(.leading, 64)
@@ -316,5 +340,30 @@ private struct ProcessGroupRow: View {
                 .padding(.bottom, 4)
             }
         }
+    }
+}
+
+/// Süreç butonlarının ne yaptığını tek satırda anlatır.
+private struct ButtonLegend: View {
+    var body: some View {
+        HStack(spacing: 16) {
+            item("arrow.clockwise", "Yeniden Başlat", "kapatıp hemen açar, RAM ve swap'i bırakır", .primary)
+            item("xmark", "Kapat", "düzgünce kapatır, kaydetmeyi sorar", .primary)
+            item("exclamationmark.octagon", "Zorla Kapat", "donmuş uygulamayı anında öldürür, kaydedilmemiş veri gider", .red)
+        }
+        .font(.caption)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func item(_ symbol: String, _ title: String, _ text: String, _ color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol).foregroundStyle(color)
+            Text(title).fontWeight(.semibold).foregroundStyle(color)
+            Text(text).foregroundStyle(.secondary)
+        }
+        .lineLimit(1)
     }
 }

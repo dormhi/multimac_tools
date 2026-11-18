@@ -437,9 +437,10 @@ private struct CleanupItemRow: View {
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting(item.urls)
             } label: {
-                Image(systemName: "magnifyingglass.circle")
+                Label("Göster", systemImage: "folder")
             }
             .buttonStyle(.borderless)
+            .font(.caption)
             .help("Finder'da göster")
         }
         .padding(.leading, 4)

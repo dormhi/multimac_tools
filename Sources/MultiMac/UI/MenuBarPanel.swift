@@ -39,7 +39,10 @@ struct MenuBarPanel: View {
             header
             gauges
             quickClean
-            if let advice = memoryAdvice(monitor.memory, top: processes.groups.first(where: { !$0.isProtected })) {
+            if let insight = swapInsight(monitor.memory, history: monitor.history, groups: processes.groups),
+               insight.level == .churning {
+                SwapInsightCard(insight: insight, compact: true) { processes.restart($0) }
+            } else if let advice = memoryAdvice(monitor.memory, top: processes.groups.first(where: { !$0.isProtected })) {
                 Label(advice, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -156,7 +159,7 @@ struct MenuBarPanel: View {
             Button { open(.cleanup) } label: { Label("Temizlik", systemImage: "list.bullet.rectangle") }
             Button { open(.storage) } label: { Label("Depolama", systemImage: "square.grid.3x3.square") }
             Spacer()
-            Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }
+            Button { NSApp.terminate(nil) } label: { Label("Çık", systemImage: "power") }
                 .help("MultiMac'ten çık")
         }
         .buttonStyle(.borderless)
@@ -193,13 +196,11 @@ private struct ProcessQuickRow: View {
             Text(Fmt.percent(fraction)).font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(.blue)
             Text(Fmt.bytes(group.total)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .frame(minWidth: 58, alignment: .trailing)
-            Button(action: quit) {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(group.isProtected ? Color.secondary : Color.red)
-            }
-            .buttonStyle(.plain)
-            .opacity(hovering && !group.isProtected ? 1 : 0)
-            .disabled(group.isProtected)
-            .help("Kapat")
+            Button("Kapat", action: quit)
+                .controlSize(.mini)
+                .opacity(hovering && !group.isProtected ? 1 : 0)
+                .disabled(group.isProtected)
+                .help("Uygulamayı düzgünce kapat")
         }
         .padding(.vertical, 1)
         .contentShape(Rectangle())

@@ -107,12 +107,96 @@ func memoryAdvice(_ m: MemorySnapshot, top: ProcessGroup?) -> String? {
     case .warning: parts.append("Bellek baskısı yüksek.")
     case .normal: break
     }
-    if m.swapFraction > 0.6 {
-        parts.append("Swap %\(Int(m.swapFraction * 100)) dolu (\(Fmt.bytes(m.swapUsed))). Bu SSD'ye yazma yapar ve sistemi yavaşlatır.")
-    }
     guard !parts.isEmpty else { return nil }
     if let top {
         parts.append("En çok kullanan: \(top.name) (\(Fmt.bytes(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.")
     }
     return parts.joined(separator: " ")
+}
+
+// MARK: - Swap yorumu
+
+struct SwapInsight {
+    enum Level { case calm, churning }
+    let level: Level
+    let title: String
+    let text: String
+    /// Yeniden başlatılması en çok fayda sağlayacak uygulama
+    let suggestion: ProcessGroup?
+}
+
+/// Swap'in "durgun" (zararsız, soğuk veri) mi yoksa "çalkantılı" (RAM ile disk arasında sürekli taşınıyor,
+/// takılmanın asıl nedeni) mı olduğunu son 5 dakikadaki değişime ve bellek baskısına bakarak yorumlar.
+func swapInsight(_ m: MemorySnapshot, history: [HistoryPoint], groups: [ProcessGroup]) -> SwapInsight? {
+    guard m.swapUsed > 200_000_000 else { return nil }
+    let recent = Array(history.suffix(100))   // 3 sn aralıkla ~5 dk
+    var movedGB = 0.0
+    for i in recent.indices.dropFirst() { movedGB += abs(recent[i].swapGB - recent[i - 1].swapGB) }
+
+    // Öneri: uzun süredir açık (3+ saat) ve en çok bellek tutan uygulama; yoksa en büyük uygulama.
+    let apps = groups.filter { $0.isApp && !$0.isProtected }
+    let longRunning = apps.filter { ($0.uptime ?? 0) > 3 * 3600 }
+    let suggestion = (longRunning.isEmpty ? apps : longRunning).max { $0.total < $1.total }
+    let restartHint = suggestion.map { g in
+        let hours = Int((g.uptime ?? 0) / 3600)
+        let age = hours >= 1 ? ", \(hours) saattir açık" : ""
+        return " En çok fayda: \(g.name) (\(Fmt.bytes(g.total))\(age)) uygulamasını yeniden başlatmak."
+    } ?? ""
+
+    if movedGB > 0.75 {
+        return SwapInsight(
+            level: .churning,
+            title: "Swap çalkantılı",
+            text: "Sistem RAM'e sığmayan veriyi sürekli diske yazıp geri okuyor; takılmanın asıl nedeni bu. Son 5 dakikada ~\(String(format: "%.1f", movedGB)) GB veri RAM ile disk arasında taşındı.\(restartHint)",
+            suggestion: suggestion)
+    }
+    if m.pressure != .normal {
+        return SwapInsight(
+            level: .churning,
+            title: "Bellek sıkışık",
+            text: "RAM dolu: macOS verinin \(Fmt.bytes(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.bytes(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)",
+            suggestion: suggestion)
+    }
+    return SwapInsight(
+        level: .calm,
+        title: "Swap durgun, endişelenme",
+        text: "Swap'te \(Fmt.bytes(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)",
+        suggestion: suggestion)
+}
+
+/// Swap yorumu kartı (Bellek ekranı ve menü paneli).
+struct SwapInsightCard: View {
+    let insight: SwapInsight
+    var compact = false
+    let restart: (ProcessGroup) -> Void
+
+    var body: some View {
+        let color: Color = insight.level == .calm ? .green : .orange
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: insight.level == .calm ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath")
+                .font(compact ? .callout : .title3)
+                .foregroundStyle(color)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(insight.title).font(compact ? .caption.weight(.semibold) : .callout.weight(.semibold))
+                Text(insight.text)
+                    .font(compact ? .caption : .callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(compact ? 4 : nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let g = insight.suggestion {
+                    Button {
+                        restart(g)
+                    } label: {
+                        Label("\(g.name) uygulamasını yeniden başlat", systemImage: "arrow.clockwise")
+                    }
+                    .controlSize(.small)
+                    .padding(.top, 2)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(compact ? 10 : 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
 }

@@ -48,7 +48,7 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             roots.removeAll { $0 == root }
                             Prefs.roots = roots
-                        } label: { Image(systemName: "minus.circle") }
+                        } label: { Label("Kaldır", systemImage: "minus.circle") }
                         .buttonStyle(.borderless)
                     }
                 }
@@ -78,7 +78,7 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             Exclusions.remove(path)
                             exclusions = Exclusions.all
-                        } label: { Image(systemName: "minus.circle") }
+                        } label: { Label("Kaldır", systemImage: "minus.circle") }
                         .buttonStyle(.borderless)
                     }
                 }
@@ -117,7 +117,7 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             protectedApps.removeAll { $0 == name }
                             Prefs.setList(Prefs.protectedApps, protectedApps)
-                        } label: { Image(systemName: "minus.circle") }
+                        } label: { Label("Kaldır", systemImage: "minus.circle") }
                         .buttonStyle(.borderless)
                     }
                 }
