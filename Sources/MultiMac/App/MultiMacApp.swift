@@ -119,6 +119,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if let dir = Snapshot.directory {
                 Task { await Snapshot.run(to: dir) }
             }
+            // Hata ayıklama: --tab memory → ana pencere o sekmede açılır (performans ölçümü için).
+            let args = CommandLine.arguments
+            if let i = args.firstIndex(of: "--tab"), i + 1 < args.count, let tab = MainTab(rawValue: args[i + 1]) {
+                state.tab = tab
+            }
         }
         Notifier.requestAuthorization()
     }

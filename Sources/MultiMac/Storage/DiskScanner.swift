@@ -43,16 +43,17 @@ final class FileNode: Identifiable {
     var isDeletable: Bool { (kind == .file || kind == .directory) && parent != nil }
     var canOpen: Bool { kind == .directory && (!children.isEmpty || isCollapsed) }
 
-    private var cachedSafety: SafetyInfo?
+    /// Açıklama metni o anki dille üretilir; dil değişince yeniden hesaplanır.
+    private var cachedSafety: (info: SafetyInfo, lang: UILanguage)?
     var safety: SafetyInfo {
-        if let cachedSafety { return cachedSafety }
+        if let cachedSafety, cachedSafety.lang == Lang.current { return cachedSafety.info }
         let info: SafetyInfo
         switch kind {
         case .smallFiles: info = SafetyInfo(level: .normal, reason: "Bu klasördeki küçük dosyaların toplamı")
         case .unscanned: info = SafetyInfo(level: .protected, reason: "macOS sistem birimi, APFS anlık görüntüleri, swap ve okunamayan alanlar")
         default: info = SafetyClassifier.classify(path)
         }
-        cachedSafety = info
+        cachedSafety = (info, Lang.current)
         return info
     }
 

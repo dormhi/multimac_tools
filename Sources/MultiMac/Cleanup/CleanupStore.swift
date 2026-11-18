@@ -293,12 +293,19 @@ final class CleanupStore: ObservableObject {
         let category = item.category
         let candidates: [CleanupItem] = await Task.detached(priority: .userInitiated) {
             let fm = FileManager.default
-            let urls: [URL] = item.urls.count > 1
+            // Çok yollu öğede (tarayıcı önbellekleri) alt öğeler üstün kendi klasörleridir:
+            // üst "yalnızca içi" diyorsa klasörün kendisi silinmemeli.
+            let multi = item.urls.count > 1
+            let urls: [URL] = multi
                 ? item.urls
                 : item.urls.flatMap { (try? fm.contentsOfDirectory(at: $0, includingPropertiesForKeys: nil)) ?? [] }
             return urls.map { url in
-                CleanupItem(urls: [url], title: url.lastPathComponent, category: category,
-                            autoEligible: false, defaultSelected: false, contentsOnly: false, parentID: parentID)
+                var sub = CleanupItem(urls: [url], title: url.lastPathComponent, category: category,
+                                      autoEligible: false, defaultSelected: false,
+                                      contentsOnly: multi && item.contentsOnly, parentID: parentID)
+                // Yaş sınırı (günlükler, pencere durumları) alt öğelerde de geçerli.
+                sub.minAgeDays = item.minAgeDays
+                return sub
             }
         }.value
         let measured = await CleanupScanner.measure(candidates)
@@ -355,7 +362,7 @@ final class CleanupStore: ObservableObject {
 
     func cleanSelected() async {
         let targets = selectedItems
-        guard !targets.isEmpty, !isCleaning else { return }
+        guard !targets.isEmpty, !isBusy else { return }
         isCleaning = true
         let toTrash = UserDefaults.standard.bool(forKey: Prefs.deleteToTrash)
         let result = await Task.detached(priority: .userInitiated) {

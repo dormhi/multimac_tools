@@ -27,8 +27,8 @@ enum Fmt {
             return f
         }
     }
-    nonisolated(unsafe) private static let enNumber = numberFormatters("en_US")
-    nonisolated(unsafe) private static let numberFormatters: [String: [NumberFormatter]] = [
+    private static let enNumber = numberFormatters("en_US")
+    private static let numberFormatters: [String: [NumberFormatter]] = [
         "tr_TR": numberFormatters("tr_TR"), "en_US": enNumber, "ru_RU": numberFormatters("ru_RU"),
     ]
 
@@ -248,12 +248,13 @@ enum Lang {
 }
 
 /// Arayüz metni: Türkçesi, İngilizcesi ve Rusçası yan yana yazılır, o anki dile göre biri döner.
-/// Rusçası verilmemişse İngilizcesi kullanılır.
-func L(_ tr: String, _ en: String, _ ru: String? = nil) -> String {
+/// Rusçası verilmemişse İngilizcesi kullanılır. Argümanlar @autoclosure: yalnızca seçili dildeki metin
+/// hazırlanır (içindeki Fmt.bytes gibi biçimlendirmeler üç kez değil bir kez çalışır).
+func L(_ tr: @autoclosure () -> String, _ en: @autoclosure () -> String, _ ru: @autoclosure () -> String? = nil) -> String {
     switch Lang.current {
-    case .tr: tr
-    case .en: en
-    case .ru: ru ?? en
+    case .tr: tr()
+    case .en: en()
+    case .ru: ru() ?? en()
     }
 }
 

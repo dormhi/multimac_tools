@@ -136,7 +136,7 @@ The card at the top reads the situation in plain language:
 | **Bellek sıkışık** (memory squeezed) | Memory pressure is not normal | Restart the biggest app that has been open for 3+ hours |
 | **Swap durgun** (swap calm) | Swap is in use but not moving | Nothing; idle pages on disk do not slow you down |
 
-Every button says what it does, and the destructive ones are red:
+Every button says what it does, and the destructive ones are red. App buttons appear when you hover a row, which keeps the long process list light:
 
 | Button | Where | What it does |
 | --- | --- | --- |
@@ -335,6 +335,9 @@ sudo rm /Library/Developer/CommandLineTools/usr/include/swift/module.modulemap
 
 # Render every tab and the menu bar panel to PNG (used for the screenshots in this README).
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --snapshot /tmp/multimac-shots
+
+# Open the main window on a given tab (overview, cleanup, storage, memory, automation, settings), e.g. for profiling with `sample`.
+/Applications/MultiMac.app/Contents/MacOS/MultiMac --tab memory
 ```
 
 ## Project structure

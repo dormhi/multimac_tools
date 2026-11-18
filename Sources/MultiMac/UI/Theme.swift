@@ -121,11 +121,9 @@ enum Surface {
         a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             ? NSColor(white: 1, alpha: 0.055) : NSColor(white: 1, alpha: 0.82)
     })
-    /// Kartın camsı kenarı: üstte daha parlak, altta söner.
-    static var edge: LinearGradient {
-        LinearGradient(colors: [Color.primary.opacity(0.13), Color.primary.opacity(0.04)],
-                       startPoint: .top, endPoint: .bottom)
-    }
+    /// Kartın ince kenarı. Düz renk: gradyan kenar işlemcide çiziliyordu ve uzun kartlarda
+    /// (Bellek'teki süreç listesi) her yenilemede ~0,15 sn ana thread harcıyordu.
+    static let edge = Color.primary.opacity(0.08)
     /// İç gruplar (liste satırları, önizleme kutuları) için hafif dolgu.
     static let inset = Color.primary.opacity(0.045)
 }
@@ -182,8 +180,7 @@ private struct GlassButtonBody: View {
             .background(Capsule(style: .continuous).fill(fill(pressed: pressed)))
             .overlay(
                 Capsule(style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.white.opacity(prominent ? 0.35 : 0.14), .white.opacity(0.02)],
-                                                 startPoint: .top, endPoint: .bottom), lineWidth: 0.75)
+                    .strokeBorder(Color.white.opacity(prominent ? 0.22 : 0.07), lineWidth: 0.75)
             )
             .contentShape(Capsule())
             .scaleEffect(pressed ? 0.97 : 1)

@@ -23,6 +23,16 @@ struct ProcessGroup: Identifiable {
     var total: UInt64 { processes.reduce(0) { $0 + $1.footprint } }
     var uptime: TimeInterval? { started.map { Date().timeIntervalSince($0) } }
     var isApp: Bool { bundlePath != nil }
+
+    /// Ekranda görünen her şeyin özeti: boyut, ekranda yazdığı hassasiyetle karşılaştırılır.
+    /// Bayt düzeyindeki oynamalar (her 3 sn'de hep olur) satırı yeniden çizdirmez.
+    func displayKey(expanded: Bool) -> String {
+        var key = "\(id)|\(name)|\(processes.count)|\(Fmt.bytes(total))|\(isProtected)|\(isDeveloperTool)|\(Int((uptime ?? 0) / 3600))"
+        if expanded {
+            for p in processes { key += "|\(p.pid):\(Fmt.bytes(p.footprint)):\(p.cwd ?? "")" }
+        }
+        return key
+    }
 }
 
 enum ProcessInspector {
@@ -175,16 +185,28 @@ final class ProcessStore: ObservableObject {
         guard !refreshing else { return }
         refreshing = true
         let result = await Task.detached(priority: .utility) { ProcessInspector.snapshot() }.value
-        groups = result
-        lastUpdate = Date()
+        // Ekranda görünen hiçbir şey değişmediyse yayınlama: liste ve öneri kartı boşuna yeniden çizilmesin.
+        // PID'ler de imzada: açılmış bir satırda biten sürecin PID'i kalmasın (Kapat yanlış PID'e gitmesin).
+        let signature = result.map { g in
+            g.displayKey(expanded: false) + "|" + g.processes.map { String($0.pid) }.joined(separator: ",")
+        }.joined(separator: "\n")
+        if signature != lastSignature || groups.isEmpty {
+            lastSignature = signature
+            groups = result
+            lastUpdate = Date()
+        }
         refreshing = false
     }
 
+    private var lastSignature = ""
+
     /// Görünüm açık kaldığı sürece yeniler; görünüm kapanınca .task iptal edilir.
+    /// Uygulama arka plandayken 10 sn'de bir yeniler (kimse izlemiyorken her 3 sn'de çizmeye gerek yok).
     func autoRefresh(every seconds: Double = 3) async {
         while !Task.isCancelled {
             await refresh()
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            let interval = NSApp.isActive ? seconds : max(seconds, 10)
+            try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
         }
     }
 
@@ -211,7 +233,8 @@ final class ProcessStore: ObservableObject {
             if app.isTerminated {
                 let config = NSWorkspace.OpenConfiguration()
                 config.activates = false
-                _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
+                NSWorkspace.shared.openApplication(at: url, configuration: config, completionHandler: nil)
+                try? await Task.sleep(nanoseconds: 500_000_000)
             }
             restarting.remove(group.id)
             try? await Task.sleep(nanoseconds: 1_500_000_000)

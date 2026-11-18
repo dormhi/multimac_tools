@@ -38,7 +38,12 @@ final class OverviewStore: ObservableObject {
         var paths: [String]
     }
 
+    /// Ölçüm sürerken yenisi başlarsa (ör. dil değişti) eskisinin sonuçları yeni listeye eklenmesin.
+    private var generation = 0
+
     func measure() async {
+        generation += 1
+        let run = generation
         isMeasuring = true
         stale = false
         progress = 0
@@ -104,6 +109,7 @@ final class OverviewStore: ObservableObject {
             }
             for _ in 0..<min(3, jobs.count) { add() }
             while let (id, size) = await group.next() {
+                guard run == generation else { group.cancelAll(); return }
                 if let i = segments.firstIndex(where: { $0.id == id }) { segments[i].bytes += size }
                 done += 1
                 progress = Double(done) / Double(max(1, jobs.count))
@@ -111,6 +117,7 @@ final class OverviewStore: ObservableObject {
             }
         }
 
+        guard run == generation else { return }
         let disk = DiskReader.read()
         let measured = segments.reduce(Int64(0)) { $0 + $1.bytes }
         segments.removeAll { $0.bytes < 50_000_000 }
