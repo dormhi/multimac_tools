@@ -4,10 +4,6 @@ import ServiceManagement
 struct SettingsView: View {
     @EnvironmentObject private var cleanup: CleanupStore
     @EnvironmentObject private var appState: AppState
-    @AppStorage(Prefs.autoCleanEnabled) private var autoClean = true
-    @AppStorage(Prefs.autoCleanIntervalHours) private var interval = 6
-    @AppStorage(Prefs.lowDiskEnabled) private var lowDisk = true
-    @AppStorage(Prefs.lowDiskThresholdGB) private var threshold = 10
     @AppStorage(Prefs.staleDays) private var staleDays = 30
     @AppStorage(Prefs.menuBarStyle) private var menuBarStyle = 0
     @AppStorage(Prefs.notifyAfterClean) private var notify = true

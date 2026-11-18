@@ -143,8 +143,15 @@ Her tuş ne yaptığını söyler, geri alınamayanlar kırmızıdır:
 ### Otomasyon
 
 <p align="center">
-  <img src="docs/images/automation.png" width="820" alt="Otomasyon ekranı: zamanlama ve kural anahtarları">
+  <img src="docs/images/automation.png" width="820" alt="Otomasyon ekranı: soru-cevap kurallı iki görev kartı, boyutlu kural kutucukları ve katlanan bölümler">
 </p>
+
+Sekmede yalnızca iki iş var; her biri tek açma/kapama anahtarı ve sade bir soru-cevap kuralı olan bir kart:
+
+- **Önbellekleri kendiliğinden temizle:** *Ne zaman?* (her saat … her hafta ya da zamanlama yok) · *Disk dolarsa?* (boş alan 5–50 GB'ın altına inince hemen temizle) · *Neler temizlensin?* (her birinin ne kadar yer açacağını gösteren kutucuklar; üzerine gelince ayrıntısı çıkar). Alt satır bir sonraki çalışmayı ve son yapılanı söyler; **Ne silinir?** tam listeyi gösterir, **Şimdi çalıştır** hemen uygular.
+- **Bellek sıkışınca uygulama kapat:** *Ne zaman?* (baskı yüksek / kritik / swap %X dolunca, N dakika sürerse) · *Hangi uygulamalar?* (senin listen) · *Hangileri kapansın?* (yalnızca N dakikadır kullanmadıkların). Alt satır koşulun şu an sağlanıp sağlanmadığını ve sırada kimin olduğunu gösterir.
+
+*Asla dokunulmayanlar*, *Gelişmiş* (bildirimler, açık uygulamalar, günlük yaşı, bekleme süresi) ve *Geçmiş* gerekene kadar kapalı durur. İki iş de **varsayılan olarak kapalı**.
 
 ## Otomasyon kuralları
 
@@ -259,7 +266,7 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 | Temizlik | Bir kip seç veya öğeleri işaretle, sonra **Temizle**. Sağ tık › *Asla dokunma* |
 | Depolama | *Tüm Disk / Ev Klasörü / Klasör…* seç, tara, bloklara çift tıklayarak içine gir |
 | Bellek | *Yeniden Başlat* uygulamayı yeniden başlatır, *Kapat* kapatır, *Zorla Kapat* zorla kapatır. Uygulamaya sağ tık › korunanlara ekle. *Durdur* bir dev server'ı kapatır |
-| Otomasyon | Kuralları aç/kapat, zamanlamayı ayarla, **Şimdi ne silinir?** önizler, **Şimdi çalıştır** uygular |
+| Otomasyon | Bir işi aç, sorularını yanıtla, temizlenecekleri kutucuklara tıklayarak seç. **Ne silinir?** önizler, **Şimdi çalıştır** uygular |
 | Ayarlar | Proje klasörleri, kullanılmayan proje eşiği, büyük/eski dosya eşikleri, uyarılar, korunan uygulamalar, menü çubuğu görünümü, girişte başlatma |
 
 ## Nasıl çalışır?

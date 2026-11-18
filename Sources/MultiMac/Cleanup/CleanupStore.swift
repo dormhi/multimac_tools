@@ -381,7 +381,8 @@ final class CleanupStore: ObservableObject {
         return result
     }
 
-    /// Otomatik temizliğin şu an neyi sileceğini gösterir (hiçbir şey silmez).
+    /// Otomatik temizliğin kapsayabileceği her şeyi kapalı kurallar dahil ölçer (hiçbir şey silmez).
+    /// Ekran, kuralı açık olanları süzerek "şu an ne silinir" sorusunu yanıtlar.
     @Published private(set) var autoPreview: [CleanupItem]?
     @Published private(set) var isPreviewing = false
 
@@ -389,8 +390,17 @@ final class CleanupStore: ObservableObject {
         guard !isPreviewing else { return }
         isPreviewing = true
         let ctx = await CleanupContext.current()
-        autoPreview = await CleanupScanner.scan(context: ctx, autoOnly: true)
+        autoPreview = await CleanupScanner.scan(context: ctx, autoOnly: true, allRules: true)
         isPreviewing = false
+    }
+
+    /// Zamanlamaya göre bir sonraki otomatik temizliğin yaklaşık zamanı (kontrol 15 dakikada bir yapılır).
+    var nextAutoDate: Date? {
+        let d = UserDefaults.standard
+        let hours = d.integer(forKey: Prefs.autoCleanIntervalHours)
+        guard d.bool(forKey: Prefs.autoStorageEnabled), hours > 0 else { return nil }
+        guard let last = lastAutoDate else { return Date() }
+        return max(Date(), last.addingTimeInterval(Double(hours) * 3600))
     }
 
     func startAutoSchedule() {
@@ -410,10 +420,12 @@ final class CleanupStore: ObservableObject {
         guard !isBusy else { return }
         let d = UserDefaults.standard
         let since = lastAutoDate.map { Date().timeIntervalSince($0) } ?? .infinity
-        let interval = Double(max(1, d.integer(forKey: Prefs.autoCleanIntervalHours))) * 3600
+        guard d.bool(forKey: Prefs.autoStorageEnabled) else { return }
+        let hours = d.integer(forKey: Prefs.autoCleanIntervalHours)
         let threshold = Int64(d.integer(forKey: Prefs.lowDiskThresholdGB)) * 1_000_000_000
 
-        let scheduled = d.bool(forKey: Prefs.autoCleanEnabled) && since >= interval
+        // Saat 0 = "zamanlama yok": yalnızca disk dolunca çalışır.
+        let scheduled = hours > 0 && since >= Double(hours) * 3600
         let lowDisk = d.bool(forKey: Prefs.lowDiskEnabled) && DiskReader.read().available < threshold && since > 3600
         if scheduled || lowDisk {
             await quickClean(automatic: true)
