@@ -271,7 +271,7 @@ enum CleanupScanner {
             guard !covered.contains(dir.path) else { continue }
             var item = CleanupItem(urls: [dir], title: "~/.cache/\(dir.lastPathComponent)", category: .devCaches,
                                    autoEligible: false, defaultSelected: false, contentsOnly: true,
-                                   note: L("Tanınmayan araç verisi, içeriğini kontrol et", "Unrecognized tool data, check its contents"))
+                                   note: L("Tanınmayan araç verisi, içeriğini kontrol et", "Unrecognized tool data, check its contents", "Неизвестные данные инструмента, проверьте содержимое"))
             item.sensitive = true
             items.append(item)
         }
@@ -288,7 +288,7 @@ enum CleanupScanner {
             let isApple = name.hasPrefix("com.apple.")
             let running = ctx.isAppRunning(name: name)
             var note: String?
-            if isApple { note = L("Apple sistem önbelleği", "Apple system cache") } else if running { note = L("Uygulama açık", "App is running") }
+            if isApple { note = L("Apple sistem önbelleği", "Apple system cache", "Системный кэш Apple") } else if running { note = L("Uygulama açık", "App is running", "Приложение запущено") }
             items.append(CleanupItem(
                 urls: [dir], title: cacheTitle(name), category: .appCaches,
                 autoEligible: !isApple, defaultSelected: !isApple,
@@ -347,10 +347,10 @@ enum CleanupScanner {
             guard !dirs.isEmpty else { continue }
             let running = ctx.isAppRunning(name: root.appName)
             items.append(CleanupItem(
-                urls: dirs, title: L("\(root.name) tarayıcı önbelleği", "\(root.name) browser cache"),
-                detail: Fmt.displayPath(rootURL.path) + L(" · \(dirs.count) önbellek klasörü (geçmiş ve çerezlere dokunulmaz)", " · \(dirs.count) cache folders (history and cookies are never touched)"),
+                urls: dirs, title: L("\(root.name) tarayıcı önbelleği", "\(root.name) browser cache", "Кэш браузера \(root.name)"),
+                detail: Fmt.displayPath(rootURL.path) + L(" · \(dirs.count) önbellek klasörü (geçmiş ve çerezlere dokunulmaz)", " · \(dirs.count) cache folders (history and cookies are never touched)", " · папок кэша: \(dirs.count) (история и cookie не затрагиваются)"),
                 category: .appCaches, autoEligible: true, defaultSelected: true, contentsOnly: true,
-                note: running ? L("Uygulama açık", "App is running") : nil, inUse: running))
+                note: running ? L("Uygulama açık", "App is running", "Приложение запущено") : nil, inUse: running))
         }
         return items
     }
@@ -358,7 +358,7 @@ enum CleanupScanner {
     private static func savedState(_ ctx: CleanupContext) -> [CleanupItem] {
         let url = ctx.home.appendingPathComponent("Library/Saved Application State")
         guard exists(url) else { return [] }
-        return [CleanupItem(urls: [url], title: L("Kayıtlı pencere durumları (30+ gün)", "Saved window states (30+ days)"), category: .logs,
+        return [CleanupItem(urls: [url], title: L("Kayıtlı pencere durumları (30+ gün)", "Saved window states (30+ days)", "Сохранённые состояния окон (30+ дней)"), category: .logs,
                             autoEligible: true, defaultSelected: true, contentsOnly: true)]
     }
 
@@ -371,10 +371,10 @@ enum CleanupScanner {
             guard !dirs.isEmpty else { continue }
             let running = ctx.isAppRunning(name: app.lastPathComponent)
             items.append(CleanupItem(
-                urls: dirs, title: L("\(app.lastPathComponent) (web önbelleği)", "\(app.lastPathComponent) (web cache)"),
+                urls: dirs, title: L("\(app.lastPathComponent) (web önbelleği)", "\(app.lastPathComponent) (web cache)", "\(app.lastPathComponent) (веб-кэш)"),
                 detail: Fmt.displayPath(app.path) + " · " + dirs.map(\.lastPathComponent).joined(separator: ", "),
                 category: .appCaches, autoEligible: true, defaultSelected: true,
-                contentsOnly: true, note: running ? L("Uygulama açık", "App is running") : nil, inUse: running))
+                contentsOnly: true, note: running ? L("Uygulama açık", "App is running", "Приложение запущено") : nil, inUse: running))
         }
         return items
     }
@@ -383,11 +383,11 @@ enum CleanupScanner {
         let dev = ctx.home.appendingPathComponent("Library/Developer")
         let rules: [(String, String, Bool, Bool, String?)] = [
             ("Xcode/DerivedData", "DerivedData", true, true, nil),
-            ("Xcode/iOS DeviceSupport", L("iOS cihaz sembolleri", "iOS device symbols"), false, true, L("Cihaz yeniden bağlanınca yeniden oluşturulur", "Recreated when the device reconnects")),
-            ("Xcode/watchOS DeviceSupport", L("watchOS cihaz sembolleri", "watchOS device symbols"), false, true, nil),
-            ("Xcode/Archives", L("Xcode arşivleri", "Xcode archives"), false, false, L("Yayınlanmış sürümlerin arşivleri", "Archives of released builds")),
-            ("CoreSimulator/Caches", L("Simülatör önbelleği", "Simulator cache"), true, true, nil),
-            ("Xcode/UserData/Previews", L("SwiftUI önizleme verisi", "SwiftUI preview data"), true, true, nil),
+            ("Xcode/iOS DeviceSupport", L("iOS cihaz sembolleri", "iOS device symbols", "Символы устройств iOS"), false, true, L("Cihaz yeniden bağlanınca yeniden oluşturulur", "Recreated when the device reconnects", "Создаются заново при подключении устройства")),
+            ("Xcode/watchOS DeviceSupport", L("watchOS cihaz sembolleri", "watchOS device symbols", "Символы устройств watchOS"), false, true, nil),
+            ("Xcode/Archives", L("Xcode arşivleri", "Xcode archives", "Архивы Xcode"), false, false, L("Yayınlanmış sürümlerin arşivleri", "Archives of released builds", "Архивы выпущенных сборок")),
+            ("CoreSimulator/Caches", L("Simülatör önbelleği", "Simulator cache", "Кэш Симулятора"), true, true, nil),
+            ("Xcode/UserData/Previews", L("SwiftUI önizleme verisi", "SwiftUI preview data", "Данные превью SwiftUI"), true, true, nil),
         ]
         return rules.compactMap { path, title, auto, selected, note in
             let url = dev.appendingPathComponent(path)
@@ -395,7 +395,7 @@ enum CleanupScanner {
             let xcodeRunning = ctx.isAppRunning(name: "xcode") || ctx.isAppRunning(name: "simulator")
             var item = CleanupItem(urls: [url], title: title, category: .xcode, autoEligible: auto,
                                    defaultSelected: selected, contentsOnly: true,
-                                   note: xcodeRunning ? L("Xcode veya simülatör açık", "Xcode or Simulator is running") : note, inUse: xcodeRunning)
+                                   note: xcodeRunning ? L("Xcode veya simülatör açık", "Xcode or Simulator is running", "Запущен Xcode или Симулятор") : note, inUse: xcodeRunning)
             item.sensitive = path.hasSuffix("Archives")
             return item
         }
@@ -404,14 +404,14 @@ enum CleanupScanner {
     private static func logs(_ ctx: CleanupContext) -> [CleanupItem] {
         let url = ctx.home.appendingPathComponent("Library/Logs")
         guard exists(url) else { return [] }
-        return [CleanupItem(urls: [url], title: L("Kullanıcı günlükleri (\(AutoSettings.logDays)+ gün)", "User logs (\(AutoSettings.logDays)+ days)"), category: .logs,
+        return [CleanupItem(urls: [url], title: L("Kullanıcı günlükleri (\(AutoSettings.logDays)+ gün)", "User logs (\(AutoSettings.logDays)+ days)", "Журналы пользователя (\(AutoSettings.logDays)+ дн.)"), category: .logs,
                             autoEligible: true, defaultSelected: true, contentsOnly: true)]
     }
 
     private static func trash(_ ctx: CleanupContext) -> [CleanupItem] {
         let url = ctx.home.appendingPathComponent(".Trash")
         guard exists(url) else { return [] }
-        return [CleanupItem(urls: [url], title: L("Çöp Kutusu", "Trash"), category: .trash, autoEligible: false,
+        return [CleanupItem(urls: [url], title: L("Çöp Kutusu", "Trash", "Корзина"), category: .trash, autoEligible: false,
                             defaultSelected: false, contentsOnly: true)]
     }
 
@@ -428,9 +428,9 @@ enum CleanupScanner {
             guard isInstaller || age >= 90 else { continue }
             items.append(CleanupItem(
                 urls: [url], title: url.lastPathComponent,
-                detail: L("~/Downloads · \(age) gün önce indirildi", "~/Downloads · downloaded \(age) days ago"), category: .downloads,
+                detail: L("~/Downloads · \(age) gün önce indirildi", "~/Downloads · downloaded \(age) days ago", "~/Downloads · скачано дней назад: \(age)"), category: .downloads,
                 autoEligible: false, defaultSelected: isInstaller, contentsOnly: false,
-                note: isInstaller ? L("Kurulum dosyası", "Installer") : nil, lastUsed: date))
+                note: isInstaller ? L("Kurulum dosyası", "Installer", "Установщик") : nil, lastUsed: date))
         }
         return items
     }
@@ -503,11 +503,11 @@ enum CleanupScanner {
                     let rel = dir.path.hasPrefix(root.path) ? String(dir.path.dropFirst(root.path.count + 1)) : dir.lastPathComponent
                     let projectName = rel.isEmpty ? dir.lastPathComponent : rel
                     var notes: [String] = []
-                    if busy { notes.append(L("Projede çalışan süreç var", "A process is running in the project")) }
+                    if busy { notes.append(L("Projede çalışan süreç var", "A process is running in the project", "В проекте запущен процесс")) }
                     if let n = rule.note { notes.append(LT(n)) }
                     items.append(CleanupItem(
                         urls: [entry], title: "\(projectName) › \(name)",
-                        detail: L("\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · \(idleDays) gündür dokunulmadı", "\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · untouched for \(idleDays) days"),
+                        detail: L("\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · \(idleDays) gündür dokunulmadı", "\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · untouched for \(idleDays) days", "\(LT(rule.kind)) · \(Fmt.displayPath(entry.path)) · не трогали дней: \(idleDays)"),
                         category: .buildArtifacts,
                         autoEligible: rule.auto,
                         defaultSelected: !busy && (rule.selectAlways || (stale && rule.selectWhenStale)),

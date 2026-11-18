@@ -54,29 +54,29 @@ private struct OverviewHealthCard: View {
         var issues: [String] = []
         var level = Health.good
         if d.available < 10_000_000_000 {
-            issues.append(L("Diskte yalnızca \(Fmt.bytes(d.available)) boş alan kaldı.", "Only \(Fmt.bytes(d.available)) of free disk space left."))
+            issues.append(L("Diskte yalnızca \(Fmt.bytes(d.available)) boş alan kaldı.", "Only \(Fmt.bytes(d.available)) of free disk space left.", "На диске осталось всего \(Fmt.bytes(d.available))."))
             level = .critical
         } else if d.available < 25_000_000_000 {
-            issues.append(L("Boş disk alanı azalıyor (\(Fmt.bytes(d.available))).", "Free disk space is running low (\(Fmt.bytes(d.available)))."))
+            issues.append(L("Boş disk alanı azalıyor (\(Fmt.bytes(d.available))).", "Free disk space is running low (\(Fmt.bytes(d.available))).", "Свободного места на диске становится мало (\(Fmt.bytes(d.available)))."))
             level = .warning
         }
         if m.pressure == .critical || m.swapFraction > 0.85 {
-            issues.append(L("Bellek yetersiz: swap %\(Int(m.swapFraction * 100)) dolu.", "Not enough memory: swap is \(Int(m.swapFraction * 100))% full."))
+            issues.append(L("Bellek yetersiz: swap %\(Int(m.swapFraction * 100)) dolu.", "Not enough memory: swap is \(Int(m.swapFraction * 100))% full.", "Не хватает памяти: своп заполнен на \(Int(m.swapFraction * 100))%."))
             level = .critical
         } else if m.pressure == .warning {
-            issues.append(L("Bellek baskısı yüksek, sistem swap kullanıyor.", "Memory pressure is high and the system is using swap."))
+            issues.append(L("Bellek baskısı yüksek, sistem swap kullanıyor.", "Memory pressure is high and the system is using swap.", "Нагрузка на память высокая, система использует своп."))
             if level == .good { level = .warning }
         } else if m.swapFraction > 0.5 {
-            issues.append(L("Swap kullanımı yüksek (%\(Int(m.swapFraction * 100))). Ağır uygulamaları kapatmak hızlandırır.", "Swap usage is high (\(Int(m.swapFraction * 100))%). Quitting heavy apps will speed things up."))
+            issues.append(L("Swap kullanımı yüksek (%\(Int(m.swapFraction * 100))). Ağır uygulamaları kapatmak hızlandırır.", "Swap usage is high (\(Int(m.swapFraction * 100))%). Quitting heavy apps will speed things up.", "Своп сильно занят (\(Int(m.swapFraction * 100))%). Закрытие тяжёлых приложений ускорит работу."))
             if level == .good { level = .warning }
         }
         let title: String
         switch level {
-        case .good: title = L("Mac'in iyi durumda", "Your Mac is in good shape")
-        case .warning: title = L("Biraz bakım iyi gelir", "A little care would help")
-        case .critical: title = L("Mac'in zorlanıyor", "Your Mac is struggling")
+        case .good: title = L("Mac'in iyi durumda", "Your Mac is in good shape", "Ваш Mac в хорошем состоянии")
+        case .warning: title = L("Biraz bakım iyi gelir", "A little care would help", "Немного ухода не помешает")
+        case .critical: title = L("Mac'in zorlanıyor", "Your Mac is struggling", "Вашему Mac тяжело")
         }
-        if issues.isEmpty { issues.append(L("Bellek ve disk alanı rahat.", "Memory and disk space are fine.")) }
+        if issues.isEmpty { issues.append(L("Bellek ve disk alanı rahat.", "Memory and disk space are fine.", "С памятью и местом на диске всё в порядке.")) }
         return (level, title, issues)
     }
 
@@ -100,7 +100,7 @@ private struct OverviewHealthCard: View {
                 } label: {
                     HStack {
                         if cleanup.isBusy { ProgressView().controlSize(.small) } else { Image(systemName: "sparkles") }
-                        Text(cleanup.isBusy ? L("Çalışıyor…", "Working…") : L("Hızlı Temizlik", "Quick Clean"))
+                        Text(cleanup.isBusy ? L("Çalışıyor…", "Working…", "Работаю…") : L("Hızlı Temizlik", "Quick Clean", "Быстрая очистка"))
                     }
                     .padding(.horizontal, 6)
                 }
@@ -120,9 +120,9 @@ private struct OverviewHealthCard: View {
 
     private func quickCaption(_ safeSize: Int64) -> String {
         if case let .done(freed, _) = cleanup.quickState {
-            return freed > 0 ? L("✓ \(Fmt.bytes(freed)) yer açıldı", "✓ Freed \(Fmt.bytes(freed))") : L("✓ Temizlenecek bir şey kalmadı", "✓ Nothing left to clean")
+            return freed > 0 ? L("✓ \(Fmt.bytes(freed)) yer açıldı", "✓ Freed \(Fmt.bytes(freed))", "✓ Освобождено \(Fmt.bytes(freed))") : L("✓ Temizlenecek bir şey kalmadı", "✓ Nothing left to clean", "✓ Больше нечего очищать")
         }
-        return safeSize > 0 ? L("Güvenle silinebilecek \(Fmt.bytes(safeSize)) var", "\(Fmt.bytes(safeSize)) can be safely deleted") : L("Önbellekleri ve güvenli kalıntıları siler", "Deletes caches and safe leftovers")
+        return safeSize > 0 ? L("Güvenle silinebilecek \(Fmt.bytes(safeSize)) var", "\(Fmt.bytes(safeSize)) can be safely deleted", "Можно безопасно удалить \(Fmt.bytes(safeSize))") : L("Önbellekleri ve güvenli kalıntıları siler", "Deletes caches and safe leftovers", "Удаляет кэши и безопасные остатки")
     }
 
 }
@@ -137,19 +137,19 @@ private struct OverviewGauges: View {
         let swapColor: Color = m.swapFraction > 0.7 ? .red : m.swapFraction > 0.4 ? .orange : .green
         let diskColor: Color = d.available < 15_000_000_000 ? .red : d.available < 40_000_000_000 ? .orange : .green
         return HStack(spacing: 16) {
-            GaugeCard(title: L("Bellek (RAM)", "Memory (RAM)"), symbol: "memorychip", fraction: m.usedFraction, color: m.pressure.color,
+            GaugeCard(title: L("Bellek (RAM)", "Memory (RAM)", "Память (RAM)"), symbol: "memorychip", fraction: m.usedFraction, color: m.pressure.color,
                       headline: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))",
-                      detail: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)"), footnote: L("Uygulamaları gör", "See apps")) {
+                      detail: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), footnote: L("Uygulamaları gör", "See apps", "Приложения")) {
                 state.showMemory()
             }
-            GaugeCard(title: "Swap", symbol: "arrow.left.arrow.right", fraction: m.swapFraction, color: swapColor,
+            GaugeCard(title: L("Swap", "Swap", "Своп"), symbol: "arrow.left.arrow.right", fraction: m.swapFraction, color: swapColor,
                       headline: "\(Fmt.bytes(m.swapUsed)) / \(Fmt.bytes(m.swapTotal))",
-                      detail: L("RAM'e sığmayıp diske taşan", "What didn't fit in RAM, on disk"), footnote: L("Bellek ayrıntıları", "Memory details")) {
+                      detail: L("RAM'e sığmayıp diske taşan", "What didn't fit in RAM, on disk", "Что не поместилось в RAM, на диске"), footnote: L("Bellek ayrıntıları", "Memory details", "Подробнее о памяти")) {
                 state.showMemory()
             }
-            GaugeCard(title: "Disk", symbol: "internaldrive", fraction: d.usedFraction, color: diskColor,
-                      headline: L("\(Fmt.bytes(d.available)) boş", "\(Fmt.bytes(d.available)) free"),
-                      detail: L("\(Fmt.bytes(d.used)) / \(Fmt.bytes(d.total)) dolu", "\(Fmt.bytes(d.used)) / \(Fmt.bytes(d.total)) used"), footnote: L("Depolama haritası", "Storage map")) {
+            GaugeCard(title: L("Disk", "Disk", "Диск"), symbol: "internaldrive", fraction: d.usedFraction, color: diskColor,
+                      headline: L("\(Fmt.bytes(d.available)) boş", "\(Fmt.bytes(d.available)) free", "Свободно \(Fmt.bytes(d.available))"),
+                      detail: L("\(Fmt.bytes(d.used)) / \(Fmt.bytes(d.total)) dolu", "\(Fmt.bytes(d.used)) / \(Fmt.bytes(d.total)) used", "Занято \(Fmt.bytes(d.used)) / \(Fmt.bytes(d.total))"), footnote: L("Depolama haritası", "Storage map", "Карта хранилища")) {
                 state.showStorage()
             }
         }
@@ -193,18 +193,18 @@ private struct OverviewDiskCard: View, Equatable {
 
     var body: some View {
         let total = Double(max(1, disk.total))
-        let free = BarSegment(id: "free", title: L("Boş alan", "Free space"), value: Double(disk.available), color: Color.primary.opacity(0.15))
+        let free = BarSegment(id: "free", title: L("Boş alan", "Free space", "Свободное место"), value: Double(disk.available), color: Color.primary.opacity(0.15))
         let bars = overview.segments.map { BarSegment(id: $0.id, title: $0.title, value: Double($0.bytes), color: $0.color) } + [free]
         return VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: L("Disk nereye gidiyor?", "Where is the disk going?"), symbol: "chart.pie.fill", color: .orange,
-                       subtitle: overview.isMeasuring ? L("Ölçülüyor… %\(Int(overview.progress * 100))", "Measuring… \(Int(overview.progress * 100))%")
-                           : overview.measuredAt.map { L("Ölçüm: \(Fmt.relative($0))", "Measured \(Fmt.relative($0))") } ?? "",
-                       actionTitle: L("Yenile", "Refresh")) {
+            CardHeader(title: L("Disk nereye gidiyor?", "Where is the disk going?", "Чем занят диск?"), symbol: "chart.pie.fill", color: .orange,
+                       subtitle: overview.isMeasuring ? L("Ölçülüyor… %\(Int(overview.progress * 100))", "Measuring… \(Int(overview.progress * 100))%", "Измерение… \(Int(overview.progress * 100))%")
+                           : overview.measuredAt.map { L("Ölçüm: \(Fmt.relative($0))", "Measured \(Fmt.relative($0))", "Измерено \(Fmt.relative($0))") } ?? "",
+                       actionTitle: L("Yenile", "Refresh", "Обновить")) {
                 Task { await overview.measure() }
             }
             StackedBar(segments: bars, total: total, height: 18) { id in open(segmentID: id) }
             if overview.segments.isEmpty {
-                HStack { ProgressView().controlSize(.small); Text(L("Klasörler ölçülüyor…", "Measuring folders…")).foregroundStyle(.secondary) }
+                HStack { ProgressView().controlSize(.small); Text(L("Klasörler ölçülüyor…", "Measuring folders…", "Измерение папок…")).foregroundStyle(.secondary) }
             }
             VStack(spacing: 0) {
                 ForEach(overview.segments) { s in
@@ -213,7 +213,7 @@ private struct OverviewDiskCard: View, Equatable {
                         open(segmentID: s.id)
                     }
                 }
-                LegendRow(color: .secondary, title: L("Boş alan", "Free space"), fraction: Double(disk.available) / total,
+                LegendRow(color: .secondary, title: L("Boş alan", "Free space", "Свободное место"), fraction: Double(disk.available) / total,
                           value: Fmt.bytes(disk.available), symbol: "circle.dashed")
             }
         }
@@ -241,9 +241,9 @@ private struct OverviewCleanableCard: View, Equatable {
         let categories = cleanup.summary.categories
         let total = cleanup.summary.total
         return VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: L("Temizlenebilir alan", "Cleanable space"), symbol: "sparkles", color: .green,
-                       subtitle: cleanup.isScanning ? L("Taranıyor…", "Scanning…") : L("\(Fmt.bytes(total)) · dolu alanın \(Fmt.percent(Double(total) / used))'i", "\(Fmt.bytes(total)) · \(Fmt.percent(Double(total) / used)) of used space"),
-                       actionTitle: L("Tümünü gör", "See all")) {
+            CardHeader(title: L("Temizlenebilir alan", "Cleanable space", "Можно очистить"), symbol: "sparkles", color: .green,
+                       subtitle: cleanup.isScanning ? L("Taranıyor…", "Scanning…", "Сканирование…") : L("\(Fmt.bytes(total)) · dolu alanın \(Fmt.percent(Double(total) / used))'i", "\(Fmt.bytes(total)) · \(Fmt.percent(Double(total) / used)) of used space", "\(Fmt.bytes(total)) · \(Fmt.percent(Double(total) / used)) занятого места"),
+                       actionTitle: L("Tümünü gör", "See all", "Все")) {
                 state.showCleanup()
             }
             HStack(spacing: 8) {
@@ -263,18 +263,18 @@ private struct OverviewCleanableCard: View, Equatable {
                 state.showCleanup(category: CleanupCategory(rawValue: id))
             }
             if cleanup.items.isEmpty && cleanup.isScanning {
-                HStack { ProgressView().controlSize(.small); Text(L("Önbellekler ve kalıntılar aranıyor…", "Looking for caches and leftovers…")).foregroundStyle(.secondary) }
+                HStack { ProgressView().controlSize(.small); Text(L("Önbellekler ve kalıntılar aranıyor…", "Looking for caches and leftovers…", "Поиск кэшей и остатков…")).foregroundStyle(.secondary) }
             }
             VStack(spacing: 0) {
                 ForEach(categories, id: \.0) { c, size in
                     LegendRow(color: c.color, title: c.title,
-                              subtitle: L("\(cleanup.summary.categoryCounts[c] ?? 0) öğe", "\(cleanup.summary.categoryCounts[c] ?? 0) items"),
+                              subtitle: L("\(cleanup.summary.categoryCounts[c] ?? 0) öğe", "\(cleanup.summary.categoryCounts[c] ?? 0) items", "Объектов: \(cleanup.summary.categoryCounts[c] ?? 0)"),
                               fraction: Double(size) / used, value: Fmt.bytes(size), symbol: c.symbol) {
                         state.showCleanup(category: c)
                     }
                 }
             }
-            Text(L("Yüzdeler dolu disk alanına göredir.", "Percentages are of used disk space.")).font(.caption2).foregroundStyle(.tertiary)
+            Text(L("Yüzdeler dolu disk alanına göredir.", "Percentages are of used disk space.", "Проценты указаны от занятого места на диске.")).font(.caption2).foregroundStyle(.tertiary)
         }
         .card()
     }
@@ -290,16 +290,16 @@ private struct OverviewMemoryCard: View {
         let m = monitor.memory
         let total = Double(max(1, m.total))
         let parts: [(String, String, UInt64, Color)] = [
-            ("app", L("Uygulamalar", "Apps"), m.app, .blue),
-            ("wired", L("Sistem (wired)", "System (wired)"), m.wired, .purple),
-            ("compressed", L("Sıkıştırılmış", "Compressed"), m.compressed, .orange),
-            ("cached", L("Dosya önbelleği", "File cache"), m.cached, .gray),
+            ("app", L("Uygulamalar", "Apps", "Приложения"), m.app, .blue),
+            ("wired", L("Sistem (wired)", "System (wired)", "Система (wired)"), m.wired, .purple),
+            ("compressed", L("Sıkıştırılmış", "Compressed", "Сжатая"), m.compressed, .orange),
+            ("cached", L("Dosya önbelleği", "File cache", "Файловый кэш"), m.cached, .gray),
         ]
         let apps = processes.groups.prefix(6)
         return VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: L("Bellek dağılımı", "Memory breakdown"), symbol: "memorychip.fill", color: .blue,
-                       subtitle: L("\(Fmt.bytes(m.used)) kullanımda · swap \(Fmt.bytes(m.swapUsed))", "\(Fmt.bytes(m.used)) in use · swap \(Fmt.bytes(m.swapUsed))"),
-                       actionTitle: L("Bellek", "Memory")) {
+            CardHeader(title: L("Bellek dağılımı", "Memory breakdown", "Распределение памяти"), symbol: "memorychip.fill", color: .blue,
+                       subtitle: L("\(Fmt.bytes(m.used)) kullanımda · swap \(Fmt.bytes(m.swapUsed))", "\(Fmt.bytes(m.used)) in use · swap \(Fmt.bytes(m.swapUsed))", "Используется \(Fmt.bytes(m.used)) · своп \(Fmt.bytes(m.swapUsed))"),
+                       actionTitle: L("Bellek", "Memory", "Память")) {
                 state.showMemory()
             }
             StackedBar(segments: parts.map { BarSegment(id: $0.0, title: $0.1, value: Double($0.2), color: $0.3) },
@@ -314,7 +314,7 @@ private struct OverviewMemoryCard: View {
                 }
             }
             Divider()
-            Text(L("En çok bellek kullananlar", "Using the most memory")).font(.subheadline.weight(.semibold))
+            Text(L("En çok bellek kullananlar", "Using the most memory", "Больше всего памяти")).font(.subheadline.weight(.semibold))
             VStack(spacing: 0) {
                 ForEach(apps) { g in
                     HStack(spacing: 10) {
@@ -363,18 +363,18 @@ private struct OverviewProjectsCard: View, Equatable {
         let projects = Array(cleanup.summary.projects.prefix(5))
         let used = Double(max(1, disk.used))
         return VStack(alignment: .leading, spacing: 10) {
-            CardHeader(title: L("Yer kaplayan projeler", "Projects taking up space"), symbol: "hammer.fill", color: .orange,
-                       subtitle: L("node_modules, .next, .venv… kalıntıları", "node_modules, .next, .venv… leftovers"),
-                       actionTitle: L("Projeler", "Projects")) {
+            CardHeader(title: L("Yer kaplayan projeler", "Projects taking up space", "Проекты, занимающие место"), symbol: "hammer.fill", color: .orange,
+                       subtitle: L("node_modules, .next, .venv… kalıntıları", "node_modules, .next, .venv… leftovers", "Остатки node_modules, .next, .venv…"),
+                       actionTitle: L("Projeler", "Projects", "Проекты")) {
                 state.showCleanup(projects: true)
             }
             if projects.isEmpty {
-                Text(cleanup.isScanning ? L("Taranıyor…", "Scanning…") : L("Build kalıntısı bulunamadı", "No build leftovers found")).foregroundStyle(.secondary)
+                Text(cleanup.isScanning ? L("Taranıyor…", "Scanning…", "Сканирование…") : L("Build kalıntısı bulunamadı", "No build leftovers found", "Остатков сборок не найдено")).foregroundStyle(.secondary)
             }
             VStack(spacing: 0) {
                 ForEach(projects) { p in
                     LegendRow(color: .orange, title: p.name,
-                              subtitle: Fmt.days(since: p.lastUsed).map { L("\($0) gündür dokunulmadı", "Untouched for \($0) days") },
+                              subtitle: Fmt.days(since: p.lastUsed).map { L("\($0) gündür dokunulmadı", "Untouched for \($0) days", "Не трогали дней: \($0)") },
                               fraction: Double(p.size) / used, value: Fmt.bytes(p.size)) {
                         state.showCleanup(projects: true, search: p.name)
                     }
@@ -393,9 +393,9 @@ private struct OverviewServersCard: View {
     var body: some View {
         let devs = servers.servers.filter { !$0.isApp }
         return VStack(alignment: .leading, spacing: 10) {
-            CardHeader(title: L("Çalışan dev server'lar", "Running dev servers"), symbol: "server.rack", color: .teal,
-                       subtitle: devs.isEmpty ? L("Port dinleyen geliştirici süreci yok", "No developer processes listening on a port") : L("\(devs.count) süreç port dinliyor", "\(devs.count) processes listening on ports"),
-                       actionTitle: L("Yönet", "Manage")) {
+            CardHeader(title: L("Çalışan dev server'lar", "Running dev servers", "Запущенные dev-серверы"), symbol: "server.rack", color: .teal,
+                       subtitle: devs.isEmpty ? L("Port dinleyen geliştirici süreci yok", "No developer processes listening on a port", "Нет процессов разработчика, слушающих порт") : L("\(devs.count) süreç port dinliyor", "\(devs.count) processes listening on ports", "Процессов, слушающих порты: \(devs.count)"),
+                       actionTitle: L("Yönet", "Manage", "Управлять")) {
                 state.showMemory(servers: true)
             }
             ForEach(devs.prefix(4)) { s in

@@ -7,9 +7,9 @@ enum MemoryPressure: Int {
 
     var title: String {
         switch self {
-        case .normal: "Normal"
-        case .warning: L("Yüksek", "High")
-        case .critical: L("Kritik", "Critical")
+        case .normal: L("Normal", "Normal", "Нормальная")
+        case .warning: L("Yüksek", "High", "Высокая")
+        case .critical: L("Kritik", "Critical", "Критическая")
         }
     }
 

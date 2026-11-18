@@ -27,9 +27,9 @@ struct MemoryView: View {
     var body: some View {
         let m = monitor.memory
         VStack(spacing: 0) {
-            PageHeader(title: L("Bellek", "Memory"), subtitle: L("Baskı: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda", "Pressure: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) in use"),
+            PageHeader(title: L("Bellek", "Memory", "Память"), subtitle: L("Baskı: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda", "Pressure: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) in use", "Нагрузка: \(m.pressure.title) · используется \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))"),
                        symbol: "memorychip", color: .blue) {
-                Badge(text: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)"), color: m.pressure.color, symbol: "circle.fill")
+                Badge(text: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), color: m.pressure.color, symbol: "circle.fill")
             }
             ScrollViewReader { proxy in
                 ScrollView {
@@ -66,25 +66,25 @@ struct MemoryView: View {
         .onChange(of: state.memoryRequest) { _, _ in handleRequest() }
         .task { await processes.autoRefresh(every: 3) }
         .task { await servers.autoRefresh(every: 5) }
-        .alert(L("Zorla kapatılsın mı?", "Force quit?"), isPresented: Binding(get: { confirmForce != nil },
+        .alert(L("Zorla kapatılsın mı?", "Force quit?", "Завершить принудительно?"), isPresented: Binding(get: { confirmForce != nil },
                                                            set: { if !$0 { confirmForce = nil } }),
                presenting: confirmForce) { g in
-            Button(L("Zorla Kapat", "Force Quit"), role: .destructive) { processes.quit(g, force: true) }
-            Button(L("Vazgeç", "Cancel"), role: .cancel) {}
+            Button(L("Zorla Kapat", "Force Quit", "Завершить принудительно"), role: .destructive) { processes.quit(g, force: true) }
+            Button(L("Vazgeç", "Cancel", "Отмена"), role: .cancel) {}
         } message: { g in
-            Text(L("\(g.name) kaydedilmemiş verileriyle birlikte hemen sonlandırılır.", "\(g.name) will be terminated immediately, along with any unsaved data."))
+            Text(L("\(g.name) kaydedilmemiş verileriyle birlikte hemen sonlandırılır.", "\(g.name) will be terminated immediately, along with any unsaved data.", "\(g.name) будет немедленно завершено вместе с несохранёнными данными."))
         }
     }
 
     private func breakdown(_ m: MemorySnapshot) -> some View {
         let items: [(String, UInt64, Color, String)] = [
-            (L("Uygulama", "Apps"), m.app, .blue, L("Açık uygulamaların kullandığı bellek", "Memory used by open apps")),
-            (L("Sistem (wired)", "System (wired)"), m.wired, .purple, L("Çekirdek ve sürücüler, boşaltılamaz", "Kernel and drivers, can't be freed")),
-            (L("Sıkıştırılmış", "Compressed"), m.compressed, .orange, L("RAM'e sığdırmak için sıkıştırılmış veri", "Data compressed to fit in RAM")),
-            (L("Dosya önbelleği", "File cache"), m.cached, .gray, L("macOS gerektiğinde anında boşaltır", "macOS frees it instantly when needed")),
+            (L("Uygulama", "Apps", "Приложения"), m.app, .blue, L("Açık uygulamaların kullandığı bellek", "Memory used by open apps", "Память открытых приложений")),
+            (L("Sistem (wired)", "System (wired)", "Система (wired)"), m.wired, .purple, L("Çekirdek ve sürücüler, boşaltılamaz", "Kernel and drivers, can't be freed", "Ядро и драйверы, освободить нельзя")),
+            (L("Sıkıştırılmış", "Compressed", "Сжатая"), m.compressed, .orange, L("RAM'e sığdırmak için sıkıştırılmış veri", "Data compressed to fit in RAM", "Данные, сжатые, чтобы поместиться в RAM")),
+            (L("Dosya önbelleği", "File cache", "Файловый кэш"), m.cached, .gray, L("macOS gerektiğinde anında boşaltır", "macOS frees it instantly when needed", "macOS мгновенно освобождает его при необходимости")),
         ]
         return VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: L("Dağılım", "Breakdown"), symbol: "chart.bar.fill", color: .blue,
+            CardHeader(title: L("Dağılım", "Breakdown", "Распределение"), symbol: "chart.bar.fill", color: .blue,
                        subtitle: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) · \(Fmt.percent(m.usedFraction))")
             GeometryReader { g in
                 HStack(spacing: 1) {
@@ -103,7 +103,7 @@ struct MemoryView: View {
                     LegendRow(color: item.2, title: item.0, subtitle: item.3,
                               fraction: Double(item.1) / Double(max(1, m.total)), value: Fmt.bytes(item.1))
                 }
-                LegendRow(color: .red, title: "Swap", subtitle: L("RAM'e sığmayıp diske taşan · toplam \(Fmt.bytes(m.swapTotal))", "Didn't fit in RAM, moved to disk · total \(Fmt.bytes(m.swapTotal))"),
+                LegendRow(color: .red, title: L("Swap", "Swap", "Своп"), subtitle: L("RAM'e sığmayıp diske taşan · toplam \(Fmt.bytes(m.swapTotal))", "Didn't fit in RAM, moved to disk · total \(Fmt.bytes(m.swapTotal))", "Не поместилось в RAM, вытеснено на диск · всего \(Fmt.bytes(m.swapTotal))"),
                           fraction: m.swapFraction, value: Fmt.bytes(m.swapUsed))
             }
         }
@@ -111,21 +111,21 @@ struct MemoryView: View {
 
     private var chart: some View {
         VStack(alignment: .leading, spacing: 6) {
-            CardHeader(title: L("Son 30 dakika", "Last 30 minutes"), symbol: "waveform.path.ecg", color: .red,
-                       subtitle: L("Kullanılan RAM ve swap (GB)", "Used RAM and swap (GB)"))
+            CardHeader(title: L("Son 30 dakika", "Last 30 minutes", "Последние 30 минут"), symbol: "waveform.path.ecg", color: .red,
+                       subtitle: L("Kullanılan RAM ve swap (GB)", "Used RAM and swap (GB)", "Используемая RAM и своп (ГБ)"))
             Chart {
                 ForEach(chartPoints) { p in
-                    AreaMark(x: .value(L("Zaman", "Time"), p.date), y: .value("GB", p.usedGB),
-                             series: .value(L("Tür", "Type"), L("Kullanılan", "Used")))
-                        .foregroundStyle(by: .value(L("Tür", "Type"), L("Kullanılan RAM", "Used RAM")))
+                    AreaMark(x: .value(L("Zaman", "Time", "Время"), p.date), y: .value(L("GB", "GB", "ГБ"), p.usedGB),
+                             series: .value(L("Tür", "Type", "Тип"), L("Kullanılan", "Used", "Используется")))
+                        .foregroundStyle(by: .value(L("Tür", "Type", "Тип"), L("Kullanılan RAM", "Used RAM", "Используемая RAM")))
                         .opacity(0.5)
-                    LineMark(x: .value(L("Zaman", "Time"), p.date), y: .value("GB", p.swapGB),
-                             series: .value(L("Tür", "Type"), "Swap"))
-                        .foregroundStyle(by: .value(L("Tür", "Type"), "Swap"))
+                    LineMark(x: .value(L("Zaman", "Time", "Время"), p.date), y: .value(L("GB", "GB", "ГБ"), p.swapGB),
+                             series: .value(L("Tür", "Type", "Тип"), L("Swap", "Swap", "Своп")))
+                        .foregroundStyle(by: .value(L("Tür", "Type", "Тип"), L("Swap", "Swap", "Своп")))
                 }
             }
-            .chartForegroundStyleScale([L("Kullanılan RAM", "Used RAM"): Color.blue, "Swap": Color.red])
-            .chartYAxisLabel("GB")
+            .chartForegroundStyleScale([L("Kullanılan RAM", "Used RAM", "Используемая RAM"): Color.blue, L("Swap", "Swap", "Своп"): Color.red])
+            .chartYAxisLabel(L("GB", "GB", "ГБ"))
             .frame(height: 190)
         }
     }
@@ -145,15 +145,15 @@ struct MemoryView: View {
     private var serverList: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                CardHeader(title: L("Dev server'lar", "Dev servers"), symbol: "server.rack", color: .teal,
-                           subtitle: L("Port dinleyen süreçler; unutulanları buradan kapat", "Processes listening on a port; stop forgotten ones here"))
-                Toggle(L("Uygulama ve sistem süreçlerini de göster", "Also show app and system processes"), isOn: $showAppServers).toggleStyle(.checkbox)
+                CardHeader(title: L("Dev server'lar", "Dev servers", "Dev-серверы"), symbol: "server.rack", color: .teal,
+                           subtitle: L("Port dinleyen süreçler; unutulanları buradan kapat", "Processes listening on a port; stop forgotten ones here", "Процессы, слушающие порт; забытые можно остановить здесь"))
+                Toggle(L("Uygulama ve sistem süreçlerini de göster", "Also show app and system processes", "Показывать также процессы приложений и системы"), isOn: $showAppServers).toggleStyle(.checkbox)
             }
             VStack(spacing: 0) {
                 if !servers.loaded {
                     ProgressView().controlSize(.small).padding(10)
                 } else if visibleServers.isEmpty {
-                    Text(L("Port dinleyen geliştirici süreci yok", "No developer processes listening on a port"))
+                    Text(L("Port dinleyen geliştirici süreci yok", "No developer processes listening on a port", "Нет процессов разработчика, слушающих порт"))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(12)
@@ -164,7 +164,7 @@ struct MemoryView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             HStack(spacing: 6) {
                                 Text(s.name).lineLimit(1)
-                                if s.isDeveloperTool { Badge(text: L("Geliştirici", "Developer"), color: .purple) }
+                                if s.isDeveloperTool { Badge(text: L("Geliştirici", "Developer", "Разработка"), color: .purple) }
                             }
                             Text(verbatim: s.cwd.map(Fmt.displayPath) ?? "PID " + String(s.pid))
                                 .font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
@@ -174,18 +174,18 @@ struct MemoryView: View {
                             ForEach(s.ports.prefix(4), id: \.self) { port in
                                 Button(":" + String(port)) { servers.openInBrowser(port) }
                                     .buttonStyle(.glass)
-                                    .help(L("http://localhost:\(String(port)) adresini tarayıcıda aç", "Open http://localhost:\(String(port)) in the browser"))
+                                    .help(L("http://localhost:\(String(port)) adresini tarayıcıda aç", "Open http://localhost:\(String(port)) in the browser", "Открыть http://localhost:\(String(port)) в браузере"))
                             }
                         }
                         Text(s.uptime).font(.caption).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
-                            .help(L("Çalışma süresi", "Uptime"))
+                            .help(L("Çalışma süresi", "Uptime", "Время работы"))
                         Text(Fmt.bytes(s.footprint)).monospacedDigit().frame(width: 76, alignment: .trailing)
-                        Button(L("Durdur", "Stop")) { servers.stop(s) }
-                            .help(L("Sürece kapanmasını söyler (SIGTERM); dev server düzgünce kapanır", "Asks the process to exit (SIGTERM); the dev server shuts down cleanly"))
+                        Button(L("Durdur", "Stop", "Остановить")) { servers.stop(s) }
+                            .help(L("Sürece kapanmasını söyler (SIGTERM); dev server düzgünce kapanır", "Asks the process to exit (SIGTERM); the dev server shuts down cleanly", "Просит процесс завершиться (SIGTERM); dev-сервер корректно остановится"))
                         Button(role: .destructive) { servers.stop(s, force: true) } label: {
-                            Text(L("Zorla Durdur", "Force Stop")).foregroundStyle(.red)
+                            Text(L("Zorla Durdur", "Force Stop", "Остановить принудительно")).foregroundStyle(.red)
                         }
-                            .help(L("Süreci anında öldürür (SIGKILL); yanıt vermeyen sunucular için", "Kills the process immediately (SIGKILL); for unresponsive servers"))
+                            .help(L("Süreci anında öldürür (SIGKILL); yanıt vermeyen sunucular için", "Kills the process immediately (SIGKILL); for unresponsive servers", "Немедленно завершает процесс (SIGKILL); для зависших серверов"))
                     }
                     .controlSize(.small)
                     .padding(.horizontal, 12)
@@ -219,10 +219,10 @@ struct MemoryView: View {
     private var processList: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                CardHeader(title: L("Uygulamalar ve süreçler", "Apps and processes"), symbol: "square.stack.3d.up.fill", color: .indigo,
-                           subtitle: L("\(processes.groups.count) grup · sağ tık: korunanlara ekle", "\(processes.groups.count) groups · right-click: add to protected"))
-                Toggle(L("Sadece geliştirici süreçleri", "Developer processes only"), isOn: $devOnly).toggleStyle(.checkbox)
-                TextField(L("Ara", "Search"), text: $search).textFieldStyle(.roundedBorder).frame(width: 180)
+                CardHeader(title: L("Uygulamalar ve süreçler", "Apps and processes", "Приложения и процессы"), symbol: "square.stack.3d.up.fill", color: .indigo,
+                           subtitle: L("\(processes.groups.count) grup · sağ tık: korunanlara ekle", "\(processes.groups.count) groups · right-click: add to protected", "Групп: \(processes.groups.count) · правый щелчок: добавить в защищённые"))
+                Toggle(L("Sadece geliştirici süreçleri", "Developer processes only", "Только процессы разработки"), isOn: $devOnly).toggleStyle(.checkbox)
+                TextField(L("Ara", "Search", "Поиск"), text: $search).textFieldStyle(.roundedBorder).frame(width: 180)
             }
             ButtonLegend()
             let userProtected = Set(Prefs.list(Prefs.protectedApps))
@@ -240,7 +240,7 @@ struct MemoryView: View {
                         .contextMenu {
                             let isUser = userProtected.contains(group.name)
                             if isUser || !group.isProtected {
-                                Button(isUser ? L("Korumayı kaldır", "Remove protection") : L("Korunanlara ekle (asla kapatma önerme)", "Add to protected (never suggest quitting)")) {
+                                Button(isUser ? L("Korumayı kaldır", "Remove protection", "Снять защиту") : L("Korunanlara ekle (asla kapatma önerme)", "Add to protected (never suggest quitting)", "Добавить в защищённые (никогда не предлагать закрыть)")) {
                                     toggleProtected(group)
                                 }
                             }
@@ -250,7 +250,7 @@ struct MemoryView: View {
             }
             .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
             if filtered.isEmpty {
-                Text(L("Eşleşen süreç yok", "No matching processes")).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                Text(L("Eşleşen süreç yok", "No matching processes", "Подходящих процессов нет")).foregroundStyle(.secondary).frame(maxWidth: .infinity)
             }
         }
     }
@@ -281,35 +281,35 @@ private struct ProcessGroupRow: View {
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text(group.name).lineLimit(1)
-                        if group.isDeveloperTool { Badge(text: L("Geliştirici", "Developer"), color: .purple) }
-                        if group.isProtected { Badge(text: L("Sistem", "System"), color: .secondary, symbol: "lock.fill") }
+                        if group.isDeveloperTool { Badge(text: L("Geliştirici", "Developer", "Разработка"), color: .purple) }
+                        if group.isProtected { Badge(text: L("Sistem", "System", "Система"), color: .secondary, symbol: "lock.fill") }
                     }
                     if let cwd = group.processes.first?.cwd, !group.isApp {
                         Text(Fmt.displayPath(cwd)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
                 Spacer()
-                Text(L("\(group.processes.count) süreç", "\(group.processes.count) processes")).font(.caption).foregroundStyle(.secondary)
+                Text(L("\(group.processes.count) süreç", "\(group.processes.count) processes", "Процессов: \(group.processes.count)")).font(.caption).foregroundStyle(.secondary)
                 Text(Fmt.bytes(group.total))
                     .monospacedDigit()
                     .frame(width: 80, alignment: .trailing)
                 if group.isApp {
                     if isRestarting {
                         ProgressView().controlSize(.small)
-                        Text(L("Yeniden başlıyor…", "Restarting…")).font(.caption).foregroundStyle(.secondary)
+                        Text(L("Yeniden başlıyor…", "Restarting…", "Перезапуск…")).font(.caption).foregroundStyle(.secondary)
                     } else {
-                        Button { restart() } label: { Label(L("Yeniden Başlat", "Restart"), systemImage: "arrow.clockwise") }
-                            .help(L("Düzgünce kapatıp hemen tekrar açar; RAM'de ve swap'te tuttuğu her şeyi bırakır", "Quits cleanly and reopens right away, releasing everything it held in RAM and swap"))
+                        Button { restart() } label: { Label(L("Yeniden Başlat", "Restart", "Перезапустить"), systemImage: "arrow.clockwise") }
+                            .help(L("Düzgünce kapatıp hemen tekrar açar; RAM'de ve swap'te tuttuğu her şeyi bırakır", "Quits cleanly and reopens right away, releasing everything it held in RAM and swap", "Корректно закрывает и сразу открывает снова, освобождая всё, что приложение держало в RAM и свопе"))
                             .disabled(group.isProtected)
                     }
                 }
-                Button { quit() } label: { Label(L("Kapat", "Quit"), systemImage: "xmark") }
-                    .help(L("Uygulamaya kapanmasını söyler; kaydedilmemiş belge varsa uygulama sorar", "Asks the app to quit; it will ask about unsaved documents"))
+                Button { quit() } label: { Label(L("Kapat", "Quit", "Закрыть"), systemImage: "xmark") }
+                    .help(L("Uygulamaya kapanmasını söyler; kaydedilmemiş belge varsa uygulama sorar", "Asks the app to quit; it will ask about unsaved documents", "Просит приложение завершиться; оно спросит о несохранённых документах"))
                     .disabled(group.isProtected)
                 Button(role: .destructive) { forceQuit() } label: {
-                    Label(L("Zorla Kapat", "Force Quit"), systemImage: "exclamationmark.octagon").foregroundStyle(.red)
+                    Label(L("Zorla Kapat", "Force Quit", "Завершить принудительно"), systemImage: "exclamationmark.octagon").foregroundStyle(.red)
                 }
-                    .help(L("Yanıt vermeyen uygulamayı anında sonlandırır; kaydedilmemiş veriler kaybolur", "Ends an unresponsive app immediately; unsaved data is lost"))
+                    .help(L("Yanıt vermeyen uygulamayı anında sonlandırır; kaydedilmemiş veriler kaybolur", "Ends an unresponsive app immediately; unsaved data is lost", "Немедленно завершает зависшее приложение; несохранённые данные будут потеряны"))
                     .disabled(group.isProtected)
             }
             .controlSize(.small)
@@ -328,9 +328,9 @@ private struct ProcessGroupRow: View {
                         }
                         Spacer()
                         Text(Fmt.bytes(p.footprint)).font(.caption).monospacedDigit()
-                        Button(L("Sonlandır", "Terminate")) { killPID(p.pid) }
+                        Button(L("Sonlandır", "Terminate", "Завершить")) { killPID(p.pid) }
                             .controlSize(.mini)
-                            .help(L("Yalnızca bu alt süreci sonlandırır (SIGTERM)", "Terminates only this helper process (SIGTERM)"))
+                            .help(L("Yalnızca bu alt süreci sonlandırır (SIGTERM)", "Terminates only this helper process (SIGTERM)", "Завершает только этот вспомогательный процесс (SIGTERM)"))
                             .disabled(group.isProtected)
                     }
                     .padding(.leading, 64)
@@ -347,9 +347,9 @@ private struct ProcessGroupRow: View {
 private struct ButtonLegend: View {
     var body: some View {
         HStack(spacing: 16) {
-            item("arrow.clockwise", L("Yeniden Başlat", "Restart"), L("kapatıp hemen açar, RAM ve swap'i bırakır", "quits and reopens, releasing RAM and swap"), .primary)
-            item("xmark", L("Kapat", "Quit"), L("düzgünce kapatır, kaydetmeyi sorar", "quits cleanly, asks to save"), .primary)
-            item("exclamationmark.octagon", L("Zorla Kapat", "Force Quit"), L("donmuş uygulamayı anında öldürür, kaydedilmemiş veri gider", "kills a frozen app instantly, unsaved data is lost"), .red)
+            item("arrow.clockwise", L("Yeniden Başlat", "Restart", "Перезапустить"), L("kapatıp hemen açar, RAM ve swap'i bırakır", "quits and reopens, releasing RAM and swap", "закрывает и открывает снова, освобождая RAM и своп"), .primary)
+            item("xmark", L("Kapat", "Quit", "Закрыть"), L("düzgünce kapatır, kaydetmeyi sorar", "quits cleanly, asks to save", "закрывает корректно, предлагает сохранить"), .primary)
+            item("exclamationmark.octagon", L("Zorla Kapat", "Force Quit", "Завершить принудительно"), L("donmuş uygulamayı anında öldürür, kaydedilmemiş veri gider", "kills a frozen app instantly, unsaved data is lost", "мгновенно завершает зависшее приложение, несохранённое теряется"), .red)
         }
         .font(.caption)
         .padding(.horizontal, 10)

@@ -14,9 +14,9 @@ final class MemoryRelief: ObservableObject {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .pressureWarning: L("Bellek baskısı \"yüksek\" olunca", "When memory pressure is \"high\"")
-            case .pressureCritical: L("Bellek baskısı \"kritik\" olunca", "When memory pressure is \"critical\"")
-            case .swap: L("Swap belirli bir yüzdeyi geçince", "When swap passes a percentage")
+            case .pressureWarning: L("Bellek baskısı \"yüksek\" olunca", "When memory pressure is \"high\"", "Когда нагрузка на память «высокая»")
+            case .pressureCritical: L("Bellek baskısı \"kritik\" olunca", "When memory pressure is \"critical\"", "Когда нагрузка на память «критическая»")
+            case .swap: L("Swap belirli bir yüzdeyi geçince", "When swap passes a percentage", "Когда своп превышает порог")
             }
         }
     }
@@ -143,8 +143,8 @@ final class MemoryRelief: ObservableObject {
         history.insert(action, at: 0)
         if history.count > 20 { history.removeLast() }
         if d.bool(forKey: Self.notifyKey) {
-            Notifier.post(title: L("RAM rahatlatıldı", "Memory freed"),
-                          body: L("\(names.joined(separator: ", ")) kapatıldı (~\(Fmt.bytes(freed))). Neden: \(reason.lowercased())", "Quit \(names.joined(separator: ", ")) (~\(Fmt.bytes(freed))). Reason: \(reason.lowercased())"))
+            Notifier.post(title: L("RAM rahatlatıldı", "Memory freed", "Память освобождена"),
+                          body: L("\(names.joined(separator: ", ")) kapatıldı (~\(Fmt.bytes(freed))). Neden: \(reason.lowercased())", "Quit \(names.joined(separator: ", ")) (~\(Fmt.bytes(freed))). Reason: \(reason.lowercased())", "Закрыто: \(names.joined(separator: ", ")) (~\(Fmt.bytes(freed))). Причина: \(reason.lowercased())"))
         }
         return action
     }

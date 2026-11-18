@@ -118,7 +118,7 @@ private struct SidebarView: View {
                 .frame(width: 32, height: 32)
             VStack(alignment: .leading, spacing: 0) {
                 Text("MultiMac").font(.headline)
-                Text(L("Mac bakım merkezi", "Mac care center")).font(.caption).foregroundStyle(.secondary)
+                Text(L("Mac bakım merkezi", "Mac care center", "Центр ухода за Mac")).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -131,9 +131,9 @@ private struct SidebarView: View {
         let d = monitor.disk
         return VStack(alignment: .leading, spacing: 8) {
             miniBar(title: "RAM", value: Fmt.percent(m.usedFraction), fraction: m.usedFraction, color: m.pressure.color)
-            miniBar(title: "Swap", value: Fmt.bytes(m.swapUsed), fraction: m.swapFraction,
+            miniBar(title: L("Swap", "Swap", "Своп"), value: Fmt.bytes(m.swapUsed), fraction: m.swapFraction,
                     color: m.swapFraction > 0.7 ? .red : m.swapFraction > 0.4 ? .orange : .green)
-            miniBar(title: "Disk", value: L("\(Fmt.bytes(d.available)) boş", "\(Fmt.bytes(d.available)) free"), fraction: d.usedFraction,
+            miniBar(title: L("Disk", "Disk", "Диск"), value: L("\(Fmt.bytes(d.available)) boş", "\(Fmt.bytes(d.available)) free", "Свободно \(Fmt.bytes(d.available))"), fraction: d.usedFraction,
                     color: d.available < 15_000_000_000 ? .red : d.available < 40_000_000_000 ? .orange : .green)
         }
         .padding(12)

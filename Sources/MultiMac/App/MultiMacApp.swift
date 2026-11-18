@@ -7,12 +7,12 @@ enum MainTab: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .overview: L("Genel Bakış", "Overview")
-        case .cleanup: L("Temizlik", "Cleanup")
-        case .storage: L("Depolama", "Storage")
-        case .memory: L("Bellek", "Memory")
-        case .automation: L("Otomasyon", "Automation")
-        case .settings: L("Ayarlar", "Settings")
+        case .overview: L("Genel Bakış", "Overview", "Обзор")
+        case .cleanup: L("Temizlik", "Cleanup", "Очистка")
+        case .storage: L("Depolama", "Storage", "Хранилище")
+        case .memory: L("Bellek", "Memory", "Память")
+        case .automation: L("Otomasyon", "Automation", "Автоматизация")
+        case .settings: L("Ayarlar", "Settings", "Настройки")
         }
     }
 

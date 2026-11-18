@@ -46,10 +46,10 @@ extension CleanupScanner {
             let url = URL(fileURLWithPath: String(cString: ent.pointee.fts_path))
             let parent = Fmt.displayPath(url.deletingLastPathComponent().path)
             var reasons: [String] = []
-            if isLarge { reasons.append(L("Büyük dosya", "Large file")) }
-            if isOld { reasons.append(L("\(Int(age)) gündür açılmadı", "Not opened for \(Int(age)) days")) }
+            if isLarge { reasons.append(L("Büyük dosya", "Large file", "Большой файл")) }
+            if isOld { reasons.append(L("\(Int(age)) gündür açılmadı", "Not opened for \(Int(age)) days", "Не открывался дней: \(Int(age))")) }
             items.append(CleanupItem(
-                urls: [url], title: name, detail: L("\(parent) · son kullanım \(Int(age)) gün önce", "\(parent) · last used \(Int(age)) days ago"),
+                urls: [url], title: name, detail: L("\(parent) · son kullanım \(Int(age)) gün önce", "\(parent) · last used \(Int(age)) days ago", "\(parent) · использовался дней назад: \(Int(age))"),
                 category: .largeFiles, autoEligible: false, defaultSelected: false, contentsOnly: false,
                 note: reasons.joined(separator: " · "), lastUsed: Date(timeIntervalSince1970: last)))
             return .continue

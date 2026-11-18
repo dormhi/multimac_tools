@@ -20,9 +20,9 @@ struct ListeningServer: Identifiable {
     var uptime: String {
         guard let started else { return "?" }
         let s = Int(Date().timeIntervalSince(started))
-        if s < 3600 { return L("\(s / 60) dk", "\(s / 60) min") }
-        if s < 86_400 { return L("\(s / 3600) sa \(s % 3600 / 60) dk", "\(s / 3600) h \(s % 3600 / 60) min") }
-        return L("\(s / 86_400) gün", "\(s / 86_400) days")
+        if s < 3600 { return L("\(s / 60) dk", "\(s / 60) min", "\(s / 60) мин") }
+        if s < 86_400 { return L("\(s / 3600) sa \(s % 3600 / 60) dk", "\(s / 3600) h \(s % 3600 / 60) min", "\(s / 3600) ч \(s % 3600 / 60) мин") }
+        return L("\(s / 86_400) gün", "\(s / 86_400) days", "\(s / 86_400) дн.")
     }
 }
 
