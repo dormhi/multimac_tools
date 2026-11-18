@@ -8,7 +8,7 @@ if [[ -f /Library/Developer/CommandLineTools/usr/include/swift/module.modulemap 
     sed "s#@EMPTY@#$PWD/scripts/toolchain-fix/empty.modulemap#" scripts/toolchain-fix/overlay.yaml.in > build/overlay.yaml
     EXTRA=(-vfsoverlay build/overlay.yaml -Xcc -ivfsoverlay -Xcc build/overlay.yaml)
 fi
-swiftc "${EXTRA[@]}" -O scripts/make-icon.swift -o build/make-icon
+swiftc ${EXTRA[@]+"${EXTRA[@]}"} -O scripts/make-icon.swift -o build/make-icon
 build/make-icon build/icon_1024.png
 ICONSET=build/AppIcon.iconset
 rm -rf "$ICONSET" && mkdir -p "$ICONSET"

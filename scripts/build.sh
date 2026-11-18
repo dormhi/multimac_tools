@@ -27,7 +27,7 @@ if [[ -f "$STALE" && -f /Library/Developer/CommandLineTools/usr/include/swift/br
 fi
 
 # shellcheck disable=SC2086
-swiftc $OPT "${EXTRA[@]}" -parse-as-library -swift-version 5 \
+swiftc $OPT ${EXTRA[@]+"${EXTRA[@]}"} -parse-as-library -swift-version 5 \
     -target arm64-apple-macos15.0 \
     -module-name MultiMac \
     -o build/MultiMac.bin \
