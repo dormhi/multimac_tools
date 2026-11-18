@@ -31,6 +31,42 @@ extension MainTab {
     }
 }
 
+// MARK: - Tema
+
+/// Açık / koyu / sistem görünümü. Menü çubuğu paneli dahil tüm pencerelere uygulanır.
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: L("Sistem", "System")
+        case .light: L("Açık", "Light")
+        case .dark: L("Koyu", "Dark")
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .system: "circle.lefthalf.filled"
+        case .light: "sun.max"
+        case .dark: "moon"
+        }
+    }
+
+    static var current: AppAppearance {
+        AppAppearance(rawValue: UserDefaults.standard.string(forKey: Prefs.appearance) ?? "") ?? .system
+    }
+
+    @MainActor static func apply(_ value: AppAppearance = current) {
+        switch value {
+        case .system: NSApp.appearance = nil
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
+    }
+}
+
 // MARK: - Kart
 
 struct CardStyle: ViewModifier {
@@ -41,10 +77,14 @@ struct CardStyle: ViewModifier {
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             // Gölge yok: kaydırırken her karede yeniden hesaplanması akıcılığı düşürüyordu.
+            // Cam hissi: düz yüzey + üstten alta sönen ince parlak kenar.
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-                    .stroke(Color.primary.opacity(0.07), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Surface.card)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Surface.edge, lineWidth: 1)
             )
     }
 }
@@ -74,7 +114,23 @@ struct HoverHighlight: ViewModifier {
     }
 }
 
-/// Renkli kare içinde SF Symbol
+/// Ortak yüzey renkleri: açık ve koyu temada Apple'ın sistem tonları.
+enum Surface {
+    /// Kart zemini: açıkta beyaz, koyuda pencereden bir ton açık.
+    static let card = Color(nsColor: NSColor(name: nil) { a in
+        a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(white: 1, alpha: 0.055) : NSColor(white: 1, alpha: 0.82)
+    })
+    /// Kartın camsı kenarı: üstte daha parlak, altta söner.
+    static var edge: LinearGradient {
+        LinearGradient(colors: [Color.primary.opacity(0.13), Color.primary.opacity(0.04)],
+                       startPoint: .top, endPoint: .bottom)
+    }
+    /// İç gruplar (liste satırları, önizleme kutuları) için hafif dolgu.
+    static let inset = Color.primary.opacity(0.045)
+}
+
+/// Yumuşak renkli zemin üzerinde SF Symbol (Apple'ın "tinted" ikon stili).
 struct IconTile: View {
     let symbol: String
     let color: Color
@@ -82,14 +138,80 @@ struct IconTile: View {
 
     var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: size * 0.5, weight: .semibold))
-            .foregroundStyle(.white)
+            .font(.system(size: size * 0.48, weight: .medium))
+            .foregroundStyle(color)
             .frame(width: size, height: size)
             .background(
-                RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                    .fill(color.gradient)
+                RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+                    .fill(color.opacity(0.15))
             )
     }
+}
+
+// MARK: - Butonlar
+
+/// Apple tonlarında, üzerine gelince yumuşakça belirginleşen buton.
+/// Varsayılan: nötr gri zemin. prominent: rengi `.tint(...)`ten gelen dolu buton. role: .destructive kırmızı.
+struct GlassButtonStyle: ButtonStyle {
+    var prominent = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        GlassButtonBody(configuration: configuration, prominent: prominent)
+    }
+}
+
+private struct GlassButtonBody: View {
+    let configuration: ButtonStyle.Configuration
+    let prominent: Bool
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.controlSize) private var controlSize
+    @State private var hovering = false
+
+    private var compact: Bool { controlSize == .small || controlSize == .mini }
+    private var destructive: Bool { configuration.role == .destructive }
+
+    var body: some View {
+        let pressed = configuration.isPressed
+        configuration.label
+            .font(compact ? .callout : .body)
+            .fontWeight(.medium)
+            .lineLimit(1)
+            .padding(.horizontal, compact ? 9 : 13)
+            .padding(.vertical, compact ? 3 : 6)
+            .foregroundStyle(foreground)
+            .background(Capsule(style: .continuous).fill(fill(pressed: pressed)))
+            .overlay(
+                Capsule(style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [.white.opacity(prominent ? 0.35 : 0.14), .white.opacity(0.02)],
+                                                 startPoint: .top, endPoint: .bottom), lineWidth: 0.75)
+            )
+            .contentShape(Capsule())
+            .scaleEffect(pressed ? 0.97 : 1)
+            .opacity(isEnabled ? 1 : 0.4)
+            .animation(.easeOut(duration: 0.18), value: hovering)
+            .animation(.easeOut(duration: 0.1), value: pressed)
+            .onHover { hovering = $0 && isEnabled }
+    }
+
+    private var foreground: AnyShapeStyle {
+        if prominent { return AnyShapeStyle(Color.white) }
+        if destructive { return AnyShapeStyle(Color.red) }
+        return AnyShapeStyle(Color.primary)
+    }
+
+    private func fill(pressed: Bool) -> AnyShapeStyle {
+        let boost = pressed ? 0.1 : hovering ? 0.05 : 0
+        if prominent {
+            return AnyShapeStyle(TintShapeStyle.tint.opacity(pressed ? 0.8 : hovering ? 1 : 0.88))
+        }
+        if destructive { return AnyShapeStyle(Color.red.opacity(0.12 + boost * 1.5)) }
+        return AnyShapeStyle(Color.primary.opacity(0.07 + boost))
+    }
+}
+
+extension ButtonStyle where Self == GlassButtonStyle {
+    static var glass: GlassButtonStyle { GlassButtonStyle() }
+    static var glassProminent: GlassButtonStyle { GlassButtonStyle(prominent: true) }
 }
 
 struct CardHeader: View {
@@ -147,7 +269,7 @@ struct StackedBar: View {
                 ForEach(segments.filter { $0.value > 0 }) { s in
                     let w = max(2, g.size.width * CGFloat(s.value / max(total, 1)))
                     Rectangle()
-                        .fill(s.color.gradient)
+                        .fill(s.color)
                         .opacity(hovered == nil || hovered == s.id ? 1 : 0.45)
                         .frame(width: w)
                         .onHover { hovered = $0 ? s.id : nil }
@@ -254,27 +376,36 @@ struct GaugeCard: View {
     }
 }
 
+/// Kip seçici hap. Button yerine dokunma hareketi: macOS'ta Button etiketi bazen ilk çizimde takılı kalıyor
+/// (değer güncellenmiyordu), düz görünüm her güncellemede yeniden çiziliyor.
 struct PillButton: View {
     let title: String
     let value: String
     let color: Color
     var active = false
     let action: () -> Void
+    @State private var hovering = false
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 2) {
-                Text(title).font(.caption.weight(.semibold))
-                Text(value).font(.callout.weight(.bold).monospacedDigit())
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .foregroundStyle(active ? .white : color)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(active ? AnyShapeStyle(color.gradient) : AnyShapeStyle(color.opacity(0.12)))
-            )
+        VStack(spacing: 2) {
+            Text(title).font(.caption.weight(.medium))
+            Text(value).font(.callout.weight(.semibold).monospacedDigit())
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .foregroundStyle(color)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(color.opacity(active ? 0.2 : hovering ? 0.12 : 0.07))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(color.opacity(active ? 0.55 : 0.12), lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .onHover { hovering = $0 }
+        .onTapGesture(perform: action)
+        .animation(.easeOut(duration: 0.15), value: hovering)
+        .accessibilityAddTraits(.isButton)
     }
 }

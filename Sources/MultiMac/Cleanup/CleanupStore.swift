@@ -90,9 +90,9 @@ struct CleanupFilter: Equatable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .size: "Boyut"
-            case .name: "Ad"
-            case .date: "Son kullanım"
+            case .size: L("Boyut", "Size")
+            case .name: L("Ad", "Name")
+            case .date: L("Son kullanım", "Last used")
             }
         }
     }
@@ -374,8 +374,8 @@ final class CleanupStore: ObservableObject {
         UserDefaults.standard.set(Int(result.freed), forKey: Prefs.lastAutoCleanBytes)
         onDiskChanged?()
         if automatic, result.freed > 50_000_000, UserDefaults.standard.bool(forKey: Prefs.notifyAfterClean) {
-            Notifier.post(title: "Otomatik temizlik tamamlandı",
-                          body: "\(Fmt.bytes(result.freed)) yer açıldı (\(result.cleanedItems) öğe).")
+            Notifier.post(title: L("Otomatik temizlik tamamlandı", "Automatic cleanup finished"),
+                          body: L("\(Fmt.bytes(result.freed)) yer açıldı (\(result.cleanedItems) öğe).", "Freed \(Fmt.bytes(result.freed)) (\(result.cleanedItems) items)."))
         }
         if !items.isEmpty { await scanAll() }
         return result

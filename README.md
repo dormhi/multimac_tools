@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/overview.jpg" width="820" alt="MultiMac Overview: health summary, RAM / swap / disk gauges, where the disk is going and cleanable space">
+  <img src="docs/images/overview.png" width="820" alt="MultiMac Overview: health summary, RAM / swap / disk gauges, where the disk is going and cleanable space">
 </p>
 
 > [!NOTE]
@@ -74,6 +74,8 @@ system files**, and stays out of the way in the menu bar.
 | 🛰️ **Dev server finder** | Every process listening on a TCP port with project folder, port (opens `localhost`), uptime and memory — find the `npm run dev` you forgot three days ago. |
 | 🤖 **Automation** | Eight cache rules you can toggle one by one, a schedule, low-disk trigger, *what would be deleted?* preview, and optional RAM relief that closes the apps you chose when memory stays tight. |
 | 🛡️ **Never touch list** | Right-click any item or whole project to exclude it forever. Respected by every scan, preset, the automation and the deletion engine itself. |
+| 🌓 **Light, Dark or System** | Apple-toned interface with soft tinted icons, glass-edged cards and buttons that fade in on hover. Pick the theme in *Settings › Appearance and language*. |
+| 🌐 **Turkish and English** | Follows your Mac's language (Turkish if macOS is Turkish, English otherwise) and can be switched in Settings at any time, no restart needed. |
 | 🪶 **Tiny footprint** | Native SwiftUI, ~55 MB RAM, < 1 % CPU when idle. No root, no helper, no background daemon. Builds without Xcode. |
 
 ## Screenshots
@@ -346,7 +348,7 @@ Sources/MultiMac/
 └── UI/         Menu bar panel, main window, Overview, Cleanup, Storage, Memory, Automation, Settings, theme
 Resources/      Info.plist, AppIcon.icns
 scripts/        build.sh, make-icon.sh / .swift, toolchain-fix (VFS overlay for broken CLT)
-docs/images/    README images
+docs/images/    README images (English, light theme; tr/ holds the Turkish, dark theme set)
 ```
 
 ## Credits

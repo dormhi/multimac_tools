@@ -65,9 +65,12 @@ private struct SidebarView: View {
             state.tab = tab
         } label: {
             HStack(spacing: 10) {
-                IconTile(symbol: tab.symbol, color: tab.color, size: 24)
+                Image(systemName: tab.symbol)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    .frame(width: 20)
                 Text(tab.title)
-                    .fontWeight(selected ? .semibold : .regular)
+                    .fontWeight(selected ? .medium : .regular)
                     .foregroundStyle(.primary)
                 Spacer(minLength: 4)
                 if let b = badge(for: tab) {
@@ -79,16 +82,16 @@ private struct SidebarView: View {
                         .background(Capsule().fill(b.color.opacity(0.15)))
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(selected ? Color.accentColor.opacity(0.22) : Color.clear)
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.primary.opacity(selected ? 0.09 : 0))
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SidebarRowStyle())
         .keyboardShortcut(shortcut(for: tab), modifiers: .command)
     }
 
@@ -110,10 +113,12 @@ private struct SidebarView: View {
 
     private var brand: some View {
         HStack(spacing: 10) {
-            IconTile(symbol: "sparkles", color: .indigo, size: 30)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 32, height: 32)
             VStack(alignment: .leading, spacing: 0) {
                 Text("MultiMac").font(.headline)
-                Text("Mac bakım merkezi").font(.caption).foregroundStyle(.secondary)
+                Text(L("Mac bakım merkezi", "Mac care center")).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -128,11 +133,11 @@ private struct SidebarView: View {
             miniBar(title: "RAM", value: Fmt.percent(m.usedFraction), fraction: m.usedFraction, color: m.pressure.color)
             miniBar(title: "Swap", value: Fmt.bytes(m.swapUsed), fraction: m.swapFraction,
                     color: m.swapFraction > 0.7 ? .red : m.swapFraction > 0.4 ? .orange : .green)
-            miniBar(title: "Disk", value: "\(Fmt.bytes(d.available)) boş", fraction: d.usedFraction,
+            miniBar(title: "Disk", value: L("\(Fmt.bytes(d.available)) boş", "\(Fmt.bytes(d.available)) free"), fraction: d.usedFraction,
                     color: d.available < 15_000_000_000 ? .red : d.available < 40_000_000_000 ? .orange : .green)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primary.opacity(0.04)))
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Surface.inset))
         .padding(10)
         .onTapGesture { state.tab = .overview }
     }
@@ -147,7 +152,7 @@ private struct SidebarView: View {
             GeometryReader { g in
                 Capsule().fill(Color.primary.opacity(0.08))
                     .overlay(alignment: .leading) {
-                        Capsule().fill(color.gradient).frame(width: max(3, g.size.width * fraction))
+                        Capsule().fill(color).frame(width: max(3, g.size.width * fraction))
                     }
             }
             .frame(height: 5)
@@ -163,16 +168,39 @@ struct PageHeader<Trailing: View>: View {
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            if let symbol { IconTile(symbol: symbol, color: color, size: 36) }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.title2.bold())
+        // Sade başlık: Apple'ın Ayarlar/Müzik başlıkları gibi büyük yazı, renkli ikon yok.
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.system(size: 26, weight: .bold))
                 Text(subtitle).font(.callout).foregroundStyle(.secondary)
             }
             Spacer()
             trailing
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 24)
+        .padding(.top, 18)
+        .padding(.bottom, 10)
+    }
+}
+
+/// Kenar çubuğu satırı: üzerine gelince hafif gri vurgu, basınca biraz koyulaşır.
+private struct SidebarRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        SidebarRowBody(configuration: configuration)
+    }
+}
+
+private struct SidebarRowBody: View {
+    let configuration: ButtonStyle.Configuration
+    @State private var hovering = false
+
+    var body: some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.primary.opacity(configuration.isPressed ? 0.08 : hovering ? 0.045 : 0))
+            )
+            .animation(.easeOut(duration: 0.15), value: hovering)
+            .onHover { hovering = $0 }
     }
 }

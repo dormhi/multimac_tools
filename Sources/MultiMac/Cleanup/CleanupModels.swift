@@ -7,27 +7,27 @@ enum CleanupCategory: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .appCaches: "Uygulama önbellekleri"
-        case .devCaches: "Geliştirici önbellekleri"
-        case .buildArtifacts: "Proje build kalıntıları"
-        case .xcode: "Xcode ve simülatör"
-        case .logs: "Günlükler"
-        case .downloads: "İndirilenler"
-        case .largeFiles: "Büyük ve eski dosyalar"
-        case .trash: "Çöp Kutusu"
+        case .appCaches: L("Uygulama önbellekleri", "App caches")
+        case .devCaches: L("Geliştirici önbellekleri", "Developer caches")
+        case .buildArtifacts: L("Proje build kalıntıları", "Project build leftovers")
+        case .xcode: L("Xcode ve simülatör", "Xcode and Simulator")
+        case .logs: L("Günlükler", "Logs")
+        case .downloads: L("İndirilenler", "Downloads")
+        case .largeFiles: L("Büyük ve eski dosyalar", "Large and old files")
+        case .trash: L("Çöp Kutusu", "Trash")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .appCaches: "Uygulamalar bu dosyaları gerektiğinde yeniden oluşturur"
-        case .devCaches: "npm, pnpm, yarn, pip, Homebrew, Gradle… İndirmeler tekrar yapılabilir"
-        case .buildArtifacts: "node_modules, .next, dist, target… Kullanılmayan projelerdekiler önceden seçili"
-        case .xcode: "DerivedData, eski cihaz sembolleri, simülatör önbelleği"
-        case .logs: "Uygulama ve çökme günlükleri"
-        case .downloads: "Kurulum dosyaları (.dmg/.pkg) ve 90 günden eski indirmeler"
-        case .largeFiles: "Ev klasöründeki çok büyük veya uzun süredir açılmamış dosyalar. Hiçbiri önceden seçili değil"
-        case .trash: "Çöp Kutusu'ndaki dosyalar kalıcı olarak silinir"
+        case .appCaches: L("Uygulamalar bu dosyaları gerektiğinde yeniden oluşturur", "Apps recreate these files when needed")
+        case .devCaches: L("npm, pnpm, yarn, pip, Homebrew, Gradle… İndirmeler tekrar yapılabilir", "npm, pnpm, yarn, pip, Homebrew, Gradle… Downloads can be fetched again")
+        case .buildArtifacts: L("node_modules, .next, dist, target… Kullanılmayan projelerdekiler önceden seçili", "node_modules, .next, dist, target… Preselected in unused projects")
+        case .xcode: L("DerivedData, eski cihaz sembolleri, simülatör önbelleği", "DerivedData, old device symbols, Simulator cache")
+        case .logs: L("Uygulama ve çökme günlükleri", "App and crash logs")
+        case .downloads: L("Kurulum dosyaları (.dmg/.pkg) ve 90 günden eski indirmeler", "Installers (.dmg/.pkg) and downloads older than 90 days")
+        case .largeFiles: L("Ev klasöründeki çok büyük veya uzun süredir açılmamış dosyalar. Hiçbiri önceden seçili değil", "Very large or long-unopened files in your home folder. None are preselected")
+        case .trash: L("Çöp Kutusu'ndaki dosyalar kalıcı olarak silinir", "Files in the Trash are deleted permanently")
         }
     }
 
@@ -102,19 +102,19 @@ enum CleanupPreset: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .safe: "Güvenli"
-        case .balanced: "Dengeli"
-        case .aggressive: "Agresif"
-        case .custom: "Özel"
+        case .safe: L("Güvenli", "Safe")
+        case .balanced: L("Dengeli", "Balanced")
+        case .aggressive: L("Agresif", "Aggressive")
+        case .custom: L("Özel", "Custom")
         }
     }
 
     var help: String {
         switch self {
-        case .safe: "Yalnızca otomatik temizliğe uygun önbellekler ve framework önbellekleri"
-        case .balanced: "Önbellekler, Xcode verisi, kurulum dosyaları ve uzun süredir kullanılmayan projelerin kalıntıları"
-        case .aggressive: "Tüm node_modules, .venv, build çıktıları, Playwright tarayıcıları ve Çöp Kutusu dahil. Kullanımdaki öğeler, eski indirmeler ve büyük dosyalar hariç"
-        case .custom: "Elle yapılmış seçim"
+        case .safe: L("Yalnızca otomatik temizliğe uygun önbellekler ve framework önbellekleri", "Only caches eligible for automatic cleanup and framework caches")
+        case .balanced: L("Önbellekler, Xcode verisi, kurulum dosyaları ve uzun süredir kullanılmayan projelerin kalıntıları", "Caches, Xcode data, installers and leftovers of long-unused projects")
+        case .aggressive: L("Tüm node_modules, .venv, build çıktıları, Playwright tarayıcıları ve Çöp Kutusu dahil. Kullanımdaki öğeler, eski indirmeler ve büyük dosyalar hariç", "Includes every node_modules, .venv, build output, Playwright browsers and the Trash. Excludes items in use, old downloads and large files")
+        case .custom: L("Elle yapılmış seçim", "Manual selection")
         }
     }
 
@@ -148,41 +148,41 @@ enum AutoRule: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .appCaches: "Uygulama önbellekleri"
-        case .browserCaches: "Tarayıcı ve Electron önbellekleri"
-        case .devToolCaches: "Geliştirici araç önbellekleri"
-        case .packageDownloads: "Paket yöneticisi indirmeleri"
-        case .frameworkCaches: "Proje framework önbellekleri"
-        case .xcodeCaches: "Xcode ve simülatör önbellekleri"
-        case .logs: "Eski günlükler ve çökme raporları"
-        case .savedState: "Eski kayıtlı pencere durumları"
+        case .appCaches: L("Uygulama önbellekleri", "App caches")
+        case .browserCaches: L("Tarayıcı ve Electron önbellekleri", "Browser and Electron caches")
+        case .devToolCaches: L("Geliştirici araç önbellekleri", "Developer tool caches")
+        case .packageDownloads: L("Paket yöneticisi indirmeleri", "Package manager downloads")
+        case .frameworkCaches: L("Proje framework önbellekleri", "Project framework caches")
+        case .xcodeCaches: L("Xcode ve simülatör önbellekleri", "Xcode and Simulator caches")
+        case .logs: L("Eski günlükler ve çökme raporları", "Old logs and crash reports")
+        case .savedState: L("Eski kayıtlı pencere durumları", "Old saved window states")
         }
     }
 
     /// Otomasyon ekranındaki kutucuklar için kısa ad.
     var shortTitle: String {
         switch self {
-        case .appCaches: "Uygulama önbellekleri"
-        case .browserCaches: "Tarayıcı önbellekleri"
-        case .devToolCaches: "Geliştirici araçları"
-        case .packageDownloads: "Paket indirmeleri"
-        case .frameworkCaches: "Proje önbellekleri"
+        case .appCaches: L("Uygulama önbellekleri", "App caches")
+        case .browserCaches: L("Tarayıcı önbellekleri", "Browser caches")
+        case .devToolCaches: L("Geliştirici araçları", "Developer tools")
+        case .packageDownloads: L("Paket indirmeleri", "Package downloads")
+        case .frameworkCaches: L("Proje önbellekleri", "Project caches")
         case .xcodeCaches: "Xcode"
-        case .logs: "Eski günlükler"
-        case .savedState: "Eski pencere durumları"
+        case .logs: L("Eski günlükler", "Old logs")
+        case .savedState: L("Eski pencere durumları", "Old window states")
         }
     }
 
     var detail: String {
         switch self {
-        case .appCaches: "~/Library/Caches altındaki üçüncü parti uygulama önbellekleri (Apple'ınkiler hariç)"
-        case .browserCaches: "Chrome, Brave, Edge, Arc, VS Code, Slack, Discord… yalnızca Cache, GPUCache, Code Cache, Service Worker önbellekleri"
-        case .devToolCaches: "eslint, prettier, vite, webpack, prisma, typescript, node-gyp, go-build, expo, android build cache…"
-        case .packageDownloads: "npm, yarn, pnpm önbelleği, pip, uv, poetry, Homebrew, CocoaPods, Cargo indirmeleri (tekrar indirilebilir)"
-        case .frameworkCaches: ".next, .turbo, .parcel-cache, .svelte-kit, .pytest_cache, .mypy_cache (içinde süreç çalışan projeler hariç)"
-        case .xcodeCaches: "DerivedData, simülatör önbelleği, SwiftUI önizlemeleri (Xcode açıkken atlanır)"
-        case .logs: "~/Library/Logs içinde belirlenen günden eski dosyalar"
-        case .savedState: "Uygulamaların pencere geri yükleme verisi, 30 günden eski olanlar"
+        case .appCaches: L("~/Library/Caches altındaki üçüncü parti uygulama önbellekleri (Apple'ınkiler hariç)", "Third-party app caches in ~/Library/Caches (not Apple's)")
+        case .browserCaches: L("Chrome, Brave, Edge, Arc, VS Code, Slack, Discord… yalnızca Cache, GPUCache, Code Cache, Service Worker önbellekleri", "Chrome, Brave, Edge, Arc, VS Code, Slack, Discord… only Cache, GPUCache, Code Cache and Service Worker caches")
+        case .devToolCaches: L("eslint, prettier, vite, webpack, prisma, typescript, node-gyp, go-build, expo, android build cache…", "eslint, prettier, vite, webpack, prisma, typescript, node-gyp, go-build, expo, android build cache…")
+        case .packageDownloads: L("npm, yarn, pnpm önbelleği, pip, uv, poetry, Homebrew, CocoaPods, Cargo indirmeleri (tekrar indirilebilir)", "npm, yarn and pnpm caches, pip, uv, poetry, Homebrew, CocoaPods and Cargo downloads (can be downloaded again)")
+        case .frameworkCaches: L(".next, .turbo, .parcel-cache, .svelte-kit, .pytest_cache, .mypy_cache (içinde süreç çalışan projeler hariç)", ".next, .turbo, .parcel-cache, .svelte-kit, .pytest_cache, .mypy_cache (skipping projects with a running process)")
+        case .xcodeCaches: L("DerivedData, simülatör önbelleği, SwiftUI önizlemeleri (Xcode açıkken atlanır)", "DerivedData, Simulator cache, SwiftUI previews (skipped while Xcode is open)")
+        case .logs: L("~/Library/Logs içinde belirlenen günden eski dosyalar", "Files in ~/Library/Logs older than the set number of days")
+        case .savedState: L("Uygulamaların pencere geri yükleme verisi, 30 günden eski olanlar", "Apps' window restore data older than 30 days")
         }
     }
 

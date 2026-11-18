@@ -6,6 +6,8 @@ struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
     @AppStorage(Prefs.staleDays) private var staleDays = 30
     @AppStorage(Prefs.menuBarStyle) private var menuBarStyle = 0
+    @AppStorage(Prefs.appearance) private var appearance = AppAppearance.system.rawValue
+    @AppStorage(Prefs.appLanguage) private var language = AppLanguage.system.rawValue
     @AppStorage(Prefs.notifyAfterClean) private var notify = true
     @AppStorage(Prefs.largeFileMinMB) private var largeMB = 500
     @AppStorage(Prefs.oldFileDays) private var oldDays = 180
@@ -27,15 +29,31 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Otomatik temizlik") {
+            Section(L("Görünüm ve dil", "Appearance and language")) {
+                Picker(L("Tema", "Theme"), selection: $appearance) {
+                    ForEach(AppAppearance.allCases) { a in
+                        Label(a.title, systemImage: a.symbol).tag(a.rawValue)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: appearance) { AppAppearance.apply() }
+                Picker(L("Dil", "Language"), selection: $language) {
+                    ForEach(AppLanguage.allCases) { l in Text(l.title).tag(l.rawValue) }
+                }
+                Text(L("Sistem seçiliyken macOS dili Türkçeyse Türkçe, değilse İngilizce kullanılır.",
+                       "With System selected, MultiMac uses Turkish if macOS is in Turkish and English otherwise."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Section(L("Otomatik temizlik", "Automatic cleanup")) {
                 HStack {
-                    Text("Otomatik depolama ve RAM temizliğinin tüm kuralları artık Otomasyon sekmesinde.")
+                    Text(L("Otomatik depolama ve RAM temizliğinin tüm kuralları artık Otomasyon sekmesinde.", "All rules for automatic storage and RAM cleanup now live in the Automation tab."))
                     Spacer()
-                    Button("Otomasyon'u Aç") { appState.tab = .automation }
+                    Button(L("Otomasyon'u Aç", "Open Automation")) { appState.tab = .automation }
                 }
             }
 
-            Section("Proje klasörleri") {
+            Section(L("Proje klasörleri", "Project folders")) {
                 ForEach(roots, id: \.self) { root in
                     HStack {
                         Image(systemName: "folder.fill").foregroundStyle(.tint)
@@ -44,26 +62,26 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             roots.removeAll { $0 == root }
                             Prefs.roots = roots
-                        } label: { Label("Kaldır", systemImage: "minus.circle") }
+                        } label: { Label(L("Kaldır", "Remove"), systemImage: "minus.circle") }
                         .buttonStyle(.borderless)
                     }
                 }
-                Button("Klasör Ekle…") { addRoot() }
-                Stepper("\(staleDays) gündür dokunulmayan projelerin node_modules'u önceden seçilsin",
+                Button(L("Klasör Ekle…", "Add Folder…")) { addRoot() }
+                Stepper(L("\(staleDays) gündür dokunulmayan projelerin node_modules'u önceden seçilsin", "Preselect node_modules of projects untouched for \(staleDays) days"),
                         value: $staleDays, in: 7...365, step: 7)
             }
 
-            Section("Büyük ve eski dosyalar") {
-                Stepper("Büyük dosya: \(largeMB) MB ve üzeri", value: $largeMB, in: 50...10_000, step: 50)
-                Stepper("Eski dosya: \(oldDays) gündür açılmamış", value: $oldDays, in: 30...1_095, step: 30)
-                Stepper("…ve en az \(oldMB) MB olanlar", value: $oldMB, in: 1...1_000, step: 10)
-                Text("Ev klasöründe aranır; ~/Library, gizli klasörler, node_modules ve uygulama/Fotoğraflar arşivleri atlanır. Bu dosyalar hiçbir kipte otomatik seçilmez.")
+            Section(L("Büyük ve eski dosyalar", "Large and old files")) {
+                Stepper(L("Büyük dosya: \(largeMB) MB ve üzeri", "Large file: \(largeMB) MB or more"), value: $largeMB, in: 50...10_000, step: 50)
+                Stepper(L("Eski dosya: \(oldDays) gündür açılmamış", "Old file: not opened for \(oldDays) days"), value: $oldDays, in: 30...1_095, step: 30)
+                Stepper(L("…ve en az \(oldMB) MB olanlar", "…and at least \(oldMB) MB"), value: $oldMB, in: 1...1_000, step: 10)
+                Text(L("Ev klasöründe aranır; ~/Library, gizli klasörler, node_modules ve uygulama/Fotoğraflar arşivleri atlanır. Bu dosyalar hiçbir kipte otomatik seçilmez.", "Searched in your home folder, skipping ~/Library, hidden folders, node_modules and app/Photos libraries. These files are never preselected by any preset."))
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Asla dokunulmayacaklar") {
+            Section(L("Asla dokunulmayacaklar", "Never touch")) {
                 if exclusions.isEmpty {
-                    Text("Liste boş. Temizlik listesinde bir öğeye sağ tıklayıp \"Asla dokunma\" diyerek ekleyebilirsin.")
+                    Text(L("Liste boş. Temizlik listesinde bir öğeye sağ tıklayıp \"Asla dokunma\" diyerek ekleyebilirsin.", "The list is empty. Right-click an item in the cleanup list and choose \"Never touch\" to add it."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(exclusions, id: \.self) { path in
@@ -74,35 +92,35 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             Exclusions.remove(path)
                             exclusions = Exclusions.all
-                        } label: { Label("Kaldır", systemImage: "minus.circle") }
+                        } label: { Label(L("Kaldır", "Remove"), systemImage: "minus.circle") }
                         .buttonStyle(.borderless)
                     }
                 }
-                Button("Klasör veya Dosya Ekle…") { addExclusion() }
+                Button(L("Klasör veya Dosya Ekle…", "Add Folder or File…")) { addExclusion() }
             }
 
-            Section("Bellek uyarıları") {
-                Toggle("Swap dolunca uyar", isOn: $alertSwap)
-                Stepper("Swap eşiği: %\(alertSwapPercent)", value: $alertSwapPercent, in: 30...100, step: 5)
+            Section(L("Bellek uyarıları", "Memory alerts")) {
+                Toggle(L("Swap dolunca uyar", "Alert when swap fills up"), isOn: $alertSwap)
+                Stepper(L("Swap eşiği: %\(alertSwapPercent)", "Swap threshold: \(alertSwapPercent)%"), value: $alertSwapPercent, in: 30...100, step: 5)
                     .disabled(!alertSwap)
-                Toggle("Bellek baskısı kritik olunca uyar", isOn: $alertPressure)
-                Toggle("Baskı \"yüksek\" seviyesinde de uyar", isOn: $alertPressureWarning)
+                Toggle(L("Bellek baskısı kritik olunca uyar", "Alert when memory pressure is critical"), isOn: $alertPressure)
+                Toggle(L("Baskı \"yüksek\" seviyesinde de uyar", "Also alert when pressure is \"high\""), isOn: $alertPressureWarning)
                     .disabled(!alertPressure)
-                Toggle("Bir uygulama çok bellek kullanınca uyar", isOn: $alertApp)
-                Stepper("Uygulama sınırı: \(alertAppGB) GB", value: $alertAppGB, in: 1...16)
+                Toggle(L("Bir uygulama çok bellek kullanınca uyar", "Alert when an app uses a lot of memory"), isOn: $alertApp)
+                Stepper(L("Uygulama sınırı: \(alertAppGB) GB", "App limit: \(alertAppGB) GB"), value: $alertAppGB, in: 1...16)
                     .disabled(!alertApp)
-                Picker("Aynı uyarıyı tekrar etme süresi", selection: $cooldown) {
-                    Text("15 dakika").tag(15)
-                    Text("30 dakika").tag(30)
-                    Text("1 saat").tag(60)
-                    Text("3 saat").tag(180)
-                    Text("Günde bir").tag(1440)
+                Picker(L("Aynı uyarıyı tekrar etme süresi", "Don't repeat the same alert for"), selection: $cooldown) {
+                    Text(L("15 dakika", "15 minutes")).tag(15)
+                    Text(L("30 dakika", "30 minutes")).tag(30)
+                    Text(L("1 saat", "1 hour")).tag(60)
+                    Text(L("3 saat", "3 hours")).tag(180)
+                    Text(L("Günde bir", "A day")).tag(1440)
                 }
             }
 
-            Section("Korunan uygulamalar") {
+            Section(L("Korunan uygulamalar", "Protected apps")) {
                 if protectedApps.isEmpty {
-                    Text("Korunan uygulamalar için kapatma butonu gösterilmez, öneri ve uyarılarda yer almaz. Bellek sekmesinde bir uygulamaya sağ tıklayarak da ekleyebilirsin.")
+                    Text(L("Korunan uygulamalar için kapatma butonu gösterilmez, öneri ve uyarılarda yer almaz. Bellek sekmesinde bir uygulamaya sağ tıklayarak da ekleyebilirsin.", "Protected apps get no quit button and never appear in suggestions or alerts. You can also add one by right-clicking it in the Memory tab."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(protectedApps, id: \.self) { name in
@@ -113,11 +131,11 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             protectedApps.removeAll { $0 == name }
                             Prefs.setList(Prefs.protectedApps, protectedApps)
-                        } label: { Label("Kaldır", systemImage: "minus.circle") }
+                        } label: { Label(L("Kaldır", "Remove"), systemImage: "minus.circle") }
                         .buttonStyle(.borderless)
                     }
                 }
-                Menu("Açık bir uygulamayı ekle") {
+                Menu(L("Açık bir uygulamayı ekle", "Add a running app")) {
                     ForEach(runningAppNames, id: \.self) { name in
                         Button(name) {
                             protectedApps.append(name)
@@ -127,28 +145,28 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Genel") {
-                Stepper("Menüde gösterilen uygulama sayısı: \(topCount)", value: $topCount, in: 3...12)
-                Toggle("Girişte başlat", isOn: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
+            Section(L("Genel", "General")) {
+                Stepper(L("Menüde gösterilen uygulama sayısı: \(topCount)", "Apps shown in the menu: \(topCount)"), value: $topCount, in: 3...12)
+                Toggle(L("Girişte başlat", "Open at login"), isOn: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
                 if let loginError { Text(loginError).font(.caption).foregroundStyle(.red) }
-                Picker("Menü çubuğu görünümü", selection: $menuBarStyle) {
-                    Text("Yalnızca simge").tag(0)
-                    Text("Simge + RAM %").tag(1)
-                    Text("Simge + RAM % + boş disk").tag(2)
+                Picker(L("Menü çubuğu görünümü", "Menu bar style"), selection: $menuBarStyle) {
+                    Text(L("Yalnızca simge", "Icon only")).tag(0)
+                    Text(L("Simge + RAM %", "Icon + RAM %")).tag(1)
+                    Text(L("Simge + RAM % + boş disk", "Icon + RAM % + free disk")).tag(2)
                 }
-                Text("Çentikli ekranlarda menü çubuğu dolunca geniş ikonlar çentiğin arkasında gizlenir. Görünmüyorsa \"Yalnızca simge\" seç veya ⌘ tuşuna basılı tutup diğer ikonları sürükleyerek yer aç.")
+                Text(L("Çentikli ekranlarda menü çubuğu dolunca geniş ikonlar çentiğin arkasında gizlenir. Görünmüyorsa \"Yalnızca simge\" seç veya ⌘ tuşuna basılı tutup diğer ikonları sürükleyerek yer aç.", "On displays with a notch, wide icons hide behind the notch when the menu bar is full. If you can't see it, choose \"Icon only\" or hold ⌘ and drag other icons to make room."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("İzinler") {
-                LabeledContent("Tam Disk Erişimi") {
+            Section(L("İzinler", "Permissions")) {
+                LabeledContent(L("Tam Disk Erişimi", "Full Disk Access")) {
                     HStack {
-                        Badge(text: hasFDA ? "Verildi" : "Verilmedi", color: hasFDA ? .green : .orange)
-                        Button("Sistem Ayarlarını Aç") { FullDiskAccess.openSettings() }
+                        Badge(text: hasFDA ? L("Verildi", "Granted") : L("Verilmedi", "Not granted"), color: hasFDA ? .green : .orange)
+                        Button(L("Sistem Ayarlarını Aç", "Open System Settings")) { FullDiskAccess.openSettings() }
                     }
                 }
-                Text("Depolama haritasının tüm diski okuyabilmesi için gerekir. Sistem Ayarları › Gizlilik ve Güvenlik › Tam Disk Erişimi listesine MultiMac'i ekle, sonra uygulamayı yeniden başlat.")
+                Text(L("Depolama haritasının tüm diski okuyabilmesi için gerekir. Sistem Ayarları › Gizlilik ve Güvenlik › Tam Disk Erişimi listesine MultiMac'i ekle, sonra uygulamayı yeniden başlat.", "Needed for the storage map to read the whole disk. Add MultiMac to System Settings › Privacy & Security › Full Disk Access, then restart the app."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -174,7 +192,7 @@ struct SettingsView: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = true
-        panel.prompt = "Hariç Tut"
+        panel.prompt = L("Hariç Tut", "Exclude")
         guard panel.runModal() == .OK else { return }
         panel.urls.forEach { Exclusions.add($0.path) }
         exclusions = Exclusions.all
@@ -185,7 +203,7 @@ struct SettingsView: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
-        panel.prompt = "Ekle"
+        panel.prompt = L("Ekle", "Add")
         guard panel.runModal() == .OK else { return }
         for url in panel.urls where !roots.contains(url.path) { roots.append(url.path) }
         Prefs.roots = roots
@@ -197,7 +215,7 @@ struct SettingsView: View {
             launchAtLogin = on
             loginError = nil
         } catch {
-            loginError = "Ayarlanamadı: \(error.localizedDescription). Uygulamayı /Applications içine kurmayı dene."
+            loginError = L("Ayarlanamadı: \(error.localizedDescription). Uygulamayı /Applications içine kurmayı dene.", "Couldn't change this: \(error.localizedDescription). Try installing the app in /Applications.")
         }
     }
 }

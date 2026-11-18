@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/overview.jpg" width="820" alt="MultiMac Genel Bakış: sağlık özeti, RAM / swap / disk göstergeleri, disk dağılımı ve temizlenebilir alan">
+  <img src="docs/images/tr/overview.png" width="820" alt="MultiMac Genel Bakış: sağlık özeti, RAM / swap / disk göstergeleri, disk dağılımı ve temizlenebilir alan">
 </p>
 
 ---
@@ -72,6 +72,8 @@ MultiMac bunun tersi: alanın ve belleğin tam olarak nereye gittiğini göstere
 | 🛰️ **Dev server bulucu** | TCP portu dinleyen her süreç; proje klasörü, port (`localhost`'u açar), çalışma süresi ve bellekle. Üç gün önce unuttuğun `npm run dev`'i bul. |
 | 🤖 **Otomasyon** | Tek tek açılıp kapatılabilen sekiz önbellek kuralı, zamanlama, disk azalınca tetikleme, *ne silinir?* önizlemesi ve bellek sıkıştığında senin seçtiğin uygulamaları kapatan isteğe bağlı RAM rahatlatma. |
 | 🛡️ **Asla dokunma listesi** | Bir öğeye veya projenin tamamına sağ tıklayıp kalıcı olarak hariç tut. Her tarama, kip, otomasyon ve silme motorunun kendisi buna uyar. |
+| 🌓 **Açık, Koyu veya Sistem** | Yumuşak renkli ikonlar, cam kenarlı kartlar ve üzerine gelince belirginleşen butonlarla Apple tonlarında arayüz. Tema *Ayarlar › Görünüm ve dil* bölümünden seçilir. |
+| 🌐 **Türkçe ve İngilizce** | Mac'in diline uyar (macOS Türkçeyse Türkçe, değilse İngilizce); Ayarlar'dan istediğin an değiştirilebilir, yeniden başlatma gerekmez. |
 | 🪶 **Hafif** | Yerel SwiftUI, ~55 MB RAM, boştayken < %1 CPU. Root yok, yardımcı yok, arka plan servisi yok. Xcode olmadan derlenir. |
 
 ## Ekran görüntüleri
@@ -79,7 +81,7 @@ MultiMac bunun tersi: alanın ve belleğin tam olarak nereye gittiğini göstere
 ### Menü çubuğu
 
 <p align="center">
-  <img src="docs/images/menubar.png" width="380" alt="MultiMac menü paneli: RAM, swap ve disk halkaları, Hızlı Temizlik, bellek önerisi ve en çok bellek kullanan uygulamalar">
+  <img src="docs/images/tr/menubar.png" width="380" alt="MultiMac menü paneli: RAM, swap ve disk halkaları, Hızlı Temizlik, bellek önerisi ve en çok bellek kullanan uygulamalar">
 </p>
 
 Bellek baskısı yükselince menü çubuğundaki ikon uyarı simgesine dönüşür. Panelde RAM / swap / disk (her kutu ilgili
@@ -96,7 +98,7 @@ haritasına veya temizlik listesine gidersin.
 ### Detaylı temizlik
 
 <p align="center">
-  <img src="docs/images/cleanup.png" width="820" alt="Kategori çubuğu, kipler, filtreler ve kategorilerle detaylı temizlik ekranı">
+  <img src="docs/images/tr/cleanup.png" width="820" alt="Kategori çubuğu, kipler, filtreler ve kategorilerle detaylı temizlik ekranı">
 </p>
 
 - **Kip:** *Güvenli* (yalnızca otomasyona uygun önbellekler) · *Dengeli* (+ Xcode verisi, kurulum dosyaları, 30+ gündür
@@ -108,7 +110,7 @@ haritasına veya temizlik listesine gidersin.
 ### Depolama haritası
 
 <p align="center">
-  <img src="docs/images/storage.png" width="820" alt="Depolama haritası: Projeler klasörünün iç içe treemap'i, inceleme paneli ve boyut listesi">
+  <img src="docs/images/tr/storage.png" width="820" alt="Depolama haritası: Projeler klasörünün iç içe treemap'i, inceleme paneli ve boyut listesi">
 </p>
 
 Her blok bir klasör veya dosya; büyüklüğü kapladığı alanla orantılı. Çift tıklayınca içine girersin, üstteki yol
@@ -119,7 +121,7 @@ işlemlerini ve klasörün içeriğini gösterir.
 ### Bellek
 
 <p align="center">
-  <img src="docs/images/memory.png" width="820" alt="Bellek ekranı: yeniden başlat tuşlu swap yorumu, dağılım, 30 dakikalık grafik, dev server'lar ve uygulama listesi">
+  <img src="docs/images/tr/memory.png" width="820" alt="Bellek ekranı: yeniden başlat tuşlu swap yorumu, dağılım, 30 dakikalık grafik, dev server'lar ve uygulama listesi">
 </p>
 
 En üstteki kart durumu sade bir dille yorumlar:
@@ -143,7 +145,7 @@ Her tuş ne yaptığını söyler, geri alınamayanlar kırmızıdır:
 ### Otomasyon
 
 <p align="center">
-  <img src="docs/images/automation.png" width="820" alt="Otomasyon ekranı: soru-cevap kurallı iki görev kartı, boyutlu kural kutucukları ve katlanan bölümler">
+  <img src="docs/images/tr/automation.png" width="820" alt="Otomasyon ekranı: soru-cevap kurallı iki görev kartı, boyutlu kural kutucukları ve katlanan bölümler">
 </p>
 
 Sekmede yalnızca iki iş var; her biri tek açma/kapama anahtarı ve sade bir soru-cevap kuralı olan bir kart:
@@ -347,7 +349,7 @@ Sources/MultiMac/
 └── UI/         Menü paneli, ana pencere, Genel Bakış, Temizlik, Depolama, Bellek, Otomasyon, Ayarlar, tema
 Resources/      Info.plist, AppIcon.icns
 scripts/        build.sh, make-icon.sh / .swift, toolchain-fix (bozuk CLT için VFS overlay)
-docs/images/    README görselleri
+docs/images/    README görselleri (İngilizce, açık tema; tr/ altında Türkçe, koyu tema)
 ```
 
 ## Teşekkürler

@@ -7,9 +7,9 @@ final class StorageStore: ObservableObject {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .disk: "Tüm Disk"
-            case .home: "Ev Klasörü"
-            case .custom: "Klasör…"
+            case .disk: L("Tüm Disk", "Entire Disk")
+            case .home: L("Ev Klasörü", "Home Folder")
+            case .custom: L("Klasör…", "Folder…")
             }
         }
     }
@@ -43,7 +43,7 @@ final class StorageStore: ObservableObject {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        panel.prompt = "Tara"
+        panel.prompt = L("Tara", "Scan")
         if panel.runModal() == .OK, let url = panel.url {
             customURL = url
             scope = .custom
@@ -75,7 +75,7 @@ final class StorageStore: ObservableObject {
                 let used = DiskReader.read().used
                 let hidden = used - result.size
                 if hidden > 500_000_000 {
-                    let pseudo = FileNode(name: "Sistem ve gizli veriler", kind: .unscanned, size: hidden)
+                    let pseudo = FileNode(name: L("Sistem ve gizli veriler", "System and hidden data"), kind: .unscanned, size: hidden)
                     pseudo.parent = result
                     result.children.append(pseudo)
                     result.children.sort { $0.size > $1.size }
@@ -165,7 +165,7 @@ final class StorageStore: ObservableObject {
             }
             removeFromTree(node)
         } catch {
-            lastError = "\(node.displayName) silinemedi: \(error.localizedDescription)"
+            lastError = L("\(node.displayName) silinemedi: \(error.localizedDescription)", "Couldn't delete \(node.displayName): \(error.localizedDescription)")
         }
     }
 

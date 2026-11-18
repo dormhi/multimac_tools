@@ -37,37 +37,37 @@ struct AutomationView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Otomasyon", subtitle: "MultiMac'in senin yerine yapabileceği iki iş",
+            PageHeader(title: L("Otomasyon", "Automation"), subtitle: L("MultiMac'in senin yerine yapabileceği iki iş", "Two jobs MultiMac can do for you"),
                        symbol: "wand.and.stars", color: .purple) {
                 HStack(spacing: 6) {
-                    Badge(text: storageOn ? "Önbellek: açık" : "Önbellek: kapalı", color: storageOn ? .green : .secondary)
-                    Badge(text: ramOn ? "RAM: açık" : "RAM: kapalı", color: ramOn ? .green : .secondary)
+                    Badge(text: storageOn ? L("Önbellek: açık", "Caches: on") : L("Önbellek: kapalı", "Caches: off"), color: storageOn ? .green : .secondary)
+                    Badge(text: ramOn ? L("RAM: açık", "RAM: on") : L("RAM: kapalı", "RAM: off"), color: ramOn ? .green : .secondary)
                 }
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     storageCard
                     ramCard
-                    Collapsible(title: "Asla dokunulmayanlar", symbol: "checkmark.shield.fill", color: .green,
-                                hint: "Otomasyonun hiçbir koşulda silmediği şeyler", isOpen: $showSafety) { safetyContent }
-                    Collapsible(title: "Gelişmiş", symbol: "slider.horizontal.3", color: .gray,
-                                hint: "Bildirimler, açık uygulamalar, günlük yaşı, bekleme süresi", isOpen: $showAdvanced) { advancedContent }
-                    Collapsible(title: "Geçmiş", symbol: "clock.arrow.circlepath", color: .gray,
+                    Collapsible(title: L("Asla dokunulmayanlar", "Never touched"), symbol: "checkmark.shield.fill", color: .green,
+                                hint: L("Otomasyonun hiçbir koşulda silmediği şeyler", "Things automation never deletes"), isOpen: $showSafety) { safetyContent }
+                    Collapsible(title: L("Gelişmiş", "Advanced"), symbol: "slider.horizontal.3", color: .gray,
+                                hint: L("Bildirimler, açık uygulamalar, günlük yaşı, bekleme süresi", "Notifications, running apps, log age, cooldown"), isOpen: $showAdvanced) { advancedContent }
+                    Collapsible(title: L("Geçmiş", "History"), symbol: "clock.arrow.circlepath", color: .gray,
                                 hint: historyHint, isOpen: $showHistory) { historyContent }
                 }
                 .padding(24)
             }
         }
         .task { if cleanup.autoPreview == nil { await cleanup.previewAuto() } }
-        .alert("Listedeki uygulamalar şimdi kapatılsın mı?", isPresented: $confirmRelief) {
-            Button("Kapat", role: .destructive) {
-                Task { await relief.relieve(reason: "Elle başlatıldı", ignoreIdle: true) }
+        .alert(L("Listedeki uygulamalar şimdi kapatılsın mı?", "Quit the apps on the list now?"), isPresented: $confirmRelief) {
+            Button(L("Kapat", "Quit"), role: .destructive) {
+                Task { await relief.relieve(reason: L("Elle başlatıldı", "Started manually"), ignoreIdle: true) }
             }
-            Button("Vazgeç", role: .cancel) {}
+            Button(L("Vazgeç", "Cancel"), role: .cancel) {}
         } message: {
             let names = relief.candidates(ignoreIdle: true).compactMap(\.localizedName)
-            Text(names.isEmpty ? "Listede şu an açık ve arka planda olan uygulama yok."
-                 : "\(names.joined(separator: ", ")) düzgünce kapatılacak. Kaydedilmemiş belge varsa uygulama soracak.")
+            Text(names.isEmpty ? L("Listede şu an açık ve arka planda olan uygulama yok.", "No app on the list is open in the background right now.")
+                 : L("\(names.joined(separator: ", ")) düzgünce kapatılacak. Kaydedilmemiş belge varsa uygulama soracak.", "\(names.joined(separator: ", ")) will be quit gracefully. Apps will ask about unsaved documents."))
         }
     }
 
@@ -75,39 +75,39 @@ struct AutomationView: View {
 
     private var storageCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            TaskHeader(title: "Önbellekleri kendiliğinden temizle",
-                       subtitle: "Uygulamaların gerektiğinde yeniden oluşturduğu çöpü siler. Belgelerine ve ayarlarına dokunmaz.",
+            TaskHeader(title: L("Önbellekleri kendiliğinden temizle", "Clean caches automatically"),
+                       subtitle: L("Uygulamaların gerektiğinde yeniden oluşturduğu çöpü siler. Belgelerine ve ayarlarına dokunmaz.", "Deletes junk that apps recreate when needed. Never touches your documents or settings."),
                        symbol: "sparkles", color: .green, isOn: $storageOn)
 
             VStack(alignment: .leading, spacing: 10) {
-                QuestionRow("Ne zaman?") {
+                QuestionRow(L("Ne zaman?", "When?")) {
                     PillPicker(selection: $interval, options: [
-                        (1, "Her saat"), (6, "6 saatte bir"), (12, "12 saatte bir"),
-                        (24, "Her gün"), (168, "Her hafta"), (0, "Zamanlama yok"),
-                    ], custom: { "\($0) saatte bir" })
+                        (1, L("Her saat", "Every hour")), (6, L("6 saatte bir", "Every 6 hours")), (12, L("12 saatte bir", "Every 12 hours")),
+                        (24, L("Her gün", "Every day")), (168, L("Her hafta", "Every week")), (0, L("Zamanlama yok", "No schedule")),
+                    ], custom: { L("\($0) saatte bir", "Every \($0) hours") })
                 }
-                QuestionRow("Disk dolarsa?") {
+                QuestionRow(L("Disk dolarsa?", "If the disk fills up?")) {
                     PillPicker(selection: lowDiskBinding, options: [
-                        (0, "Bir şey yapma, zamanını bekle"),
-                        (5, "Boş alan 5 GB'ın altına inince hemen temizle"),
-                        (10, "Boş alan 10 GB'ın altına inince hemen temizle"),
-                        (20, "Boş alan 20 GB'ın altına inince hemen temizle"),
-                        (30, "Boş alan 30 GB'ın altına inince hemen temizle"),
-                        (50, "Boş alan 50 GB'ın altına inince hemen temizle"),
-                    ], custom: { "Boş alan \($0) GB'ın altına inince hemen temizle" })
+                        (0, L("Bir şey yapma, zamanını bekle", "Do nothing, wait for the schedule")),
+                        (5, L("Boş alan 5 GB'ın altına inince hemen temizle", "Clean right away below 5 GB free")),
+                        (10, L("Boş alan 10 GB'ın altına inince hemen temizle", "Clean right away below 10 GB free")),
+                        (20, L("Boş alan 20 GB'ın altına inince hemen temizle", "Clean right away below 20 GB free")),
+                        (30, L("Boş alan 30 GB'ın altına inince hemen temizle", "Clean right away below 30 GB free")),
+                        (50, L("Boş alan 50 GB'ın altına inince hemen temizle", "Clean right away below 50 GB free")),
+                    ], custom: { L("Boş alan \($0) GB'ın altına inince hemen temizle", "Clean right away below \($0) GB free") })
                 }
                 if interval == 0 && !lowDisk {
-                    Label("Bu ayarlarla otomatik temizlik hiç çalışmaz. Bir zaman ya da disk eşiği seç.",
+                    Label(L("Bu ayarlarla otomatik temizlik hiç çalışmaz. Bir zaman ya da disk eşiği seç.", "With these settings the cleanup never runs. Pick a schedule or a disk threshold."),
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.caption).foregroundStyle(.orange)
                         .padding(.leading, questionWidth + 12)
                 }
-                QuestionRow("Neler temizlensin?", alignTop: true) {
+                QuestionRow(L("Neler temizlensin?", "What should be cleaned?"), alignTop: true) {
                     VStack(alignment: .leading, spacing: 8) {
                         FlowLayout(spacing: 6) {
                             ForEach(AutoRule.allCases) { rule in ruleChip(rule) }
                         }
-                        Text(hoveredRule?.detail ?? "Bir kutunun üzerine gel, neleri kapsadığını gör. Tıklayınca açılır ya da kapanır.")
+                        Text(hoveredRule?.detail ?? L("Bir kutunun üzerine gel, neleri kapsadığını gör. Tıklayınca açılır ya da kapanır.", "Hover a chip to see what it covers. Click it to turn it on or off."))
                             .font(.caption).foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -126,7 +126,7 @@ struct AutomationView: View {
                     showPreview.toggle()
                     if showPreview { Task { await cleanup.previewAuto() } }
                 } label: {
-                    Label(showPreview ? "Listeyi gizle" : "Ne silinir?", systemImage: showPreview ? "chevron.up" : "eye")
+                    Label(showPreview ? L("Listeyi gizle", "Hide list") : L("Ne silinir?", "What gets deleted?"), systemImage: showPreview ? "chevron.up" : "eye")
                 }
                 Button {
                     Task {
@@ -134,9 +134,9 @@ struct AutomationView: View {
                         await cleanup.previewAuto()
                     }
                 } label: {
-                    Label(cleanup.isBusy ? "Temizleniyor…" : "Şimdi çalıştır", systemImage: "sparkles")
+                    Label(cleanup.isBusy ? L("Temizleniyor…", "Cleaning…") : L("Şimdi çalıştır", "Run now"), systemImage: "sparkles")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(.green)
                 .disabled(cleanup.isBusy || enabledItems.isEmpty)
             }
@@ -178,7 +178,7 @@ struct AutomationView: View {
                     .foregroundStyle(on.wrappedValue ? Color.green : Color.secondary)
                 Text(rule.shortTitle)
                 if let bytes {
-                    Text(bytes > 0 ? Fmt.bytes(bytes) : "boş")
+                    Text(bytes > 0 ? Fmt.bytes(bytes) : L("boş", "empty"))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
@@ -200,22 +200,22 @@ struct AutomationView: View {
 
     private var storageStatus: String {
         let total = enabledItems.reduce(Int64(0)) { $0 + $1.size }
-        let now = cleanup.autoPreview == nil ? "" : " Şu an \(Fmt.bytes(total)) temizlenebilir."
-        let last = cleanup.lastAutoDate.map { " Son temizlik \(Fmt.relative($0)), \(Fmt.bytes(cleanup.lastAutoBytes))." } ?? ""
-        guard storageOn else { return "Kapalı. Yalnızca \"Şimdi çalıştır\"a basınca temizler." + now }
+        let now = cleanup.autoPreview == nil ? "" : L(" Şu an \(Fmt.bytes(total)) temizlenebilir.", " \(Fmt.bytes(total)) can be cleaned now.")
+        let last = cleanup.lastAutoDate.map { L(" Son temizlik \(Fmt.relative($0)), \(Fmt.bytes(cleanup.lastAutoBytes)).", " Last cleaned \(Fmt.relative($0)), \(Fmt.bytes(cleanup.lastAutoBytes)).") } ?? ""
+        guard storageOn else { return L("Kapalı. Yalnızca \"Şimdi çalıştır\"a basınca temizler.", "Off. Cleans only when you click \"Run now\".") + now }
         if let next = cleanup.nextAutoDate {
-            let when = next.timeIntervalSinceNow < 15 * 60 ? "birkaç dakika içinde" : Fmt.relative(next)
-            return "Sonraki temizlik \(when)." + last
+            let when = next.timeIntervalSinceNow < 15 * 60 ? L("birkaç dakika içinde", "in a few minutes") : Fmt.relative(next)
+            return L("Sonraki temizlik \(when).", "Next cleanup \(when).") + last
         }
-        return lowDisk ? "Yalnızca boş alan \(threshold) GB'ın altına inince çalışır." + last
-            : "Çalışmıyor: zaman ya da disk eşiği seçilmedi."
+        return lowDisk ? L("Yalnızca boş alan \(threshold) GB'ın altına inince çalışır.", "Runs only when free space drops below \(threshold) GB.") + last
+            : L("Çalışmıyor: zaman ya da disk eşiği seçilmedi.", "Not running: no schedule or disk threshold selected.")
     }
 
     private var previewList: some View {
         let items = enabledItems
         return VStack(alignment: .leading, spacing: 6) {
-            Text(items.isEmpty ? "Şu an temizlenecek bir şey yok."
-                 : "Şimdi çalışsa \(items.count) öğeden \(Fmt.bytes(items.reduce(Int64(0)) { $0 + $1.size })) silinir:")
+            Text(items.isEmpty ? L("Şu an temizlenecek bir şey yok.", "Nothing to clean right now.")
+                 : L("Şimdi çalışsa \(items.count) öğeden \(Fmt.bytes(items.reduce(Int64(0)) { $0 + $1.size })) silinir:", "Running now would delete \(Fmt.bytes(items.reduce(Int64(0)) { $0 + $1.size })) from \(items.count) items:"))
                 .font(.callout.weight(.semibold))
             LazyVStack(alignment: .leading, spacing: 4) {
                 ForEach(items.prefix(15)) { item in
@@ -230,7 +230,7 @@ struct AutomationView: View {
                     }
                     .padding(.vertical, 2)
                     .contextMenu {
-                        Button("Asla dokunma: \(item.urls.first?.lastPathComponent ?? "")") {
+                        Button(L("Asla dokunma: \(item.urls.first?.lastPathComponent ?? "")", "Never touch: \(item.urls.first?.lastPathComponent ?? "")")) {
                             item.urls.forEach { cleanup.exclude(path: $0.path) }
                             Task { await cleanup.previewAuto() }
                         }
@@ -238,9 +238,9 @@ struct AutomationView: View {
                 }
             }
             if items.count > 15 {
-                Text("…ve \(items.count - 15) öğe daha").font(.caption).foregroundStyle(.secondary)
+                Text(L("…ve \(items.count - 15) öğe daha", "…and \(items.count - 15) more")).font(.caption).foregroundStyle(.secondary)
             }
-            Text("Önizleme hiçbir şey silmez. Bir satıra sağ tıklayıp \"Asla dokunma\" dersen otomasyon onu bir daha silmez.")
+            Text(L("Önizleme hiçbir şey silmez. Bir satıra sağ tıklayıp \"Asla dokunma\" dersen otomasyon onu bir daha silmez.", "The preview deletes nothing. Right-click a row and choose \"Never touch\" and automation will never delete it again."))
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(12)
@@ -251,46 +251,46 @@ struct AutomationView: View {
 
     private var ramCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            TaskHeader(title: "Bellek sıkışınca uygulama kapat",
-                       subtitle: "RAM'i gerçekten açmanın tek güvenli yolu. Yalnızca senin seçtiğin uygulamalar, düzgünce kapatılır.",
+            TaskHeader(title: L("Bellek sıkışınca uygulama kapat", "Quit apps when memory is tight"),
+                       subtitle: L("RAM'i gerçekten açmanın tek güvenli yolu. Yalnızca senin seçtiğin uygulamalar, düzgünce kapatılır.", "The only safe way to really free RAM. Only apps you choose, quit gracefully."),
                        symbol: "memorychip", color: .blue, isOn: $ramOn)
 
             VStack(alignment: .leading, spacing: 10) {
-                QuestionRow("Ne zaman?") {
+                QuestionRow(L("Ne zaman?", "When?")) {
                     HStack(spacing: 6) {
                         PillPicker(selection: triggerBinding, options: [
-                            ("w", "Bellek sıkışınca"), ("c", "Bellek kritik olunca"),
-                            ("s50", "Swap %50 dolunca"), ("s70", "Swap %70 dolunca"), ("s80", "Swap %80 dolunca"),
-                            ("s90", "Swap %90 dolunca"),
+                            ("w", L("Bellek sıkışınca", "When memory is tight")), ("c", L("Bellek kritik olunca", "When memory is critical")),
+                            ("s50", L("Swap %50 dolunca", "When swap is 50% full")), ("s70", L("Swap %70 dolunca", "When swap is 70% full")), ("s80", L("Swap %80 dolunca", "When swap is 80% full")),
+                            ("s90", L("Swap %90 dolunca", "When swap is 90% full")),
                         ])
                         PillPicker(selection: $ramSustain, options: [
-                            (0, "hemen"), (1, "1 dakika sürerse"), (2, "2 dakika sürerse"),
-                            (5, "5 dakika sürerse"), (10, "10 dakika sürerse"),
-                        ], custom: { "\($0) dakika sürerse" })
+                            (0, L("hemen", "right away")), (1, L("1 dakika sürerse", "for 1 minute")), (2, L("2 dakika sürerse", "for 2 minutes")),
+                            (5, L("5 dakika sürerse", "for 5 minutes")), (10, L("10 dakika sürerse", "for 10 minutes")),
+                        ], custom: { L("\($0) dakika sürerse", "for \($0) minutes") })
                     }
                 }
-                QuestionRow("Hangi uygulamalar?", alignTop: true) {
+                QuestionRow(L("Hangi uygulamalar?", "Which apps?"), alignTop: true) {
                     VStack(alignment: .leading, spacing: 8) {
                         FlowLayout(spacing: 6) {
                             ForEach(ramApps, id: \.self) { name in appChip(name) }
                             addAppMenu
                         }
                         if ramApps.isEmpty {
-                            Text("Liste boş, yani hiçbir uygulama kapatılmaz. Arka planda RAM tutan ama hemen gerekmeyenleri ekle: Spotify, Discord, WhatsApp, Slack…")
+                            Text(L("Liste boş, yani hiçbir uygulama kapatılmaz. Arka planda RAM tutan ama hemen gerekmeyenleri ekle: Spotify, Discord, WhatsApp, Slack…", "The list is empty, so no app will be quit. Add apps that hold RAM in the background but aren't needed right away: Spotify, Discord, WhatsApp, Slack…"))
                                 .font(.caption).foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
-                QuestionRow("Hangileri kapansın?") {
+                QuestionRow(L("Hangileri kapansın?", "Which of them?")) {
                     PillPicker(selection: $ramIdle, options: [
-                        (0, "Arka plandaki hepsi"), (5, "5 dakikadır kullanmadıklarım"),
-                        (10, "10 dakikadır kullanmadıklarım"), (20, "20 dakikadır kullanmadıklarım"),
-                        (30, "30 dakikadır kullanmadıklarım"), (60, "1 saattir kullanmadıklarım"),
-                        (120, "2 saattir kullanmadıklarım"),
-                    ], custom: { "\($0) dakikadır kullanmadıklarım" })
+                        (0, L("Arka plandaki hepsi", "All in the background")), (5, L("5 dakikadır kullanmadıklarım", "Unused for 5 minutes")),
+                        (10, L("10 dakikadır kullanmadıklarım", "Unused for 10 minutes")), (20, L("20 dakikadır kullanmadıklarım", "Unused for 20 minutes")),
+                        (30, L("30 dakikadır kullanmadıklarım", "Unused for 30 minutes")), (60, L("1 saattir kullanmadıklarım", "Unused for 1 hour")),
+                        (120, L("2 saattir kullanmadıklarım", "Unused for 2 hours")),
+                    ], custom: { L("\($0) dakikadır kullanmadıklarım", "Unused for \($0) minutes") })
                 }
-                Text("Öndeki uygulama ve korunan uygulamalar asla kapatılmaz. Kaydedilmemiş belge varsa uygulama sana sorar.")
+                Text(L("Öndeki uygulama ve korunan uygulamalar asla kapatılmaz. Kaydedilmemiş belge varsa uygulama sana sorar.", "The frontmost app and protected apps are never quit. Apps will ask you about unsaved documents."))
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(.leading, questionWidth + 12)
             }
@@ -305,7 +305,7 @@ struct AutomationView: View {
                 Button {
                     confirmRelief = true
                 } label: {
-                    Label("Şimdi kapat…", systemImage: "xmark.circle")
+                    Label(L("Şimdi kapat…", "Quit now…"), systemImage: "xmark.circle")
                 }
                 .disabled(ramApps.isEmpty)
             }
@@ -355,7 +355,7 @@ struct AutomationView: View {
                 Image(systemName: "xmark").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(name) uygulamasını listeden çıkar")
+            .accessibilityLabel(L("\(name) uygulamasını listeden çıkar", "Remove \(name) from the list"))
         }
         .font(.callout)
         .padding(.horizontal, 10).padding(.vertical, 6)
@@ -378,7 +378,7 @@ struct AutomationView: View {
     private var addAppMenu: some View {
         Menu {
             let names = runningAppNames
-            if names.isEmpty { Text("Eklenecek açık uygulama yok") }
+            if names.isEmpty { Text(L("Eklenecek açık uygulama yok", "No running apps to add")) }
             ForEach(names, id: \.self) { name in
                 Button(name) {
                     ramApps.append(name)
@@ -386,7 +386,7 @@ struct AutomationView: View {
                 }
             }
         } label: {
-            Label("Uygulama ekle", systemImage: "plus")
+            Label(L("Uygulama ekle", "Add app"), systemImage: "plus")
                 .font(.callout)
         }
         .menuStyle(.borderlessButton)
@@ -405,14 +405,14 @@ struct AutomationView: View {
     }
 
     private var ramStatus: String {
-        guard ramOn else { return "Kapalı. Yalnızca \"Şimdi kapat\"a basınca listedekileri kapatır." }
-        guard !ramApps.isEmpty else { return "Açık ama liste boş, bu yüzden hiçbir şey kapatılmaz." }
-        guard relief.conditionMet(monitor.memory) else { return "Bellek şu an rahat, kapatılacak bir şey yok." }
+        guard ramOn else { return L("Kapalı. Yalnızca \"Şimdi kapat\"a basınca listedekileri kapatır.", "Off. Quits the listed apps only when you click \"Quit now\".") }
+        guard !ramApps.isEmpty else { return L("Açık ama liste boş, bu yüzden hiçbir şey kapatılmaz.", "On, but the list is empty, so nothing will be quit.") }
+        guard relief.conditionMet(monitor.memory) else { return L("Bellek şu an rahat, kapatılacak bir şey yok.", "Memory is fine right now, nothing to quit.") }
         let names = relief.candidates().compactMap(\.localizedName)
-        let since = relief.conditionSince.map { " (\(Fmt.relative($0)) başladı)" } ?? ""
+        let since = relief.conditionSince.map { L(" (\(Fmt.relative($0)) başladı)", " (started \(Fmt.relative($0)))") } ?? ""
         return names.isEmpty
-            ? "Koşul sağlanıyor\(since) ama listeden kapatılmaya uygun uygulama yok."
-            : "Koşul sağlanıyor\(since). Sırada: \(names.joined(separator: ", "))."
+            ? L("Koşul sağlanıyor\(since) ama listeden kapatılmaya uygun uygulama yok.", "Condition met\(since), but no app on the list can be quit.")
+            : L("Koşul sağlanıyor\(since). Sırada: \(names.joined(separator: ", ")).", "Condition met\(since). Next up: \(names.joined(separator: ", ")).")
     }
 
     // MARK: - Katlanan bölümler
@@ -420,20 +420,20 @@ struct AutomationView: View {
     private var safetyContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach([
-                ("internaldrive", "Sistem dosyaları: /System, /Library, /private"),
-                ("apple.logo", "Apple'ın kendi önbellekleri"),
-                ("person.crop.circle", "Uygulama verileri ve ayarları"),
-                ("lock.fill", "Tarayıcı geçmişi, çerezler ve şifreler"),
-                ("folder.fill", "node_modules, .venv, İndirilenler, büyük dosyalar ve Çöp Kutusu"),
-                ("hammer.fill", "Açık Xcode'un DerivedData'sı ve içinde dev server çalışan projelerin önbellekleri"),
+                ("internaldrive", L("Sistem dosyaları: /System, /Library, /private", "System files: /System, /Library, /private")),
+                ("apple.logo", L("Apple'ın kendi önbellekleri", "Apple's own caches")),
+                ("person.crop.circle", L("Uygulama verileri ve ayarları", "App data and settings")),
+                ("lock.fill", L("Tarayıcı geçmişi, çerezler ve şifreler", "Browser history, cookies and passwords")),
+                ("folder.fill", L("node_modules, .venv, İndirilenler, büyük dosyalar ve Çöp Kutusu", "node_modules, .venv, Downloads, large files and the Trash")),
+                ("hammer.fill", L("Açık Xcode'un DerivedData'sı ve içinde dev server çalışan projelerin önbellekleri", "DerivedData of a running Xcode and caches of projects with a running dev server")),
             ], id: \.1) { symbol, text in
                 Label(text, systemImage: symbol).font(.callout)
             }
             HStack {
-                Label("\"Asla dokunma\" listende \(Exclusions.all.count) öğe var", systemImage: "hand.raised.fill")
+                Label(L("\"Asla dokunma\" listende \(Exclusions.all.count) öğe var", "Your \"Never touch\" list has \(Exclusions.all.count) items"), systemImage: "hand.raised.fill")
                     .font(.callout)
                 Spacer()
-                Button("Listeyi düzenle") { appState.tab = .settings }
+                Button(L("Listeyi düzenle", "Edit list")) { appState.tab = .settings }
             }
             .padding(.top, 4)
         }
@@ -441,20 +441,20 @@ struct AutomationView: View {
 
     private var advancedContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Önbellek temizliği").font(.subheadline.weight(.semibold))
-            Toggle("Temizlikten sonra bildirim göster", isOn: $notify)
+            Text(L("Önbellek temizliği", "Cache cleanup")).font(.subheadline.weight(.semibold))
+            Toggle(L("Temizlikten sonra bildirim göster", "Notify after cleaning"), isOn: $notify)
             VStack(alignment: .leading, spacing: 2) {
-                Toggle("Açık uygulamaların önbelleklerini atla", isOn: $skipRunning)
-                Text("Kapatırsan açık uygulamaların (ör. Chrome) önbellekleri de silinir; uygulama bir süre yavaşlayabilir.")
+                Toggle(L("Açık uygulamaların önbelleklerini atla", "Skip caches of running apps"), isOn: $skipRunning)
+                Text(L("Kapatırsan açık uygulamaların (ör. Chrome) önbellekleri de silinir; uygulama bir süre yavaşlayabilir.", "If off, caches of running apps (e.g. Chrome) are deleted too; the app may be slower for a while."))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Stepper("Günlükler \(logDays) günden eskiyse silinsin", value: $logDays, in: 1...90)
+            Stepper(L("Günlükler \(logDays) günden eskiyse silinsin", "Delete logs older than \(logDays) days"), value: $logDays, in: 1...90)
             Divider()
-            Text("Bellek").font(.subheadline.weight(.semibold))
-            Toggle("Uygulama kapattıktan sonra bildirim göster", isOn: $ramNotify)
+            Text(L("Bellek", "Memory")).font(.subheadline.weight(.semibold))
+            Toggle(L("Uygulama kapattıktan sonra bildirim göster", "Notify after quitting apps"), isOn: $ramNotify)
             VStack(alignment: .leading, spacing: 2) {
-                Stepper("İki kapatma arasında en az \(ramCooldown) dakika bekle", value: $ramCooldown, in: 5...240, step: 5)
-                Text("Bellek sıkışık kalmaya devam ederse uygulamaları art arda kapatmasın diye.")
+                Stepper(L("İki kapatma arasında en az \(ramCooldown) dakika bekle", "Wait at least \(ramCooldown) minutes between runs"), value: $ramCooldown, in: 5...240, step: 5)
+                Text(L("Bellek sıkışık kalmaya devam ederse uygulamaları art arda kapatmasın diye.", "So it doesn't keep quitting apps one after another while memory stays tight."))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -464,7 +464,7 @@ struct AutomationView: View {
 
     private var historyHint: String {
         cleanup.lastAutoDate == nil && relief.history.isEmpty
-            ? "Henüz bir şey yapılmadı" : "Son temizlik ve kapatılan uygulamalar"
+            ? L("Henüz bir şey yapılmadı", "Nothing done yet") : L("Son temizlik ve kapatılan uygulamalar", "Last cleanup and quit apps")
     }
 
     private var historyContent: some View {
@@ -473,7 +473,7 @@ struct AutomationView: View {
                 HStack(alignment: .top) {
                     Image(systemName: "sparkles").foregroundStyle(.green).frame(width: 18)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("Önbellek temizliği: \(Fmt.bytes(cleanup.lastAutoBytes)) yer açıldı")
+                        Text(L("Önbellek temizliği: \(Fmt.bytes(cleanup.lastAutoBytes)) yer açıldı", "Cache cleanup: freed \(Fmt.bytes(cleanup.lastAutoBytes))"))
                         Text(Fmt.relative(date)).font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -482,14 +482,14 @@ struct AutomationView: View {
                 HStack(alignment: .top) {
                     Image(systemName: "memorychip").foregroundStyle(.blue).frame(width: 18)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("Kapatıldı: \(a.apps.joined(separator: ", "))").lineLimit(2)
+                        Text(L("Kapatıldı: \(a.apps.joined(separator: ", "))", "Quit: \(a.apps.joined(separator: ", "))")).lineLimit(2)
                         Text("\(Fmt.relative(a.date)) · ~\(Fmt.bytes(a.freed)) · \(a.reason)")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
             if cleanup.lastAutoDate == nil && relief.history.isEmpty {
-                Text("Otomasyon henüz bir şey yapmadı.").font(.callout).foregroundStyle(.secondary)
+                Text(L("Otomasyon henüz bir şey yapmadı.", "Automation hasn't done anything yet.")).font(.callout).foregroundStyle(.secondary)
             }
         }
     }
@@ -517,7 +517,7 @@ private struct TaskHeader: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 16)
-            Text(isOn ? "Açık" : "Kapalı")
+            Text(isOn ? L("Açık", "On") : L("Kapalı", "Off"))
                 .font(.callout.weight(.medium))
                 .foregroundStyle(isOn ? color : .secondary)
             Toggle("", isOn: $isOn)
