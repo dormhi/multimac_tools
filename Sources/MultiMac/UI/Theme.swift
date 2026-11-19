@@ -26,6 +26,7 @@ extension MainTab {
         case .storage: .orange
         case .memory: .blue
         case .automation: .purple
+        case .smart: .indigo
         case .settings: .gray
         }
     }

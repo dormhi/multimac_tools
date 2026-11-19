@@ -73,12 +73,12 @@ struct MenuBarPanel: View {
         let m = monitor.memory
         let d = monitor.disk
         return HStack(spacing: 8) {
-            StatTile(title: "RAM", value: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))",
+            StatTile(title: "RAM", value: "\(Fmt.memory(m.used)) / \(Fmt.memory(m.total))",
                      caption: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), fraction: m.usedFraction, color: m.pressure.color)
                 .hoverHighlight(cornerRadius: 10)
                 .onTapGesture { open(.memory) }
-            StatTile(title: L("Swap", "Swap", "Своп"), value: Fmt.bytes(m.swapUsed),
-                     caption: "/ \(Fmt.bytes(m.swapTotal))", fraction: m.swapFraction,
+            StatTile(title: L("Swap", "Swap", "Своп"), value: Fmt.memory(m.swapUsed),
+                     caption: "/ \(Fmt.memory(m.swapTotal))", fraction: m.swapFraction,
                      color: m.swapFraction > 0.7 ? .red : m.swapFraction > 0.4 ? .orange : .green)
                 .hoverHighlight(cornerRadius: 10)
                 .onTapGesture { open(.memory) }
@@ -194,7 +194,7 @@ private struct ProcessQuickRow: View {
             }
             Spacer()
             Text(Fmt.percent(fraction)).font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(.blue)
-            Text(Fmt.bytes(group.total)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
+            Text(Fmt.memory(group.total)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .frame(minWidth: 58, alignment: .trailing)
             Button(L("Kapat", "Quit", "Закрыть"), action: quit)
                 .controlSize(.mini)

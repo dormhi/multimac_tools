@@ -483,7 +483,7 @@ struct AutomationView: View {
                     Image(systemName: "memorychip").foregroundStyle(.blue).frame(width: 18)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(L("Kapatıldı: \(a.apps.joined(separator: ", "))", "Quit: \(a.apps.joined(separator: ", "))", "Закрыто: \(a.apps.joined(separator: ", "))")).lineLimit(2)
-                        Text("\(Fmt.relative(a.date)) · ~\(Fmt.bytes(a.freed)) · \(a.reason)")
+                        Text("\(Fmt.relative(a.date)) · ~\(Fmt.memory(a.freed)) · \(a.reason)")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -625,7 +625,7 @@ private struct Collapsible<Content: View>: View {
 }
 
 /// Öğeleri satıra sığdığı kadar dizer, sığmayanı alt satıra geçirir.
-private struct FlowLayout: Layout {
+struct FlowLayout: Layout {
     var spacing: CGFloat = 6
 
     private struct Row { var indices: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }

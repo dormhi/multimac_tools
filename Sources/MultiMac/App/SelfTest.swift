@@ -18,6 +18,7 @@ enum Snapshot {
         state.storage.scan(path: Prefs.roots.first ?? NSHomeDirectory())
         Task { await state.processes.autoRefresh(every: 3) }
         Task { await state.servers.refresh() }
+        Task { await state.smart.analyze() }
         try? await Task.sleep(nanoseconds: 45_000_000_000)  // taramalar bitsin
         if let root = state.storage.root {
             state.storage.selection = root.children.first { $0.kind == .directory }
@@ -64,12 +65,34 @@ enum Snapshot {
 enum SelfTest {
     static var isRequested: Bool { CommandLine.arguments.contains("--selftest") }
 
+    /// `--selftest --smart`: yalnızca Akıllı Temizlik analizini yazar (silmez; boyut geçmişine gözlem ekler).
+    @MainActor
+    static func runSmart() async {
+        let t = Date()
+        let smart = SmartStore()
+        await smart.analyze()
+        print("== Akıllı Temizlik (\(smart.items.count) öğe, \(String(format: "%.1f", Date().timeIntervalSince(t))) sn)")
+        print("  izlenen \(smart.stats.observedPaths) · karar \(smart.stats.decisions) · elenen \(smart.stats.hidden) · disk \(Fmt.bytes(smart.stats.diskBytes))")
+        for item in smart.items {
+            let section = item.section == .suggest ? "ÖNERİ" : item.section == .regrows ? "GERİ DOLAN" : "KORU"
+            print("  [\(section)] \(Fmt.bytes(item.size).padding(toLength: 10, withPad: " ", startingAt: 0)) \(String(format: "%.2f", item.score)) \(item.kind.rawValue) · \(item.title)")
+            print("        \(item.facts.map(\.text).joined(separator: " · "))")
+        }
+        var rusage = rusage_info_v4()
+        _ = withUnsafeMutablePointer(to: &rusage) {
+            $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(getpid(), RUSAGE_INFO_V4, $0) }
+        }
+        print("  bellek (phys_footprint): \(Fmt.memory(rusage.ri_phys_footprint))")
+        exit(0)
+    }
+
     @MainActor
     static func run() async {
+        if CommandLine.arguments.contains("--smart") { await runSmart() }
         let m = MemoryReader.read()
         print("== Bellek")
-        print("  kullanılan \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))  app \(Fmt.bytes(m.app))  wired \(Fmt.bytes(m.wired))  sıkıştırılmış \(Fmt.bytes(m.compressed))  önbellek \(Fmt.bytes(m.cached))")
-        print("  swap \(Fmt.bytes(m.swapUsed)) / \(Fmt.bytes(m.swapTotal))  baskı \(m.pressure.title)")
+        print("  kullanılan \(Fmt.memory(m.used)) / \(Fmt.memory(m.total))  app \(Fmt.memory(m.app))  wired \(Fmt.memory(m.wired))  sıkıştırılmış \(Fmt.memory(m.compressed))  önbellek \(Fmt.memory(m.cached))")
+        print("  swap \(Fmt.memory(m.swapUsed)) / \(Fmt.memory(m.swapTotal))  baskı \(m.pressure.title)")
 
         let d = DiskReader.read()
         print("== Disk\n  boş \(Fmt.bytes(d.available)) / \(Fmt.bytes(d.total))  (purgeable dahil \(Fmt.bytes(d.importantAvailable)))")
@@ -79,7 +102,7 @@ enum SelfTest {
         print("== Süreçler (\(groups.count) grup, \(Int(Date().timeIntervalSince(t0) * 1000)) ms)")
         for g in groups.prefix(8) {
             let cwd = g.processes.first?.cwd.map { " cwd=\(Fmt.displayPath($0))" } ?? ""
-            print("  \(Fmt.bytes(g.total).padding(toLength: 10, withPad: " ", startingAt: 0)) \(g.name) ×\(g.processes.count)\(g.isProtected ? " [korumalı]" : "")\(g.isDeveloperTool ? " [dev]" : "")\(cwd)")
+            print("  \(Fmt.memory(g.total).padding(toLength: 10, withPad: " ", startingAt: 0)) \(g.name) ×\(g.processes.count)\(g.isProtected ? " [korumalı]" : "")\(g.isDeveloperTool ? " [dev]" : "")\(cwd)")
         }
 
         let t1 = Date()

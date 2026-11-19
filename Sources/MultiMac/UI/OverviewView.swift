@@ -138,12 +138,12 @@ private struct OverviewGauges: View {
         let diskColor: Color = d.available < 15_000_000_000 ? .red : d.available < 40_000_000_000 ? .orange : .green
         return HStack(spacing: 16) {
             GaugeCard(title: L("Bellek (RAM)", "Memory (RAM)", "Память (RAM)"), symbol: "memorychip", fraction: m.usedFraction, color: m.pressure.color,
-                      headline: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))",
+                      headline: "\(Fmt.memory(m.used)) / \(Fmt.memory(m.total))",
                       detail: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), footnote: L("Uygulamaları gör", "See apps", "Приложения")) {
                 state.showMemory()
             }
             GaugeCard(title: L("Swap", "Swap", "Своп"), symbol: "arrow.left.arrow.right", fraction: m.swapFraction, color: swapColor,
-                      headline: "\(Fmt.bytes(m.swapUsed)) / \(Fmt.bytes(m.swapTotal))",
+                      headline: "\(Fmt.memory(m.swapUsed)) / \(Fmt.memory(m.swapTotal))",
                       detail: L("RAM'e sığmayıp diske taşan", "What didn't fit in RAM, on disk", "Что не поместилось в RAM, на диске"), footnote: L("Bellek ayrıntıları", "Memory details", "Подробнее о памяти")) {
                 state.showMemory()
             }
@@ -298,7 +298,7 @@ private struct OverviewMemoryCard: View {
         let apps = processes.groups.prefix(6)
         return VStack(alignment: .leading, spacing: 12) {
             CardHeader(title: L("Bellek dağılımı", "Memory breakdown", "Распределение памяти"), symbol: "memorychip.fill", color: .blue,
-                       subtitle: L("\(Fmt.bytes(m.used)) kullanımda · swap \(Fmt.bytes(m.swapUsed))", "\(Fmt.bytes(m.used)) in use · swap \(Fmt.bytes(m.swapUsed))", "Используется \(Fmt.bytes(m.used)) · своп \(Fmt.bytes(m.swapUsed))"),
+                       subtitle: L("\(Fmt.memory(m.used)) kullanımda · swap \(Fmt.memory(m.swapUsed))", "\(Fmt.memory(m.used)) in use · swap \(Fmt.memory(m.swapUsed))", "Используется \(Fmt.memory(m.used)) · своп \(Fmt.memory(m.swapUsed))"),
                        actionTitle: L("Bellek", "Memory", "Память")) {
                 state.showMemory()
             }
@@ -326,7 +326,7 @@ private struct OverviewMemoryCard: View {
                                 Text(Fmt.percent(Double(g.total) / total))
                                     .font(.callout.weight(.semibold).monospacedDigit())
                                     .foregroundStyle(.blue)
-                                Text(Fmt.bytes(g.total)).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                                Text(Fmt.memory(g.total)).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
                                     .frame(minWidth: 70, alignment: .trailing)
                             }
                             GeometryReader { geo in
@@ -404,7 +404,7 @@ private struct OverviewServersCard: View {
                     Text(verbatim: s.ports.map { ":" + String($0) }.joined(separator: " ")).font(.caption.monospaced()).foregroundStyle(.teal)
                     Spacer()
                     Text(s.uptime).font(.caption).foregroundStyle(.secondary)
-                    Text(Fmt.bytes(s.footprint)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Text(Fmt.memory(s.footprint)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 3)
                 .padding(.horizontal, 6)

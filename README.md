@@ -8,8 +8,8 @@
 
 <p align="center">
   <b>A native, lightweight maintenance app for small Macs.</b><br>
-  Quick clean from the menu bar, rule-based cache cleanup, a SpaceSniffer-style storage map and an honest memory manager
-  — built for an 8 GB / 256 GB MacBook.
+  Quick clean from the menu bar, rule-based cache cleanup, a small on-device model that learns what you leave behind,
+  a SpaceSniffer-style storage map and an honest memory manager — built for an 8 GB / 256 GB MacBook.
 </p>
 
 <p align="center">
@@ -27,7 +27,8 @@
 </p>
 
 > [!NOTE]
-> The app's interface is currently in **Turkish**. Screenshots show the Turkish UI; every screen is explained below.
+> The interface is available in **English, Turkish and Russian**. These screenshots show the English UI in the light
+> theme; the [Turkish README](README.tr.md) shows the Turkish UI in the dark theme.
 
 ---
 
@@ -37,6 +38,7 @@
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Automation rules](#automation-rules)
+- [Smart Cleanup: how it learns](#smart-cleanup-how-it-learns)
 - [RAM: why there is no "RAM cleaner"](#ram-why-there-is-no-ram-cleaner)
 - [Safety model](#safety-model)
 - [Installation](#installation)
@@ -70,11 +72,12 @@ system files**, and stays out of the way in the menu bar.
 | 📊 **Overview** | Health summary with reasons, big RAM / swap / disk gauges, *where is the disk going?* (Library, Applications, Projects, dev tools, Downloads…), cleanable space per category and preset, memory breakdown, biggest projects and running dev servers. **Every percentage is clickable** and opens the right screen, filtered. |
 | 🧹 **Detailed cleanup** | App caches, developer caches, project build leftovers, Xcode, logs, downloads, large & old files, Trash. *Safe / Balanced / Aggressive* presets, per-project view, search, size & age filters, sorting, expand an item to pick sub-folders, delete permanently or move to Trash. |
 | 🗺️ **Storage map** | SpaceSniffer-style nested treemap of the whole disk, your home or any folder. Color-coded safety (system / caution / safe / yours) and a strong warning before deleting anything protected. Explains *System Data*. |
-| 🧠 **Memory manager** | Apps grouped with their helper processes, 30-minute RAM & swap chart, protected apps, alerts for swap %, critical pressure and apps above a limit. A plain-language **swap insight** tells you whether swap is actually hurting and which long-running app to **restart** to get memory back. Every action button is labeled: *Yeniden Başlat* (restart), *Kapat* (quit), *Zorla Kapat* (force quit). |
+| 🧠 **Memory manager** | Apps grouped with their helper processes, 30-minute RAM & swap chart, protected apps, alerts for swap %, critical pressure and apps above a limit. A plain-language **swap insight** tells you whether swap is actually hurting and which long-running app to **restart** to get memory back. Every action button is labeled: *Restart*, *Quit*, *Force Quit*. Memory is shown in 1024-based units like Activity Monitor, so 8 GB of RAM reads *8 GB*. |
 | 🛰️ **Dev server finder** | Every process listening on a TCP port with project folder, port (opens `localhost`), uptime and memory — find the `npm run dev` you forgot three days ago. |
 | 🤖 **Automation** | Eight cache rules you can toggle one by one, a schedule, low-disk trigger, *what would be deleted?* preview, and optional RAM relief that closes the apps you chose when memory stays tight. |
+| ✨ **Smart Cleanup** | A tiny on-device model (~1 KB) ranks what you used and then left behind: idle projects' `node_modules`, leftovers of apps you removed, old Playwright / Node / Python / Homebrew / device-support versions, AI models you tried once. Every suggestion says *why* and how confident it is. It learns from what you clean, what you hide and whether cleaned folders come back. Caches that refill right away are flagged as not worth cleaning, and old-but-important files are never suggested. |
 | 🛡️ **Never touch list** | Right-click any item or whole project to exclude it forever. Respected by every scan, preset, the automation and the deletion engine itself. |
-| 🌓 **Light, Dark or System** | Apple-toned interface with soft tinted icons, glass-edged cards and buttons that fade in on hover. Pick the theme in *Settings › Appearance and language*. |
+| 🌓 **Light, Dark or System** | Apple-toned interface with soft tinted icons, glass-edged cards and buttons that fade in on hover. Pick the theme in *Settings › Appearance and language*. The sidebar collapses into a slim icon rail instead of disappearing. |
 | 🌐 **Turkish, English and Russian** | Follows your Mac's language (Turkish or Russian if macOS uses it, English otherwise) and can be switched in Settings at any time, no restart needed. |
 | 🪶 **Tiny footprint** | Native SwiftUI, ~55 MB RAM, < 1 % CPU when idle. No root, no helper, no background daemon. Builds without Xcode. |
 
@@ -93,9 +96,9 @@ one-click restart of the app that would free the most. Hover a row to quit the a
 
 ### Overview
 
-The screenshot at the top. *Disk nereye gidiyor?* ("where is the disk going?") measures the main folders and shows each
-as a share of the disk; *Temizlenebilir alan* ("cleanable space") shows what each preset would free. Click a row to jump
-to the storage map or cleanup list for exactly that item.
+The screenshot at the top. *Where is the disk going?* measures the main folders and shows each as a share of the disk;
+*Cleanable space* shows what each preset would free. Click a row to jump to the storage map or cleanup list for exactly
+that item.
 
 ### Detailed cleanup
 
@@ -105,11 +108,11 @@ to the storage map or cleanup list for exactly that item.
 
 | Label | Meaning |
 | --- | --- |
-| **Kip: Güvenli / Dengeli / Agresif** | Preset: *Safe* (only automation-eligible caches) · *Balanced* (+ Xcode data, installers, leftovers of projects untouched for 30+ days) · *Aggressive* (+ every `node_modules`, `.venv`, build output and Trash; never items in use, old downloads, large files or unknown data) |
-| **Kategoriler / Projeler** | Group by category, or by project (`node_modules + .next + dist`) |
-| **Boyut · Yaş · Sırala · Seçililer** | Size filter · age filter · sort · show selected only |
-| **Silme: Kalıcı sil / Çöp Kutusuna taşı** | Delete permanently / move to Trash (recoverable) |
-| **Otomatik** badge | Will also be cleaned by the automation |
+| **Preset: Safe / Balanced / Aggressive** | *Safe*: only automation-eligible caches · *Balanced*: + Xcode data, installers, leftovers of projects untouched for 30+ days · *Aggressive*: + every `node_modules`, `.venv`, build output and Trash; never items in use, old downloads, large files or unknown data |
+| **Categories / Projects** | Group by category, or by project (`node_modules + .next + dist`) |
+| **Size · Age · Sort · Selected** | Size filter · age filter · sort · show selected only |
+| **Delete: Delete permanently / Move to Trash** | Delete for good, or move to the Trash (recoverable) |
+| **Auto** badge | Will also be cleaned by the automation |
 
 ### Storage map
 
@@ -118,8 +121,8 @@ to the storage map or cleanup list for exactly that item.
 </p>
 
 Each block is a folder or file, sized by the space it takes; double-click to dive in, the breadcrumb goes back.
-Colors: 🟩 *Silinebilir* safe to delete (caches, `node_modules`…) · 🟦 *Kullanıcı dosyası* your files ·
-🟧 *Dikkat* app data / settings · 🟥 *Sistem / Korunan* system or protected. The inspector shows the reason for the
+Colors: 🟩 *Safe to delete* (caches, `node_modules`…) · 🟦 *Your file* · 🟧 *Caution* (app data / settings) ·
+🟥 *System / Protected*. The inspector shows the reason for the
 color, Finder / delete actions and the folder's contents.
 
 ### Memory
@@ -132,19 +135,19 @@ The card at the top reads the situation in plain language:
 
 | Card | When | What it suggests |
 | --- | --- | --- |
-| **Swap çalkantılı** (swap churning) | More than ~0.75 GB moved in or out of swap in the last 5 minutes | Close or restart something now, this is what makes the Mac stutter |
-| **Bellek sıkışık** (memory squeezed) | Memory pressure is not normal | Restart the biggest app that has been open for 3+ hours |
-| **Swap durgun** (swap calm) | Swap is in use but not moving | Nothing; idle pages on disk do not slow you down |
+| **Swap is churning** | More than ~0.75 GB moved in or out of swap in the last 5 minutes | Close or restart something now, this is what makes the Mac stutter |
+| **Memory is tight** | Memory pressure is not normal | Restart the biggest app that has been open for 3+ hours |
+| **Swap is calm** | Swap is in use but not moving | Nothing; idle pages on disk do not slow you down |
 
 Every button says what it does, and the destructive ones are red. App buttons appear when you hover a row, which keeps the long process list light:
 
 | Button | Where | What it does |
 | --- | --- | --- |
-| **Yeniden Başlat** | Apps | Quits the app gracefully, waits for it to exit, opens it again in the background. Its memory starts fresh and its swapped-out pages are dropped |
-| **Kapat** | Apps | Asks the app to quit, like ⌘Q. It can still ask to save documents |
-| **Zorla Kapat** | Apps | Kills the app and its helpers immediately (asks for confirmation; unsaved work is lost) |
-| **Sonlandır** | Single helper process | Terminates just that process |
-| **Durdur** / **Zorla Durdur** | Dev servers | Stops a server with `SIGTERM` / kills it with `SIGKILL` |
+| **Restart** | Apps | Quits the app gracefully, waits for it to exit, opens it again in the background. Its memory starts fresh and its swapped-out pages are dropped |
+| **Quit** | Apps | Asks the app to quit, like ⌘Q. It can still ask to save documents |
+| **Force Quit** | Apps | Kills the app and its helpers immediately (asks for confirmation; unsaved work is lost) |
+| **Terminate** | Single helper process | Terminates just that process |
+| **Stop** / **Force Stop** | Dev servers | Stops a server with `SIGTERM` / kills it with `SIGKILL` |
 
 ### Automation
 
@@ -154,10 +157,26 @@ Every button says what it does, and the destructive ones are red. App buttons ap
 
 The tab holds exactly two jobs, each a card with one on/off switch and a plain question-and-answer rule:
 
-- **Önbellekleri kendiliğinden temizle** (clean caches on their own): *When?* (hourly … weekly, or no schedule) · *If the disk fills up?* (clean right away below 5–50 GB free) · *What?* (rule chips showing how much each would free; hover for details). The footer says when it runs next and what it did last; **Ne silinir?** lists exactly what would go, **Şimdi çalıştır** runs it now.
-- **Bellek sıkışınca uygulama kapat** (quit apps when memory is tight): *When?* (pressure high / critical / swap above X %, for N minutes) · *Which apps?* (your list) · *Which of them?* (only those unused for N minutes). The footer shows whether the condition is met right now and who is next.
+- **Clean caches automatically**: *When?* (hourly … weekly, or no schedule) · *If the disk fills up?* (clean right away below 5–50 GB free) · *What?* (rule chips showing how much each would free; hover for details). The footer says when it runs next and what it did last; **What gets deleted?** lists exactly what would go, **Run now** runs it now.
+- **Quit apps when memory is tight**: *When?* (pressure high / critical / swap above X %, for N minutes) · *Which apps?* (your list) · *Which of them?* (only those unused for N minutes). The footer shows whether the condition is met right now and who is next.
 
 *Never touched*, *Advanced* (notifications, running apps, log age, cooldown) and *History* are folded away until you need them. Both jobs are **off by default**.
+
+### Smart Cleanup
+
+<p align="center">
+  <img src="docs/images/smart.png" width="820" alt="Smart Cleanup: model card with what it pays attention to, and suggestions with reasons and confidence bars">
+</p>
+
+- **Model card:** whether it is still on its starting knowledge or already learning, how many folders it watches, how
+  many of your decisions it learned from, its size, and *what it pays attention to*: its strongest weights (indigo makes
+  a suggestion more likely, orange less). *Reset learning* goes back to the starting weights.
+- **Used, then left behind:** the suggestions. Each row has a reason line (*Project idle for 73 days*, *Its app is no
+  longer installed*), a confidence bar, the size, and on hover **Don't suggest** and Finder. Homebrew and Ollama are
+  removed with their own tools, so those rows offer **Copy command** (`brew cleanup`, `ollama rm …`) instead of a checkbox.
+- **Refills quickly · not worth cleaning:** caches that came back within days of the last cleanup.
+- **Untouched but looks important:** old folders with documents, photos or code, kinds you never accept, and
+  information only: apps unopened for 120+ days, iPhone backups and Mail attachments. Never suggested.
 
 ## Automation rules
 
@@ -180,6 +199,37 @@ All automatic behaviour lives in the **Otomasyon** tab, and every rule can be sw
 
 **Never deleted automatically:** system folders, Apple caches, app data and settings, browser history / cookies /
 passwords, `node_modules`, `.venv`, Downloads, large files, Trash and your *Never touch* list.
+
+## Smart Cleanup: how it learns
+
+It is machine learning in the plainest form that works on one person's data: **logistic regression**, about 15 weights
+plus one starting bias per kind of suggestion. No neural network, no Core ML, no download, no cloud.
+
+| Part | What it is |
+| --- | --- |
+| Features | Days unchanged, days unopened (or *unknown*), size, growth this week, *grew fast then stopped*, *refilled after cleaning*, app removed / app running, project idle / project busy, a newer version exists, can be downloaded again, you cleaned it before |
+| Starting point | Weights tuned by hand from the cleanup rules, so it gives sensible suggestions on day one |
+| Learns from | Cleaning a suggestion (yes) · **Don't suggest** (no, and that path is muted) · a cleaned folder refilling within 7 days (no) · a cleaned folder not coming back for 30 days (yes) |
+| Guard rails | Each update is small and pulled back toward the starting weights, so one click can't wreck it |
+| Memory | Model ~1 KB; size history (up to 45 samples per path) is a few tens of KB on disk and loaded only while analysing |
+| When it runs | When you open the tab (at most every 6 hours), after regular and quick cleanups, and once a day in the background via the automation check. No daemon |
+| Explanations | The reason line comes from the features that pushed the score up the most |
+
+New sources it looks at, beyond the regular cleanup scan:
+
+- **Leftovers of removed apps:** reverse-DNS folders (`com.vendor.app`) in Application Support, Caches, HTTPStorages,
+  WebKit, Logs and Saved Application State whose app is no longer installed and that have been untouched for 30+ days.
+  Folders named after the app (`Spotify`) are skipped because they are ambiguous; `~/Library/Containers` is skipped
+  because reading it triggers a macOS privacy prompt.
+- **Old versions:** Playwright browsers with a newer revision, nvm Node and pyenv Python versions (the default / global
+  one, versions pinned in your projects' `.nvmrc` / `.python-version` and pyenv versions with virtualenvs are kept),
+  Xcode device support for older iOS versions, simulators whose runtime is gone, old Homebrew Cellar versions.
+- **AI models:** Hugging Face models and datasets, LM Studio, Whisper, PyTorch Hub and Ollama models.
+- **Information only:** apps unopened for 120+ days (from macOS's *last used* date), iPhone backups, Mail attachments
+  (with Full Disk Access).
+
+macOS's *last used* date is not always updated, so a missing value counts as *unknown*, never as *never used*. It takes
+a week or two of history before *grew fast then stopped* and *refills quickly* have anything to work with.
 
 ## RAM: why there is no "RAM cleaner"
 
@@ -218,6 +268,8 @@ MultiMac errs on the side of not deleting:
    deletion, and a folder that contains an excluded path is not removed.
 4. **Age limits** for logs and saved window states.
 5. **Safety classifier** in the storage map marks system, app-data and personal paths before you can delete them.
+6. **Smart Cleanup only suggests.** Its suggestions come only from paths the deletion engine's final gate allows,
+   personal-looking folders are never suggested, and nothing is deleted until you confirm.
 
 ## Installation
 
@@ -262,26 +314,29 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 
 | Where | What |
 | --- | --- |
-| `⌘1` … `⌘6` | Overview, Cleanup, Storage, Memory, Automation, Settings |
-| Menu bar › **Hızlı Temizlik** | Run the automation rules now |
+| `⌘1` … `⌘7` | Overview, Cleanup, Storage, Memory, Automation, Smart Cleanup, Settings |
+| `⌃⌘S` or the sidebar button | Collapse the sidebar to an icon rail and back |
+| Menu bar › **Quick Clean** | Run the automation rules now |
 | Overview | Click any percentage to open that item in the storage map or cleanup list |
-| Cleanup | Pick a preset or tick items, then **Temizle** (clean). Right-click › *Asla dokunma* (never touch) |
-| Storage | Choose *Tüm Disk / Ev Klasörü / Klasör…*, scan, double-click blocks to dive in |
-| Memory | *Yeniden Başlat* restarts an app, *Kapat* quits, *Zorla Kapat* force quits. Right-click an app › add to protected apps. *Durdur* stops a dev server |
-| Automation | Turn a job on, answer its questions, click chips to pick what gets cleaned. **Ne silinir?** previews, **Şimdi çalıştır** runs |
+| Cleanup | Pick a preset or tick items, then **Clean**. Right-click › *Never touch* |
+| Storage | Choose *Entire Disk / Home Folder / Folder…*, scan, double-click blocks to dive in |
+| Memory | *Restart* restarts an app, *Quit* quits, *Force Quit* force quits. Right-click an app › add to protected apps. *Stop* stops a dev server |
+| Automation | Turn a job on, answer its questions, click chips to pick what gets cleaned. **What gets deleted?** previews, **Run now** runs |
+| Smart Cleanup | Tick suggestions and **Clean selected**, or **Don't suggest** to teach it. **Analyze again** rescans |
 | Settings | Project folders, stale-project threshold, large/old file thresholds, alerts, protected apps, menu bar style, launch at login |
 
 ## How it works
 
 | Data | Source |
 | --- | --- |
-| Used memory, wired, compressed, cached | `host_statistics64` — same formula as Activity Monitor |
+| Used memory, wired, compressed, cached | `host_statistics64` — same formula as Activity Monitor, shown in 1024-based units like Activity Monitor (disk sizes use 1000-based units like Finder) |
 | Swap | `sysctl vm.swapusage` |
 | Memory pressure | `sysctl kern.memorystatus_vm_pressure_level` |
 | Per-app memory | `proc_pid_rusage` (`phys_footprint`); XPC helpers (e.g. WebKit tabs) are attributed to their owner with `responsibility_get_pid_responsible_for_pid` |
 | Listening ports / dev servers | `proc_pidinfo` + `proc_pidfdinfo` (no `lsof`), working directory via `PROC_PIDVNODEPATHINFO` |
 | Folder sizes | `fts(3)` with allocated size (`st_blocks`), hard links counted once |
 | Disk free space | `URLResourceKey.volumeAvailableCapacity` |
+| Last used date (Smart Cleanup) | Spotlight `kMDItemLastUsedDate`, falling back to the newest access / modification time of the files |
 
 ## Performance
 
@@ -291,13 +346,14 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 | CPU when idle | < 1 % (3-second updates) |
 | Cleanup scan | ~7 s for caches and build leftovers, ~17 s including the large-file search |
 | Storage map | ~630 k files scanned in ~17 s, kept as ~16 k nodes in memory |
+| Smart Cleanup | ~60 candidates analysed in ~17 s; model ~1 KB, history ~11 KB on disk |
 
 Small folders in the storage map are collapsed and rescanned on demand, views observe only the data they show, the
 window's minimum-size computation is cut off so live updates don't re-layout the whole window, and long lists are lazy.
 
 ## Limitations
 
-- Interface is Turkish only (for now).
+- Smart Cleanup needs a week or two of history before it can tell refilling caches from abandoned folders.
 - Ad-hoc signed, not notarised; meant to be built locally.
 - No root helper: system-wide caches (`/Library/Caches`, `/private/var`) are shown but never cleaned.
 - Apple silicon and macOS 15+ only.
@@ -333,10 +389,13 @@ sudo rm /Library/Developer/CommandLineTools/usr/include/swift/module.modulemap
 # Deletes nothing.
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --selftest ~/Projects
 
+# Print only the Smart Cleanup analysis: candidates, scores, sections and reasons. Deletes nothing.
+/Applications/MultiMac.app/Contents/MacOS/MultiMac --selftest --smart
+
 # Render every tab and the menu bar panel to PNG (used for the screenshots in this README).
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --snapshot /tmp/multimac-shots
 
-# Open the main window on a given tab (overview, cleanup, storage, memory, automation, settings), e.g. for profiling with `sample`.
+# Open the main window on a given tab (overview, cleanup, storage, memory, automation, smart, settings), e.g. for profiling with `sample`.
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --tab memory
 ```
 
@@ -348,7 +407,8 @@ Sources/MultiMac/
 ├── Core/       Memory, disk & process readers, dev server finder, alerts, RAM relief, overview data
 ├── Cleanup/    Models & automation rules, scanner, large-file finder, deletion engine & store
 ├── Storage/    fts(3) walker, disk scanner, safety classifier, treemap layout, storage store
-└── UI/         Menu bar panel, main window, Overview, Cleanup, Storage, Memory, Automation, Settings, theme
+├── Smart/      Smart Cleanup: features & model, size history, detectors, analysis & feedback store
+└── UI/         Menu bar panel, main window, Overview, Cleanup, Storage, Memory, Automation, Smart Cleanup, Settings, theme
 Resources/      Info.plist, AppIcon.icns
 scripts/        build.sh, make-icon.sh / .swift, toolchain-fix (VFS overlay for broken CLT)
 docs/images/    README images (English, light theme; tr/ holds the Turkish, dark theme set)

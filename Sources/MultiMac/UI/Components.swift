@@ -109,7 +109,7 @@ func memoryAdvice(_ m: MemorySnapshot, top: ProcessGroup?) -> String? {
     }
     guard !parts.isEmpty else { return nil }
     if let top {
-        parts.append(L("En çok kullanan: \(top.name) (\(Fmt.bytes(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.", "Top user: \(top.name) (\(Fmt.bytes(top.total))). Quitting apps you don't use reduces swap.", "Больше всех: \(top.name) (\(Fmt.bytes(top.total))). Закрытие неиспользуемых приложений уменьшит своп."))
+        parts.append(L("En çok kullanan: \(top.name) (\(Fmt.memory(top.total))). Kullanmadığın uygulamaları kapatmak swap'ı azaltır.", "Top user: \(top.name) (\(Fmt.memory(top.total))). Quitting apps you don't use reduces swap.", "Больше всех: \(top.name) (\(Fmt.memory(top.total))). Закрытие неиспользуемых приложений уменьшит своп."))
     }
     return parts.joined(separator: " ")
 }
@@ -140,7 +140,7 @@ func swapInsight(_ m: MemorySnapshot, history: [HistoryPoint], groups: [ProcessG
     let restartHint = suggestion.map { g in
         let hours = Int((g.uptime ?? 0) / 3600)
         let age = hours >= 1 ? L(", \(hours) saattir açık", ", open for \(hours) hours", ", открыто \(hours) ч") : ""
-        return L(" En çok fayda: \(g.name) (\(Fmt.bytes(g.total))\(age)) uygulamasını yeniden başlatmak.", " Biggest win: restart \(g.name) (\(Fmt.bytes(g.total))\(age)).", " Больше всего даст перезапуск \(g.name) (\(Fmt.bytes(g.total))\(age)).")
+        return L(" En çok fayda: \(g.name) (\(Fmt.memory(g.total))\(age)) uygulamasını yeniden başlatmak.", " Biggest win: restart \(g.name) (\(Fmt.memory(g.total))\(age)).", " Больше всего даст перезапуск \(g.name) (\(Fmt.memory(g.total))\(age)).")
     } ?? ""
 
     if movedGB > 0.75 {
@@ -154,13 +154,13 @@ func swapInsight(_ m: MemorySnapshot, history: [HistoryPoint], groups: [ProcessG
         return SwapInsight(
             level: .churning,
             title: L("Bellek sıkışık", "Memory is tight", "Памяти мало"),
-            text: L("RAM dolu: macOS verinin \(Fmt.bytes(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.bytes(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)", "RAM is full: macOS is compressing \(Fmt.bytes(m.compressed)) of data to make it fit, and \(Fmt.bytes(m.swapUsed)) is in swap. Swap is steady right now, so nothing is moving to disk, but opening something new may cause stutters. Quitting apps you don't use or restarting one that has been open for a long time frees memory.\(restartHint)", "RAM заполнена: macOS сжимает \(Fmt.bytes(m.compressed)) данных, чтобы всё поместилось, а в свопе \(Fmt.bytes(m.swapUsed)). Сейчас своп не меняется, так что обмена с диском нет, но при открытии чего-то нового возможны подтормаживания. Освободить память поможет закрытие неиспользуемых приложений или перезапуск давно открытого.\(restartHint)"),
+            text: L("RAM dolu: macOS verinin \(Fmt.memory(m.compressed))'ını sıkıştırarak sığdırıyor, swap'te de \(Fmt.memory(m.swapUsed)) var. Swap şu an sabit, yani diske gidip gelme yok; ama yeni bir şey açınca takılma başlayabilir. Kullanmadığın uygulamaları kapatmak ya da uzun süredir açık olanı yeniden başlatmak yer açar.\(restartHint)", "RAM is full: macOS is compressing \(Fmt.memory(m.compressed)) of data to make it fit, and \(Fmt.memory(m.swapUsed)) is in swap. Swap is steady right now, so nothing is moving to disk, but opening something new may cause stutters. Quitting apps you don't use or restarting one that has been open for a long time frees memory.\(restartHint)", "RAM заполнена: macOS сжимает \(Fmt.memory(m.compressed)) данных, чтобы всё поместилось, а в свопе \(Fmt.memory(m.swapUsed)). Сейчас своп не меняется, так что обмена с диском нет, но при открытии чего-то нового возможны подтормаживания. Освободить память поможет закрытие неиспользуемых приложений или перезапуск давно открытого.\(restartHint)"),
             suggestion: suggestion)
     }
     return SwapInsight(
         level: .calm,
         title: L("Swap durgun, endişelenme", "Swap is calm, don't worry", "Своп спокоен, не волнуйтесь"),
-        text: L("Swap'te \(Fmt.bytes(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)", "There is \(Fmt.bytes(m.swapUsed)) in swap, but it isn't changing and memory pressure is normal. This is data nobody has used for a while: it only takes disk space and moves back to RAM by itself the moment an app touches it. macOS has no safe way to force it back into RAM; restarting the app is enough if you want it gone.\(restartHint)", "В свопе \(Fmt.bytes(m.swapUsed)), но объём не меняется и нагрузка на память нормальная. Это данные, которые давно никто не использовал: они только занимают место на диске и сами вернутся в RAM, как только приложение к ним обратится. Безопасного способа принудительно вернуть их в RAM в macOS нет; если хотите от них избавиться, достаточно перезапустить приложение.\(restartHint)"),
+        text: L("Swap'te \(Fmt.memory(m.swapUsed)) var ama değişmiyor ve bellek baskısı normal. Bu, uzun süredir kimsenin kullanmadığı veri: yalnızca diskte yer tutar, bir uygulama ona dokunduğu an kendiliğinden RAM'e döner. macOS'ta bunu zorla RAM'e geri almanın güvenli bir yolu yok; boşaltmak istersen uygulamayı yeniden başlatman yeterli.\(restartHint)", "There is \(Fmt.memory(m.swapUsed)) in swap, but it isn't changing and memory pressure is normal. This is data nobody has used for a while: it only takes disk space and moves back to RAM by itself the moment an app touches it. macOS has no safe way to force it back into RAM; restarting the app is enough if you want it gone.\(restartHint)", "В свопе \(Fmt.memory(m.swapUsed)), но объём не меняется и нагрузка на память нормальная. Это данные, которые давно никто не использовал: они только занимают место на диске и сами вернутся в RAM, как только приложение к ним обратится. Безопасного способа принудительно вернуть их в RAM в macOS нет; если хотите от них избавиться, достаточно перезапустить приложение.\(restartHint)"),
         suggestion: suggestion)
 }
 

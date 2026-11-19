@@ -59,7 +59,7 @@ private struct MemoryHeader: View {
 
     var body: some View {
         let m = monitor.memory
-        PageHeader(title: L("Bellek", "Memory", "Память"), subtitle: L("Baskı: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) kullanımda", "Pressure: \(m.pressure.title) · \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) in use", "Нагрузка: \(m.pressure.title) · используется \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))"),
+        PageHeader(title: L("Bellek", "Memory", "Память"), subtitle: L("Baskı: \(m.pressure.title) · \(Fmt.memory(m.used)) / \(Fmt.memory(m.total)) kullanımda", "Pressure: \(m.pressure.title) · \(Fmt.memory(m.used)) / \(Fmt.memory(m.total)) in use", "Нагрузка: \(m.pressure.title) · используется \(Fmt.memory(m.used)) / \(Fmt.memory(m.total))"),
                    symbol: "memorychip", color: .blue) {
             Badge(text: L("Baskı: \(m.pressure.title)", "Pressure: \(m.pressure.title)", "Нагрузка: \(m.pressure.title)"), color: m.pressure.color, symbol: "circle.fill")
         }
@@ -100,7 +100,7 @@ private struct MemoryBreakdownCard: View {
         ]
         return VStack(alignment: .leading, spacing: 12) {
             CardHeader(title: L("Dağılım", "Breakdown", "Распределение"), symbol: "chart.bar.fill", color: .blue,
-                       subtitle: "\(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total)) · \(Fmt.percent(m.usedFraction))")
+                       subtitle: "\(Fmt.memory(m.used)) / \(Fmt.memory(m.total)) · \(Fmt.percent(m.usedFraction))")
             GeometryReader { g in
                 HStack(spacing: 1) {
                     ForEach(items, id: \.0) { item in
@@ -116,10 +116,10 @@ private struct MemoryBreakdownCard: View {
             VStack(spacing: 0) {
                 ForEach(items, id: \.0) { item in
                     LegendRow(color: item.2, title: item.0, subtitle: item.3,
-                              fraction: Double(item.1) / Double(max(1, m.total)), value: Fmt.bytes(item.1))
+                              fraction: Double(item.1) / Double(max(1, m.total)), value: Fmt.memory(item.1))
                 }
-                LegendRow(color: .red, title: L("Swap", "Swap", "Своп"), subtitle: L("RAM'e sığmayıp diske taşan · toplam \(Fmt.bytes(m.swapTotal))", "Didn't fit in RAM, moved to disk · total \(Fmt.bytes(m.swapTotal))", "Не поместилось в RAM, вытеснено на диск · всего \(Fmt.bytes(m.swapTotal))"),
-                          fraction: m.swapFraction, value: Fmt.bytes(m.swapUsed))
+                LegendRow(color: .red, title: L("Swap", "Swap", "Своп"), subtitle: L("RAM'e sığmayıp diske taşan · toplam \(Fmt.memory(m.swapTotal))", "Didn't fit in RAM, moved to disk · total \(Fmt.memory(m.swapTotal))", "Не поместилось в RAM, вытеснено на диск · всего \(Fmt.memory(m.swapTotal))"),
+                          fraction: m.swapFraction, value: Fmt.memory(m.swapUsed))
             }
         }
     }
@@ -209,7 +209,7 @@ private struct MemoryServersCard: View {
                         }
                         Text(s.uptime).font(.caption).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
                             .help(L("Çalışma süresi", "Uptime", "Время работы"))
-                        Text(Fmt.bytes(s.footprint)).monospacedDigit().frame(width: 76, alignment: .trailing)
+                        Text(Fmt.memory(s.footprint)).monospacedDigit().frame(width: 76, alignment: .trailing)
                         Button(L("Durdur", "Stop", "Остановить")) { servers.stop(s) }
                             .help(L("Sürece kapanmasını söyler (SIGTERM); dev server düzgünce kapanır", "Asks the process to exit (SIGTERM); the dev server shuts down cleanly", "Просит процесс завершиться (SIGTERM); dev-сервер корректно остановится"))
                         Button(role: .destructive) { servers.stop(s, force: true) } label: {
@@ -373,7 +373,7 @@ private struct ProcessGroupRow: View, Equatable {
                 } else {
                     Text(L("\(group.processes.count) süreç", "\(group.processes.count) processes", "Процессов: \(group.processes.count)")).font(.caption).foregroundStyle(.secondary)
                 }
-                Text(Fmt.bytes(group.total))
+                Text(Fmt.memory(group.total))
                     .monospacedDigit()
                     .frame(width: 80, alignment: .trailing)
             }
@@ -394,7 +394,7 @@ private struct ProcessGroupRow: View, Equatable {
                             Text(Fmt.displayPath(cwd)).font(.caption2).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                         }
                         Spacer()
-                        Text(Fmt.bytes(p.footprint)).font(.caption).monospacedDigit()
+                        Text(Fmt.memory(p.footprint)).font(.caption).monospacedDigit()
                         Button(L("Sonlandır", "Terminate", "Завершить")) { killPID(p.pid) }
                             .controlSize(.mini)
                             .help(L("Yalnızca bu alt süreci sonlandırır (SIGTERM)", "Terminates only this helper process (SIGTERM)", "Завершает только этот вспомогательный процесс (SIGTERM)"))

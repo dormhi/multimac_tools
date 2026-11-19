@@ -8,8 +8,8 @@
 
 <p align="center">
   <b>Küçük Mac'ler için yerel ve hafif bir bakım uygulaması.</b><br>
-  Menü çubuğundan hızlı temizlik, kural bazlı önbellek temizliği, SpaceSniffer tarzı depolama haritası ve dürüst bir
-  bellek yöneticisi — 8 GB / 256 GB bir MacBook için yazıldı.
+  Menü çubuğundan hızlı temizlik, kural bazlı önbellek temizliği, kullanıp bıraktıklarını öğrenen cihaz üstü küçük bir
+  model, SpaceSniffer tarzı depolama haritası ve dürüst bir bellek yöneticisi — 8 GB / 256 GB bir MacBook için yazıldı.
 </p>
 
 <p align="center">
@@ -26,6 +26,10 @@
   <img src="docs/images/tr/overview.png" width="820" alt="MultiMac Genel Bakış: sağlık özeti, RAM / swap / disk göstergeleri, disk dağılımı ve temizlenebilir alan">
 </p>
 
+> [!NOTE]
+> Arayüz **Türkçe, İngilizce ve Rusça**. Bu sayfadaki görüntüler Türkçe arayüzü koyu temada gösterir;
+> [İngilizce README](README.md) açık temada İngilizce arayüzü gösterir.
+
 ---
 
 ## İçindekiler
@@ -34,6 +38,7 @@
 - [Özellikler](#özellikler)
 - [Ekran görüntüleri](#ekran-görüntüleri)
 - [Otomasyon kuralları](#otomasyon-kuralları)
+- [Akıllı Temizlik: nasıl öğrenir?](#akıllı-temizlik-nasıl-öğrenir)
 - [RAM: neden "RAM temizleyici" yok?](#ram-neden-ram-temizleyici-yok)
 - [Güvenlik modeli](#güvenlik-modeli)
 - [Kurulum](#kurulum)
@@ -68,11 +73,12 @@ MultiMac bunun tersi: alanın ve belleğin tam olarak nereye gittiğini göstere
 | 📊 **Genel Bakış** | Nedenleriyle sağlık özeti, büyük RAM / swap / disk göstergeleri, *disk nereye gidiyor?* (Kütüphane, Uygulamalar, Projeler, geliştirici araçları, İndirilenler…), kategori ve kipe göre temizlenebilir alan, bellek dağılımı, en büyük projeler ve çalışan dev server'lar. **Her yüzde tıklanabilir** ve doğru ekranı, filtrelenmiş olarak açar. |
 | 🧹 **Detaylı temizlik** | Uygulama önbellekleri, geliştirici önbellekleri, proje build kalıntıları, Xcode, günlükler, İndirilenler, büyük ve eski dosyalar, Çöp Kutusu. *Güvenli / Dengeli / Agresif* kipleri, proje görünümü, arama, boyut ve yaş filtreleri, sıralama, alt klasörleri tek tek seçme, kalıcı silme veya Çöp Kutusuna taşıma. |
 | 🗺️ **Depolama haritası** | Tüm diskin, ev klasörünün veya herhangi bir klasörün SpaceSniffer tarzı iç içe treemap'i. Renkli güvenlik işaretleri (sistem / dikkat / silinebilir / senin) ve korunan bir şeyi silmeden önce güçlü uyarı. *Sistem Verisi*ni açıklar. |
-| 🧠 **Bellek yöneticisi** | Yardımcı süreçleriyle gruplanmış uygulamalar, 30 dakikalık RAM ve swap grafiği, korunan uygulamalar, swap yüzdesi, kritik baskı ve sınırı aşan uygulamalar için uyarılar. Sade dilli **swap yorumu** swap'in gerçekten sorun olup olmadığını ve belleği geri almak için uzun süredir açık hangi uygulamayı **yeniden başlatman** gerektiğini söyler. Her tuşun üzerinde ne yaptığı yazar: *Yeniden Başlat*, *Kapat*, *Zorla Kapat*. |
+| 🧠 **Bellek yöneticisi** | Yardımcı süreçleriyle gruplanmış uygulamalar, 30 dakikalık RAM ve swap grafiği, korunan uygulamalar, swap yüzdesi, kritik baskı ve sınırı aşan uygulamalar için uyarılar. Sade dilli **swap yorumu** swap'in gerçekten sorun olup olmadığını ve belleği geri almak için uzun süredir açık hangi uygulamayı **yeniden başlatman** gerektiğini söyler. Her tuşun üzerinde ne yaptığı yazar: *Yeniden Başlat*, *Kapat*, *Zorla Kapat*. Bellek, Etkinlik Monitörü gibi 1024 tabanlı birimle gösterilir; 8 GB RAM *8 GB* yazar. |
 | 🛰️ **Dev server bulucu** | TCP portu dinleyen her süreç; proje klasörü, port (`localhost`'u açar), çalışma süresi ve bellekle. Üç gün önce unuttuğun `npm run dev`'i bul. |
 | 🤖 **Otomasyon** | Tek tek açılıp kapatılabilen sekiz önbellek kuralı, zamanlama, disk azalınca tetikleme, *ne silinir?* önizlemesi ve bellek sıkıştığında senin seçtiğin uygulamaları kapatan isteğe bağlı RAM rahatlatma. |
+| ✨ **Akıllı Temizlik** | Cihaz üstü küçük bir model (~1 KB) kullanıp bıraktıklarını sıralar: boştaki projelerin `node_modules`'ı, sildiğin uygulamaların kalıntıları, eski Playwright / Node / Python / Homebrew / cihaz sembolü sürümleri, bir kere denediğin yapay zeka modelleri. Her öneri *neden* önerildiğini ve ne kadar emin olduğunu söyler. Temizlediklerinden, gizlediklerinden ve temizlenen klasörlerin geri dolup dolmadığından öğrenir. Hemen geri dolan önbellekleri "temizlemeye değmez" diye ayırır, eski ama önemli dosyaları asla önermez. |
 | 🛡️ **Asla dokunma listesi** | Bir öğeye veya projenin tamamına sağ tıklayıp kalıcı olarak hariç tut. Her tarama, kip, otomasyon ve silme motorunun kendisi buna uyar. |
-| 🌓 **Açık, Koyu veya Sistem** | Yumuşak renkli ikonlar, cam kenarlı kartlar ve üzerine gelince belirginleşen butonlarla Apple tonlarında arayüz. Tema *Ayarlar › Görünüm ve dil* bölümünden seçilir. |
+| 🌓 **Açık, Koyu veya Sistem** | Yumuşak renkli ikonlar, cam kenarlı kartlar ve üzerine gelince belirginleşen butonlarla Apple tonlarında arayüz. Tema *Ayarlar › Görünüm ve dil* bölümünden seçilir. Kenar çubuğu kaybolmak yerine ince bir simge rayına daralır. |
 | 🌐 **Türkçe, İngilizce ve Rusça** | Mac'in diline uyar (macOS Türkçe veya Rusçaysa o dil, değilse İngilizce); Ayarlar'dan istediğin an değiştirilebilir, yeniden başlatma gerekmez. |
 | 🪶 **Hafif** | Yerel SwiftUI, ~55 MB RAM, boştayken < %1 CPU. Root yok, yardımcı yok, arka plan servisi yok. Xcode olmadan derlenir. |
 
@@ -155,6 +161,22 @@ Sekmede yalnızca iki iş var; her biri tek açma/kapama anahtarı ve sade bir s
 
 *Asla dokunulmayanlar*, *Gelişmiş* (bildirimler, açık uygulamalar, günlük yaşı, bekleme süresi) ve *Geçmiş* gerekene kadar kapalı durur. İki iş de **varsayılan olarak kapalı**.
 
+### Akıllı Temizlik
+
+<p align="center">
+  <img src="docs/images/tr/smart.png" width="820" alt="Akıllı Temizlik: neye dikkat ettiğini gösteren model kartı ve nedenleri ile güven çubuklu öneriler">
+</p>
+
+- **Model kartı:** hâlâ başlangıç bilgisiyle mi çalıştığı yoksa öğrenmeye mi başladığı, kaç klasörü izlediği, kaç
+  kararından öğrendiği, boyutu ve *neye dikkat ettiği*: en güçlü ağırlıkları (mor öneri olasılığını artırır, turuncu
+  azaltır). *Öğrenileni sıfırla* başlangıç ağırlıklarına döner.
+- **Kullanılıp bırakılanlar:** öneriler. Her satırda bir neden (*Proje 73 gündür boşta*, *Uygulaması artık yüklü
+  değil*), güven çubuğu, boyut ve üzerine gelince **Önerme** ile Finder tuşu var. Homebrew ve Ollama kendi araçlarıyla
+  silinir; bu satırlarda kutucuk yerine **Komutu kopyala** (`brew cleanup`, `ollama rm …`) çıkar.
+- **Hızlı geri dolanlar · temizlemeye değmez:** son temizlikten birkaç gün sonra geri dolan önbellekler.
+- **Dokunulmayan ama önemli görünenler:** belge, fotoğraf veya kod içeren eski klasörler, hiç kabul etmediğin türler ve
+  yalnızca bilgi olanlar: 120+ gündür açılmamış uygulamalar, iPhone yedekleri ve Mail ekleri. Asla önerilmez.
+
 ## Otomasyon kuralları
 
 Tüm otomatik davranış **Otomasyon** sekmesinde ve her kural kapatılabilir:
@@ -177,6 +199,38 @@ Tüm otomatik davranış **Otomasyon** sekmesinde ve her kural kapatılabilir:
 **Asla otomatik silinmeyenler:** sistem klasörleri, Apple önbellekleri, uygulama verisi ve ayarları, tarayıcı
 geçmişi / çerezleri / şifreleri, `node_modules`, `.venv`, İndirilenler, büyük dosyalar, Çöp Kutusu ve *Asla dokunma*
 listen.
+
+## Akıllı Temizlik: nasıl öğrenir?
+
+Tek bir kişinin verisiyle çalışan en sade makine öğrenmesi: **lojistik regresyon**, yaklaşık 15 ağırlık ve her öneri
+türü için bir başlangıç sabiti. Sinir ağı, Core ML, indirme ya da bulut yok.
+
+| Parça | Ne |
+| --- | --- |
+| Özellikler | Kaç gündür değişmedi, kaç gündür açılmadı (veya *bilinmiyor*), boyut, bu haftaki büyüme, *hızla büyüyüp durması*, *temizlendikten sonra geri dolması*, uygulaması silinmiş / açık, proje boşta / projede iş sürüyor, daha yeni sürümü var, yeniden indirilebilir, daha önce temizlemişsin |
+| Başlangıç | Temizlik kurallarından elle ayarlanmış ağırlıklar; ilk günden makul öneriler verir |
+| Neyden öğrenir | Öneriyi temizlemen (evet) · **Önerme** (hayır, o yol susturulur) · temizlenen klasörün 7 gün içinde geri dolması (hayır) · 30 gün boyunca geri gelmemesi (evet) |
+| Korkuluklar | Her güncelleme küçüktür ve başlangıç ağırlıklarına doğru geri çekilir; tek bir tıklama modeli bozamaz |
+| Bellek | Model ~1 KB; boyut geçmişi (yol başına en fazla 45 ölçüm) diskte birkaç on KB, yalnızca analiz sırasında yüklenir |
+| Ne zaman çalışır | Sekmeyi açınca (en fazla 6 saatte bir), normal ve hızlı temizliklerden sonra ve otomasyon kontrolüyle arka planda günde bir kez. Arka plan servisi yok |
+| Açıklamalar | Neden satırı, puanı en çok yükselten özelliklerden üretilir |
+
+Normal temizlik taramasının ötesinde baktığı yerler:
+
+- **Silinmiş uygulama kalıntıları:** Application Support, Caches, HTTPStorages, WebKit, Logs ve Saved Application State
+  içinde uygulaması artık yüklü olmayan ve 30+ gündür dokunulmayan ters alan adlı klasörler (`com.firma.uygulama`).
+  Uygulama adıyla adlandırılmış klasörler (`Spotify`) belirsiz olduğu için atlanır; `~/Library/Containers` okumak macOS
+  gizlilik izni istediği için taranmaz.
+- **Eski sürümler:** daha yeni revizyonu olan Playwright tarayıcıları, nvm Node ve pyenv Python sürümleri (varsayılan /
+  genel sürüm, projelerindeki `.nvmrc` / `.python-version` dosyalarında anılanlar ve içinde sanal ortam olan pyenv
+  sürümleri korunur), eski iOS sürümlerinin Xcode cihaz sembolleri, çalışma ortamı silinmiş simülatörler, Homebrew
+  Cellar'daki eski sürümler.
+- **Yapay zeka modelleri:** Hugging Face modelleri ve veri setleri, LM Studio, Whisper, PyTorch Hub ve Ollama modelleri.
+- **Yalnızca bilgi:** 120+ gündür açılmamış uygulamalar (macOS'un *son kullanılma* tarihinden), iPhone yedekleri, Mail
+  ekleri (Tam Disk Erişimi varsa).
+
+macOS'un *son kullanılma* tarihi her zaman güncellenmez; yoksa *bilinmiyor* sayılır, asla *hiç kullanılmamış* değil.
+*Hızla büyüyüp durma* ve *hızla geri dolma* sinyallerinin işe yaraması için bir iki haftalık geçmiş gerekir.
 
 ## RAM: neden "RAM temizleyici" yok?
 
@@ -218,6 +272,8 @@ MultiMac şüphede kalınca silmez:
    hariç tutulan bir yol içeren klasör silinmez.
 4. Günlükler ve pencere durumları için **yaş sınırları**.
 5. Depolama haritasındaki **güvenlik sınıflandırıcısı**, sistem, uygulama verisi ve kişisel yolları silmeden önce işaretler.
+6. **Akıllı Temizlik yalnızca önerir.** Önerileri yalnızca silme motorunun son kapısının izin verdiği yollardan gelir,
+   kişisel görünen klasörler asla önerilmez ve sen onaylamadan hiçbir şey silinmez.
 
 ## Kurulum
 
@@ -262,26 +318,29 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 
 | Nerede | Ne |
 | --- | --- |
-| `⌘1` … `⌘6` | Genel Bakış, Temizlik, Depolama, Bellek, Otomasyon, Ayarlar |
+| `⌘1` … `⌘7` | Genel Bakış, Temizlik, Depolama, Bellek, Otomasyon, Akıllı Temizlik, Ayarlar |
+| `⌃⌘S` veya kenar çubuğu tuşu | Kenar çubuğunu simge rayına daralt ve geri aç |
 | Menü çubuğu › **Hızlı Temizlik** | Otomasyon kurallarını şimdi çalıştır |
 | Genel Bakış | Herhangi bir yüzdeye tıkla; o öğe depolama haritasında veya temizlik listesinde açılır |
 | Temizlik | Bir kip seç veya öğeleri işaretle, sonra **Temizle**. Sağ tık › *Asla dokunma* |
 | Depolama | *Tüm Disk / Ev Klasörü / Klasör…* seç, tara, bloklara çift tıklayarak içine gir |
 | Bellek | *Yeniden Başlat* uygulamayı yeniden başlatır, *Kapat* kapatır, *Zorla Kapat* zorla kapatır. Uygulamaya sağ tık › korunanlara ekle. *Durdur* bir dev server'ı kapatır |
 | Otomasyon | Bir işi aç, sorularını yanıtla, temizlenecekleri kutucuklara tıklayarak seç. **Ne silinir?** önizler, **Şimdi çalıştır** uygular |
+| Akıllı Temizlik | Önerileri işaretle ve **Seçilenleri temizle**, ya da **Önerme** diyerek öğret. **Yeniden analiz et** yeniden tarar |
 | Ayarlar | Proje klasörleri, kullanılmayan proje eşiği, büyük/eski dosya eşikleri, uyarılar, korunan uygulamalar, menü çubuğu görünümü, girişte başlatma |
 
 ## Nasıl çalışır?
 
 | Veri | Kaynak |
 | --- | --- |
-| Kullanılan bellek, wired, sıkıştırılmış, önbellek | `host_statistics64` — Etkinlik Monitörü ile aynı formül |
+| Kullanılan bellek, wired, sıkıştırılmış, önbellek | `host_statistics64` — Etkinlik Monitörü ile aynı formül; Etkinlik Monitörü gibi 1024 tabanlı birimle gösterilir (disk boyutları Finder gibi 1000 tabanlı) |
 | Swap | `sysctl vm.swapusage` |
 | Bellek baskısı | `sysctl kern.memorystatus_vm_pressure_level` |
 | Uygulama başına bellek | `proc_pid_rusage` (`phys_footprint`); XPC yardımcıları (ör. WebKit sekmeleri) `responsibility_get_pid_responsible_for_pid` ile sahibine yazılır |
 | Dinlenen portlar / dev server'lar | `proc_pidinfo` + `proc_pidfdinfo` (`lsof` yok), çalışma dizini `PROC_PIDVNODEPATHINFO` ile |
 | Klasör boyutları | `fts(3)` ile diskte kaplanan alan (`st_blocks`), sabit bağlantılar bir kez sayılır |
 | Boş disk alanı | `URLResourceKey.volumeAvailableCapacity` |
+| Son kullanılma tarihi (Akıllı Temizlik) | Spotlight `kMDItemLastUsedDate`; yoksa dosyaların en yeni erişim / değişiklik zamanı |
 
 ## Performans
 
@@ -291,6 +350,7 @@ xattr -dr com.apple.quarantine /Applications/MultiMac.app
 | Boştayken CPU | < %1 (3 saniyelik güncellemeler) |
 | Temizlik taraması | Önbellekler ve build kalıntıları ~7 sn, büyük dosya aramasıyla ~17 sn |
 | Depolama haritası | ~630 bin dosya ~17 sn'de taranır, bellekte ~16 bin düğüm olarak tutulur |
+| Akıllı Temizlik | ~60 aday ~17 sn'de analiz edilir; model ~1 KB, geçmiş diskte ~11 KB |
 
 Depolama haritasındaki küçük klasörler katlanır ve gerektiğinde yeniden taranır; görünümler yalnızca gösterdikleri
 veriyi izler; pencerenin minimum boyut hesabı kesilir, böylece canlı güncellemeler tüm pencereyi yeniden
@@ -298,7 +358,7 @@ yerleştirmez; uzun listeler lazy'dir.
 
 ## Sınırlamalar
 
-- Arayüz şimdilik yalnızca Türkçe.
+- Akıllı Temizlik'in geri dolan önbellekleri bırakılmış klasörlerden ayırabilmesi için bir iki haftalık geçmiş gerekir.
 - Ad-hoc imzalı, notarize edilmemiş; yerelde derlenmek için.
 - Root yardımcısı yok: sistem geneli önbellekler (`/Library/Caches`, `/private/var`) gösterilir ama asla temizlenmez.
 - Yalnızca Apple silicon ve macOS 15+.
@@ -334,10 +394,13 @@ sudo rm /Library/Developer/CommandLineTools/usr/include/swift/module.modulemap
 # Hiçbir şey silmez.
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --selftest ~/Projects
 
+# Yalnızca Akıllı Temizlik analizini yazdırır: adaylar, puanlar, bölümler ve nedenler. Hiçbir şey silmez.
+/Applications/MultiMac.app/Contents/MacOS/MultiMac --selftest --smart
+
 # Her sekmeyi ve menü panelini PNG olarak kaydeder (bu README'deki görüntüler böyle alındı).
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --snapshot /tmp/multimac-shots
 
-# Ana pencereyi belirli bir sekmede açar (overview, cleanup, storage, memory, automation, settings); `sample` ile ölçüm için.
+# Ana pencereyi belirli bir sekmede açar (overview, cleanup, storage, memory, automation, smart, settings); `sample` ile ölçüm için.
 /Applications/MultiMac.app/Contents/MacOS/MultiMac --tab memory
 ```
 
@@ -349,7 +412,8 @@ Sources/MultiMac/
 ├── Core/       Bellek, disk ve süreç okuyucuları, dev server bulucu, uyarılar, RAM rahatlatma, genel bakış verisi
 ├── Cleanup/    Modeller ve otomasyon kuralları, tarayıcı, büyük dosya bulucu, silme motoru ve store
 ├── Storage/    fts(3) gezgini, disk tarayıcı, güvenlik sınıflandırıcısı, treemap yerleşimi, depolama store'u
-└── UI/         Menü paneli, ana pencere, Genel Bakış, Temizlik, Depolama, Bellek, Otomasyon, Ayarlar, tema
+├── Smart/      Akıllı Temizlik: özellikler ve model, boyut geçmişi, dedektörler, analiz ve geri bildirim store'u
+└── UI/         Menü paneli, ana pencere, Genel Bakış, Temizlik, Depolama, Bellek, Otomasyon, Akıllı Temizlik, Ayarlar, tema
 Resources/      Info.plist, AppIcon.icns
 scripts/        build.sh, make-icon.sh / .swift, toolchain-fix (bozuk CLT için VFS overlay)
 docs/images/    README görselleri (İngilizce, açık tema; tr/ altında Türkçe, koyu tema)
