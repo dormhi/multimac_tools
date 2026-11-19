@@ -52,6 +52,14 @@ enum Fmt {
         (relativeFormatters[Lang.localeID] ?? relativeFormatter("en_US")).localizedString(for: d, relativeTo: Date())
     }
 
+    /// "13 Eki" / "Oct 13" / "13 окт." — o anki dilde kısa gün ve ay.
+    static func shortDate(_ d: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Lang.locale
+        f.setLocalizedDateFormatFromTemplate("dMMM")
+        return f.string(from: d)
+    }
+
     static let home = NSHomeDirectory()
 
     /// /Users/x/Projects → ~/Projects, /System/Volumes/Data/Users → /Users

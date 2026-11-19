@@ -151,6 +151,8 @@ final class CleanupStore: ObservableObject {
     @Published private(set) var lastAutoBytes: Int64 = 0
 
     var onDiskChanged: (() -> Void)?
+    /// Otomatik kontrolün her turunda (15 dk) çağrılır.
+    var onIdleTick: (() async -> Void)?
     private var autoTimer: Timer?
 
     var isBusy: Bool { isScanning || isCleaning || quickState == .scanning || quickState == .cleaning }
@@ -371,6 +373,7 @@ final class CleanupStore: ObservableObject {
         lastResult = result
         isCleaning = false
         onDiskChanged?()
+        await SmartDisk.shared.recordCleaned(targets.map { ($0.id, $0.size) })
         await scanAll()
     }
 
@@ -388,6 +391,7 @@ final class CleanupStore: ObservableObject {
             CleanupEngine.clean(targets)
         }.value
         quickState = .done(freed: result.freed, items: result.cleanedItems)
+        await SmartDisk.shared.recordCleaned(targets.map { ($0.id, $0.size) })
         lastAutoDate = Date()
         lastAutoBytes = result.freed
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Prefs.lastAutoCleanDate)
@@ -437,6 +441,7 @@ final class CleanupStore: ObservableObject {
     }
 
     func autoCheck() async {
+        defer { Task { await onIdleTick?() } }
         guard !isBusy else { return }
         let d = UserDefaults.standard
         let since = lastAutoDate.map { Date().timeIntervalSince($0) } ?? .infinity

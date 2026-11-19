@@ -64,8 +64,30 @@ enum Snapshot {
 enum SelfTest {
     static var isRequested: Bool { CommandLine.arguments.contains("--selftest") }
 
+    /// `--selftest --smart`: yalnızca Akıllı Temizlik analizini yazar (silmez; boyut geçmişine gözlem ekler).
+    @MainActor
+    static func runSmart() async {
+        let t = Date()
+        let smart = SmartStore()
+        await smart.analyze()
+        print("== Akıllı Temizlik (\(smart.items.count) öğe, \(String(format: "%.1f", Date().timeIntervalSince(t))) sn)")
+        print("  izlenen \(smart.stats.observedPaths) · karar \(smart.stats.decisions) · elenen \(smart.stats.hidden) · disk \(Fmt.bytes(smart.stats.diskBytes))")
+        for item in smart.items {
+            let section = item.section == .suggest ? "ÖNERİ" : item.section == .regrows ? "GERİ DOLAN" : "KORU"
+            print("  [\(section)] \(Fmt.bytes(item.size).padding(toLength: 10, withPad: " ", startingAt: 0)) \(String(format: "%.2f", item.score)) \(item.kind.rawValue) · \(item.title)")
+            print("        \(item.facts.map(\.text).joined(separator: " · "))")
+        }
+        var rusage = rusage_info_v4()
+        _ = withUnsafeMutablePointer(to: &rusage) {
+            $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(getpid(), RUSAGE_INFO_V4, $0) }
+        }
+        print("  bellek (phys_footprint): \(Fmt.bytes(rusage.ri_phys_footprint))")
+        exit(0)
+    }
+
     @MainActor
     static func run() async {
+        if CommandLine.arguments.contains("--smart") { await runSmart() }
         let m = MemoryReader.read()
         print("== Bellek")
         print("  kullanılan \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))  app \(Fmt.bytes(m.app))  wired \(Fmt.bytes(m.wired))  sıkıştırılmış \(Fmt.bytes(m.compressed))  önbellek \(Fmt.bytes(m.cached))")

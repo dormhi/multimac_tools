@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 enum MainTab: String, CaseIterable, Identifiable, Hashable {
-    case overview, cleanup, storage, memory, automation, settings
+    case overview, cleanup, storage, memory, automation, smart, settings
     var id: String { rawValue }
 
     var title: String {
@@ -12,6 +12,7 @@ enum MainTab: String, CaseIterable, Identifiable, Hashable {
         case .storage: L("Depolama", "Storage", "Хранилище")
         case .memory: L("Bellek", "Memory", "Память")
         case .automation: L("Otomasyon", "Automation", "Автоматизация")
+        case .smart: L("Akıllı Temizlik", "Smart Cleanup", "Умная очистка")
         case .settings: L("Ayarlar", "Settings", "Настройки")
         }
     }
@@ -23,6 +24,7 @@ enum MainTab: String, CaseIterable, Identifiable, Hashable {
         case .storage: "square.grid.3x3.square"
         case .memory: "memorychip"
         case .automation: "wand.and.stars"
+        case .smart: "brain.head.profile"
         case .settings: "gearshape"
         }
     }
@@ -58,6 +60,7 @@ final class AppState: ObservableObject {
     let overview = OverviewStore()
     let alerts = MemoryAlerts()
     let relief = MemoryRelief()
+    let smart = SmartStore()
 
     private var appliedLanguage = Lang.current
 
@@ -77,6 +80,12 @@ final class AppState: ObservableObject {
             self?.monitor.refreshDisk()
             self?.overview.invalidate()
         }
+        smart.onDiskChanged = { [weak self] in
+            self?.monitor.refreshDisk()
+            self?.overview.invalidate()
+        }
+        // Otomatik kontrol (15 dk'da bir) arka plandayken günde bir kez sessiz gözlem yapar: öğrenme için boyut geçmişi.
+        cleanup.onIdleTick = { [weak self] in await self?.smart.dailyObservationIfNeeded() }
     }
 
     func showCleanup(category: CleanupCategory? = nil, projects: Bool = false,
@@ -141,6 +150,7 @@ extension View {
             .environmentObject(state.servers)
             .environmentObject(state.overview)
             .environmentObject(state.relief)
+            .environmentObject(state.smart)
             .buttonStyle(.glass)
     }
 }
