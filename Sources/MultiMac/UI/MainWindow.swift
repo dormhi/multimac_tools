@@ -32,10 +32,27 @@ struct MainWindow: View {
             .navigationTitle(state.tab.title)
         }
         .frame(minWidth: 980, minHeight: 640)
+        // Sistemin kenar çubuğu düğmesi kenar çubuğunu tamamen gizliyor ve bu isteği güvenilir biçimde
+        // bildirmiyor; yerine aynı yerde kendi düğmemiz: dar (yalnızca simge) ↔ geniş.
+        .toolbar(removing: .sidebarToggle)
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { compact.toggle() }
+                } label: {
+                    Image(systemName: "sidebar.left")
+                }
+                .buttonStyle(.automatic)
+                .help(compact ? L("Kenar çubuğunu genişlet", "Expand sidebar", "Развернуть боковую панель")
+                              : L("Kenar çubuğunu daralt", "Collapse sidebar", "Свернуть боковую панель"))
+                .keyboardShortcut("s", modifiers: [.command, .control])
+            }
+        }
         .onChange(of: visibility) { _, new in
+            // Kenar çubuğu hiçbir yoldan (menü, kısayol) tamamen gizlenmesin: dar görünüme geçsin.
             guard new != .all else { return }
             visibility = .all
-            withAnimation(.easeInOut(duration: 0.2)) { compact.toggle() }
+            compact = true
         }
         .onAppear {
             NSApp.setActivationPolicy(.regular)
