@@ -4,13 +4,14 @@ import AppKit
 struct MainWindow: View {
     @EnvironmentObject private var state: AppState
     /// Kenar çubuğu düğmesi kenar çubuğunu gizlemek yerine yalnızca simgelerin kaldığı dar görünüme geçirir.
+    /// Dar genişlik (84) pencere düğmelerinin (trafik ışıkları) kenar çubuğuna sığması için seçildi.
     @AppStorage("sidebarCompact") private var compact = false
     @State private var visibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         NavigationSplitView(columnVisibility: $visibility) {
             SidebarView(compact: compact)
-                .navigationSplitViewColumnWidth(min: compact ? 62 : 205, ideal: compact ? 62 : 220, max: compact ? 62 : 280)
+                .navigationSplitViewColumnWidth(min: compact ? 84 : 205, ideal: compact ? 84 : 220, max: compact ? 84 : 280)
         } detail: {
             // GeometryReader, pencerenin min. boyut hesabını burada keser. Olmadan SwiftUI her
             // güncellemede kaydırılan içeriğin tamamını ölçüyordu (boştayken bile ~%15 CPU, takılma).
