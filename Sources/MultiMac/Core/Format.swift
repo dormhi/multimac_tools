@@ -1,21 +1,25 @@
 import Foundation
 
 enum Fmt {
-    /// Finder gibi 1000 tabanlı birimler; ondalık ayırıcı ve "Sıfır KB" uygulama diline göre.
-    static func bytes(_ b: Int64) -> String {
-        let v = Double(max(0, b))
+    /// Disk ve dosya boyutları: Finder gibi 1000 tabanlı; ondalık ayırıcı ve "Sıfır KB" uygulama diline göre.
+    static func bytes(_ b: Int64) -> String { format(Double(max(0, b)), base: 1000) }
+
+    /// Bellek (RAM, swap, süreçler): Etkinlik Monitörü gibi 1024 tabanlı. 8 GB RAM "8 GB" görünür, "8,59 GB" değil.
+    static func memory(_ b: UInt64) -> String { format(Double(b), base: 1024) }
+
+    private static func format(_ v: Double, base: Double) -> String {
         if v == 0 { return L("Sıfır KB", "Zero KB", "Ноль КБ") }
-        if v < 1000 { return "\(Int(v)) " + L("bayt", "bytes", "байт") }
-        var x = v / 1000
+        if v < base { return "\(Int(v)) " + L("bayt", "bytes", "байт") }
+        var x = v / base
         var unit = 0
-        while x >= 1000 && unit < 3 { x /= 1000; unit += 1 }
+        while x >= base && unit < 3 { x /= base; unit += 1 }
+        // 1023,9 MB gibi değerler yuvarlanınca "1024 MB" yazmasın
+        if base == 1024, x >= 999.5, unit < 3 { x /= base; unit += 1 }
         let digits = unit == 0 ? 0 : unit == 1 ? 1 : 2
         let f = numberFormatters[Lang.localeID]?[digits] ?? enNumber[digits]
         let units = Lang.isRussian ? ["КБ", "МБ", "ГБ", "ТБ"] : ["KB", "MB", "GB", "TB"]
         return (f.string(from: NSNumber(value: x)) ?? String(x)) + " " + units[unit]
     }
-
-    static func bytes(_ b: UInt64) -> String { bytes(Int64(clamping: b)) }
 
     private static func numberFormatters(_ id: String) -> [NumberFormatter] {
         (0...2).map { digits in

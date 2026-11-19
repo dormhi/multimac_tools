@@ -81,7 +81,7 @@ enum SelfTest {
         _ = withUnsafeMutablePointer(to: &rusage) {
             $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(getpid(), RUSAGE_INFO_V4, $0) }
         }
-        print("  bellek (phys_footprint): \(Fmt.bytes(rusage.ri_phys_footprint))")
+        print("  bellek (phys_footprint): \(Fmt.memory(rusage.ri_phys_footprint))")
         exit(0)
     }
 
@@ -90,8 +90,8 @@ enum SelfTest {
         if CommandLine.arguments.contains("--smart") { await runSmart() }
         let m = MemoryReader.read()
         print("== Bellek")
-        print("  kullanılan \(Fmt.bytes(m.used)) / \(Fmt.bytes(m.total))  app \(Fmt.bytes(m.app))  wired \(Fmt.bytes(m.wired))  sıkıştırılmış \(Fmt.bytes(m.compressed))  önbellek \(Fmt.bytes(m.cached))")
-        print("  swap \(Fmt.bytes(m.swapUsed)) / \(Fmt.bytes(m.swapTotal))  baskı \(m.pressure.title)")
+        print("  kullanılan \(Fmt.memory(m.used)) / \(Fmt.memory(m.total))  app \(Fmt.memory(m.app))  wired \(Fmt.memory(m.wired))  sıkıştırılmış \(Fmt.memory(m.compressed))  önbellek \(Fmt.memory(m.cached))")
+        print("  swap \(Fmt.memory(m.swapUsed)) / \(Fmt.memory(m.swapTotal))  baskı \(m.pressure.title)")
 
         let d = DiskReader.read()
         print("== Disk\n  boş \(Fmt.bytes(d.available)) / \(Fmt.bytes(d.total))  (purgeable dahil \(Fmt.bytes(d.importantAvailable)))")
@@ -101,7 +101,7 @@ enum SelfTest {
         print("== Süreçler (\(groups.count) grup, \(Int(Date().timeIntervalSince(t0) * 1000)) ms)")
         for g in groups.prefix(8) {
             let cwd = g.processes.first?.cwd.map { " cwd=\(Fmt.displayPath($0))" } ?? ""
-            print("  \(Fmt.bytes(g.total).padding(toLength: 10, withPad: " ", startingAt: 0)) \(g.name) ×\(g.processes.count)\(g.isProtected ? " [korumalı]" : "")\(g.isDeveloperTool ? " [dev]" : "")\(cwd)")
+            print("  \(Fmt.memory(g.total).padding(toLength: 10, withPad: " ", startingAt: 0)) \(g.name) ×\(g.processes.count)\(g.isProtected ? " [korumalı]" : "")\(g.isDeveloperTool ? " [dev]" : "")\(cwd)")
         }
 
         let t1 = Date()

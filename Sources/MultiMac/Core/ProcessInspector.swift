@@ -27,9 +27,9 @@ struct ProcessGroup: Identifiable {
     /// Ekranda görünen her şeyin özeti: boyut, ekranda yazdığı hassasiyetle karşılaştırılır.
     /// Bayt düzeyindeki oynamalar (her 3 sn'de hep olur) satırı yeniden çizdirmez.
     func displayKey(expanded: Bool) -> String {
-        var key = "\(id)|\(name)|\(processes.count)|\(Fmt.bytes(total))|\(isProtected)|\(isDeveloperTool)|\(Int((uptime ?? 0) / 3600))"
+        var key = "\(id)|\(name)|\(processes.count)|\(Fmt.memory(total))|\(isProtected)|\(isDeveloperTool)|\(Int((uptime ?? 0) / 3600))"
         if expanded {
-            for p in processes { key += "|\(p.pid):\(Fmt.bytes(p.footprint)):\(p.cwd ?? "")" }
+            for p in processes { key += "|\(p.pid):\(Fmt.memory(p.footprint)):\(p.cwd ?? "")" }
         }
         return key
     }

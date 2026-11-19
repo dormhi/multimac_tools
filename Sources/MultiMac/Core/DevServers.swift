@@ -84,7 +84,7 @@ final class DevServerStore: ObservableObject {
     func refresh() async {
         let found = await Task.detached(priority: .utility) { DevServerFinder.scan() }.value
         // Ekranda görünen hiçbir şey değişmediyse yayınlama (kart her 5 sn'de boşuna çizilmesin).
-        let signature = found.map { "\($0.pid)|\($0.ports)|\($0.cwd ?? "")|\(Fmt.bytes($0.footprint))|\($0.uptime)" }
+        let signature = found.map { "\($0.pid)|\($0.ports)|\($0.cwd ?? "")|\(Fmt.memory($0.footprint))|\($0.uptime)" }
             .joined(separator: "\n")
         if signature != lastSignature {
             lastSignature = signature

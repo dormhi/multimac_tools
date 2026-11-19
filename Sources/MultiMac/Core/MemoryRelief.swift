@@ -145,7 +145,7 @@ final class MemoryRelief: ObservableObject {
         if history.count > 20 { history.removeLast() }
         if d.bool(forKey: Self.notifyKey) {
             Notifier.post(title: L("RAM rahatlatıldı", "Memory freed", "Память освобождена"),
-                          body: L("\(names.joined(separator: ", ")) kapatıldı (~\(Fmt.bytes(freed))). Neden: \(reason.lowercased())", "Quit \(names.joined(separator: ", ")) (~\(Fmt.bytes(freed))). Reason: \(reason.lowercased())", "Закрыто: \(names.joined(separator: ", ")) (~\(Fmt.bytes(freed))). Причина: \(reason.lowercased())"))
+                          body: L("\(names.joined(separator: ", ")) kapatıldı (~\(Fmt.memory(freed))). Neden: \(reason.lowercased())", "Quit \(names.joined(separator: ", ")) (~\(Fmt.memory(freed))). Reason: \(reason.lowercased())", "Закрыто: \(names.joined(separator: ", ")) (~\(Fmt.memory(freed))). Причина: \(reason.lowercased())"))
         }
         return action
     }
