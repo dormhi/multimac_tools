@@ -3,39 +3,44 @@ import AppKit
 
 struct MainWindow: View {
     @EnvironmentObject private var state: AppState
-    /// Kenar çubuğu düğmesi kenar çubuğunu gizlemek yerine yalnızca simgelerin kaldığı dar görünüme geçirir.
-    /// Dar genişlik (84) pencere düğmelerinin (trafik ışıkları) kenar çubuğuna sığması için seçildi.
+    /// Kenar çubuğu düğmesi kenar çubuğunu gizlemek yerine ince simge rayına geçirir.
     @AppStorage("sidebarCompact") private var compact = false
     @State private var visibility: NavigationSplitViewVisibility = .all
 
+    /// Ray genişliği: VS Code / Slack simge şeritleriyle aynı oranda.
+    static let railWidth: CGFloat = 52
+
     var body: some View {
-        NavigationSplitView(columnVisibility: $visibility) {
-            SidebarView(compact: compact)
-                .navigationSplitViewColumnWidth(min: compact ? 84 : 205, ideal: compact ? 84 : 220, max: compact ? 84 : 280)
-        } detail: {
-            // GeometryReader, pencerenin min. boyut hesabını burada keser. Olmadan SwiftUI her
-            // güncellemede kaydırılan içeriğin tamamını ölçüyordu (boştayken bile ~%15 CPU, takılma).
-            GeometryReader { _ in
-                Group {
-                    switch state.tab {
-                    case .overview: OverviewView()
-                    case .cleanup: CleanupView()
-                    case .storage: StorageView()
-                    case .memory: MemoryView()
-                    case .automation: AutomationView()
-                    case .smart: SmartCleanupView()
-                    case .settings: SettingsView()
-                    }
+        Group {
+            if compact {
+                // Dar düzen: başlık çubuğu pencere boyunca uzanır (trafik ışıkları + düğme + başlık),
+                // ray onun altından başlar. Tam boy kenar çubuğu dar halde trafik ışıklarına sığmıyordu.
+                HStack(spacing: 0) {
+                    SidebarView(compact: true)
+                        .frame(width: Self.railWidth)
+                        .frame(maxHeight: .infinity)
+                        .background(SidebarMaterial())
+                    Divider()
+                    detail
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                NavigationSplitView(columnVisibility: $visibility) {
+                    SidebarView(compact: false)
+                        .navigationSplitViewColumnWidth(min: 205, ideal: 220, max: 280)
+                        // Sistemin düğmesi kenar çubuğunu tamamen gizliyor; yerine kendi düğmemiz (başlığın solunda).
+                        .toolbar(removing: .sidebarToggle)
+                } detail: {
+                    detail
+                }
+                .onChange(of: visibility) { _, new in
+                    // Kenar çubuğu hiçbir yoldan (menü, kısayol) tamamen gizlenmesin: raya geçsin.
+                    guard new != .all else { return }
+                    visibility = .all
+                    compact = true
+                }
             }
-            .background(Color(nsColor: .windowBackgroundColor))
-            .navigationTitle(state.tab.title)
         }
         .frame(minWidth: 980, minHeight: 640)
-        // Sistemin kenar çubuğu düğmesi kenar çubuğunu tamamen gizliyor ve bu isteği güvenilir biçimde
-        // bildirmiyor; yerine aynı yerde kendi düğmemiz: dar (yalnızca simge) ↔ geniş.
-        .toolbar(removing: .sidebarToggle)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
@@ -43,17 +48,10 @@ struct MainWindow: View {
                 } label: {
                     Image(systemName: "sidebar.left")
                 }
-                .buttonStyle(.automatic)
                 .help(compact ? L("Kenar çubuğunu genişlet", "Expand sidebar", "Развернуть боковую панель")
                               : L("Kenar çubuğunu daralt", "Collapse sidebar", "Свернуть боковую панель"))
                 .keyboardShortcut("s", modifiers: [.command, .control])
             }
-        }
-        .onChange(of: visibility) { _, new in
-            // Kenar çubuğu hiçbir yoldan (menü, kısayol) tamamen gizlenmesin: dar görünüme geçsin.
-            guard new != .all else { return }
-            visibility = .all
-            compact = true
         }
         .onAppear {
             NSApp.setActivationPolicy(.regular)
@@ -61,6 +59,39 @@ struct MainWindow: View {
         }
         .onDisappear { NSApp.setActivationPolicy(.accessory) }
     }
+
+    private var detail: some View {
+        // GeometryReader, pencerenin min. boyut hesabını burada keser. Olmadan SwiftUI her
+        // güncellemede kaydırılan içeriğin tamamını ölçüyordu (boştayken bile ~%15 CPU, takılma).
+        GeometryReader { _ in
+            Group {
+                switch state.tab {
+                case .overview: OverviewView()
+                case .cleanup: CleanupView()
+                case .storage: StorageView()
+                case .memory: MemoryView()
+                case .automation: AutomationView()
+                case .smart: SmartCleanupView()
+                case .settings: SettingsView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+        .navigationTitle(state.tab.title)
+    }
+}
+
+/// Kenar çubuğunun pencere arkasını hafifçe gösteren sistem malzemesi (NavigationSplitView'dakiyle aynı).
+private struct SidebarMaterial: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let v = NSVisualEffectView()
+        v.material = .sidebar
+        v.blendingMode = .behindWindow
+        v.state = .followsWindowActiveState
+        return v
+    }
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
 /// Kenar çubuğu ayrı görünüm: RAM/disk her güncellendiğinde yalnızca bu kısım yeniden çizilir.
@@ -78,10 +109,10 @@ private struct SidebarView: View {
                 ForEach(MainTab.allCases.filter { $0 != .settings }) { tab in
                     sidebarRow(tab)
                 }
-                Divider().padding(.vertical, 8).padding(.horizontal, compact ? 4 : 6)
+                Divider().padding(.vertical, 8).padding(.horizontal, compact ? 14 : 6)
                 sidebarRow(.settings)
             }
-            .padding(.horizontal, compact ? 8 : 10)
+            .padding(.horizontal, compact ? 0 : 10)
             .padding(.top, 4)
         }
         .safeAreaInset(edge: .top) { brand }
@@ -97,7 +128,7 @@ private struct SidebarView: View {
             Image(systemName: tab.symbol)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(selected ? Color.accentColor : Color.secondary)
-                .frame(width: 38, height: 32)
+                .frame(width: 36, height: 32)
                 .overlay(alignment: .topTrailing) {
                     if let b = badge(for: tab) {
                         Circle().fill(b.color == .secondary ? Color.accentColor : b.color)
@@ -181,16 +212,8 @@ private struct SidebarView: View {
     }
 
     @ViewBuilder private var brand: some View {
-        if compact {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .frame(width: 30, height: 30)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .help("MultiMac")
-        } else {
-            fullBrand
-        }
+        // Rayda logo yok: başlık çubuğu zaten üstte.
+        if compact { Color.clear.frame(height: 6) } else { fullBrand }
     }
 
     private var fullBrand: some View {
