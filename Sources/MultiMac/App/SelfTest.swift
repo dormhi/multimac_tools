@@ -18,6 +18,7 @@ enum Snapshot {
         state.storage.scan(path: Prefs.roots.first ?? NSHomeDirectory())
         Task { await state.processes.autoRefresh(every: 3) }
         Task { await state.servers.refresh() }
+        Task { await state.smart.analyze() }
         try? await Task.sleep(nanoseconds: 45_000_000_000)  // taramalar bitsin
         if let root = state.storage.root {
             state.storage.selection = root.children.first { $0.kind == .directory }

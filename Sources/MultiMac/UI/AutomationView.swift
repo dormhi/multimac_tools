@@ -625,7 +625,7 @@ private struct Collapsible<Content: View>: View {
 }
 
 /// Öğeleri satıra sığdığı kadar dizer, sığmayanı alt satıra geçirir.
-private struct FlowLayout: Layout {
+struct FlowLayout: Layout {
     var spacing: CGFloat = 6
 
     private struct Row { var indices: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }

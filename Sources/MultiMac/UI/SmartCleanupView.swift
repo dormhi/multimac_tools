@@ -307,7 +307,8 @@ private struct WeightBar: View {
 private struct FlowChips: View {
     let chips: [String]
     var body: some View {
-        HStack(spacing: 6) {
+        // Sığmayan çip alt satıra geçer (İngilizce ve Rusçada metinler uzun).
+        FlowLayout(spacing: 6) {
             ForEach(chips, id: \.self) { c in
                 Text(c)
                     .font(.caption)
@@ -316,6 +317,7 @@ private struct FlowChips: View {
                     .padding(.vertical, 3)
                     .background(Capsule().fill(Surface.inset))
                     .lineLimit(1)
+                    .fixedSize()
             }
         }
     }
