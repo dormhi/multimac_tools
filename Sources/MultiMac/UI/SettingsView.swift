@@ -172,6 +172,10 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            PageHeader(title: MainTab.settings.title,
+                       subtitle: L("Görünüm, dil, klasörler ve korunanlar", "Appearance, language, folders and protected items", "Оформление, язык, папки и защищённое")) { EmptyView() }
+        }
         .onAppear {
             hasFDA = FullDiskAccess.isGranted
             exclusions = Exclusions.all

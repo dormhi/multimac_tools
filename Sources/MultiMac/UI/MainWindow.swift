@@ -22,6 +22,8 @@ struct MainWindow: View {
         }
         .background(AuroraBackground().ignoresSafeArea())
         .toolbarBackground(.hidden, for: .windowToolbar)
+        // Başlık çubuğunda sekme adı yok: kenar çubuğunun üstüne taşıyordu. Her sayfanın kendi başlığı var.
+        .toolbar(removing: .title)
         .frame(minWidth: 980, minHeight: 640)
         .toolbar {
             ToolbarItem(placement: .navigation) {
