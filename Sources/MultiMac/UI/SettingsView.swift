@@ -171,6 +171,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onAppear {
             hasFDA = FullDiskAccess.isGranted
             exclusions = Exclusions.all

@@ -32,7 +32,6 @@ struct OverviewView: View {
             .frame(maxWidth: 1200)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
         .task { await processes.autoRefresh(every: 4) }
         .task {
             if cleanup.items.isEmpty && !cleanup.isScanning { await cleanup.scanAll() }
