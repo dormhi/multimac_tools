@@ -79,9 +79,11 @@ struct CardStyle: ViewModifier {
             .frame(maxWidth: .infinity, alignment: .leading)
             // Gölge yok: kaydırırken her karede yeniden hesaplanması akıcılığı düşürüyordu.
             // Cam hissi: düz yüzey + üstten alta sönen ince parlak kenar.
+            // Buzlu cam: arkadaki renkli zemin bulanıklaşır (GPU'da), üstüne ince beyaz ton.
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Surface.card)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -124,7 +126,7 @@ enum Surface {
         })
     }
     /// Kart zemini: yarı saydam cam.
-    static let card = dynamic(dark: NSColor(white: 1, alpha: 0.10), light: NSColor(white: 1, alpha: 0.48))
+    static let card = dynamic(dark: NSColor(white: 1, alpha: 0.06), light: NSColor(white: 1, alpha: 0.3))
     /// Camın ince parlak kenarı. Düz renk (gradyan kenar işlemcide çiziliyordu).
     static let edge = dynamic(dark: NSColor(white: 1, alpha: 0.20), light: NSColor(white: 1, alpha: 0.85))
     /// Kenar çubuğu camı: kartlardan bir ton daha saydam.
@@ -140,6 +142,17 @@ enum Surface {
 }
 
 extension Color {
+    /// Renkli yazılar için: koyu temada rengi beyaza doğru açar (mor/mavi cam zeminde okunsun), açıkta aynen bırakır.
+    var readable: Color {
+        let base = NSColor(self)
+        return Color(nsColor: NSColor(name: nil) { a in
+            guard a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua else { return base }
+            var resolved = base
+            a.performAsCurrentDrawingAppearance { resolved = base.usingColorSpace(.sRGB) ?? base }
+            return resolved.blended(withFraction: 0.38, of: .white) ?? resolved
+        })
+    }
+
     /// Akıllı Temizlik rengi: koyu temada mor zemin üstünde okunsun diye açık lavanta, açıkta indigo.
     static let smartAccent = Color(nsColor: NSColor(name: nil) { a in
         a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
@@ -201,7 +214,7 @@ struct IconTile: View {
     var body: some View {
         Image(systemName: symbol)
             .font(.system(size: size * 0.48, weight: .medium))
-            .foregroundStyle(color)
+            .foregroundStyle(color.readable)
             .frame(width: size, height: size)
             .background(
                 RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
@@ -371,7 +384,7 @@ struct LegendRow: View {
             Spacer(minLength: 8)
             Text(Fmt.percent(fraction))
                 .font(.callout.weight(.semibold).monospacedDigit())
-                .foregroundStyle(color)
+                .foregroundStyle(color.readable)
                 .frame(minWidth: 40, alignment: .trailing)
             Text(value)
                 .font(.callout.monospacedDigit())
@@ -426,7 +439,7 @@ struct GaugeCard: View {
                     Image(systemName: "chevron.right").font(.caption2.weight(.bold))
                 }
                 .font(.caption.weight(.medium))
-                .foregroundStyle(color)
+                .foregroundStyle(color.readable)
             }
             Spacer(minLength: 0)
         }
@@ -454,14 +467,14 @@ struct PillButton: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .foregroundStyle(color)
+        .foregroundStyle(color.readable)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(color.opacity(active ? 0.2 : hovering ? 0.12 : 0.07))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(color.opacity(active ? 0.55 : 0.12), lineWidth: 1)
+                .strokeBorder(color.readable.opacity(active ? 0.55 : 0.25), lineWidth: 1)
         )
         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .onHover { hovering = $0 }

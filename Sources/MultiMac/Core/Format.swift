@@ -52,8 +52,12 @@ enum Fmt {
         "tr_TR": relativeFormatter("tr_TR"), "en_US": relativeFormatter("en_US"), "ru_RU": relativeFormatter("ru_RU"),
     ]
 
+    /// "5 dk önce" / "3 saat sonra". Bir dakikadan yakın ileri tarihler (ör. az önce biten ölçüm, saat farkıyla)
+    /// "0 saniye sonra" yazmasın diye şimdiye sabitlenir.
     static func relative(_ d: Date) -> String {
-        (relativeFormatters[Lang.localeID] ?? relativeFormatter("en_US")).localizedString(for: d, relativeTo: Date())
+        let now = Date()
+        let target = d > now && d.timeIntervalSince(now) < 60 ? now : d
+        return (relativeFormatters[Lang.localeID] ?? relativeFormatter("en_US")).localizedString(for: target, relativeTo: now)
     }
 
     /// "13 Eki" / "Oct 13" / "13 окт." — o anki dilde kısa gün ve ay.
