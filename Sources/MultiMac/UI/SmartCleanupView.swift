@@ -9,7 +9,7 @@ struct SmartCleanupView: View {
     @State private var confirmReset = false
     @State private var showAllKeep = false
 
-    private let tint = Color.indigo
+    private let tint = Color.smartAccent
 
     var body: some View {
         VStack(spacing: 0) {

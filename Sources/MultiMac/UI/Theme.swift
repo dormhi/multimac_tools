@@ -26,7 +26,7 @@ extension MainTab {
         case .storage: .orange
         case .memory: .blue
         case .automation: .purple
-        case .smart: .indigo
+        case .smart: .smartAccent
         case .settings: .gray
         }
     }
@@ -79,9 +79,11 @@ struct CardStyle: ViewModifier {
             .frame(maxWidth: .infinity, alignment: .leading)
             // Gölge yok: kaydırırken her karede yeniden hesaplanması akıcılığı düşürüyordu.
             // Cam hissi: düz yüzey + üstten alta sönen ince parlak kenar.
+            // Buzlu cam: arkadaki renkli zemin bulanıklaşır (GPU'da), üstüne ince beyaz ton.
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Surface.card)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -115,18 +117,92 @@ struct HoverHighlight: ViewModifier {
     }
 }
 
-/// Ortak yüzey renkleri: açık ve koyu temada Apple'ın sistem tonları.
+/// Ortak yüzey renkleri: cam görünüm. Pencere zemini renkli "aurora" görseli,
+/// kenar çubuğu ve kartlar bunun üstünde yarı saydam cam paneller.
 enum Surface {
-    /// Kart zemini: açıkta beyaz, koyuda pencereden bir ton açık.
-    static let card = Color(nsColor: NSColor(name: nil) { a in
-        a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(white: 1, alpha: 0.055) : NSColor(white: 1, alpha: 0.82)
-    })
-    /// Kartın ince kenarı. Düz renk: gradyan kenar işlemcide çiziliyordu ve uzun kartlarda
-    /// (Bellek'teki süreç listesi) her yenilemede ~0,15 sn ana thread harcıyordu.
-    static let edge = Color.primary.opacity(0.08)
+    private static func dynamic(dark: NSColor, light: NSColor) -> Color {
+        Color(nsColor: NSColor(name: nil) { a in
+            a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light
+        })
+    }
+    /// Kart zemini: yarı saydam cam.
+    static let card = dynamic(dark: NSColor(white: 1, alpha: 0.06), light: NSColor(white: 1, alpha: 0.3))
+    /// Camın ince parlak kenarı. Düz renk (gradyan kenar işlemcide çiziliyordu).
+    static let edge = dynamic(dark: NSColor(white: 1, alpha: 0.20), light: NSColor(white: 1, alpha: 0.85))
+    /// Kenar çubuğu camı: kartlardan bir ton daha saydam.
+    static let rail = dynamic(dark: NSColor(white: 1, alpha: 0.06), light: NSColor(white: 1, alpha: 0.32))
+    /// Kenar çubuğunda seçili satır.
+    static let selected = dynamic(dark: NSColor(white: 1, alpha: 0.20), light: NSColor(white: 1, alpha: 0.75))
     /// İç gruplar (liste satırları, önizleme kutuları) için hafif dolgu.
     static let inset = Color.primary.opacity(0.045)
+    /// Öne çıkan eylemlerin mor → pembe degradesi.
+    static let accentGradient = LinearGradient(
+        colors: [Color(red: 0.49, green: 0.42, blue: 1.0), Color(red: 1.0, green: 0.44, blue: 0.66)],
+        startPoint: .topLeading, endPoint: .bottomTrailing)
+}
+
+extension Color {
+    /// Renkli yazılar için: koyu temada rengi beyaza doğru açar (mor/mavi cam zeminde okunsun), açıkta aynen bırakır.
+    var readable: Color {
+        let base = NSColor(self)
+        return Color(nsColor: NSColor(name: nil) { a in
+            guard a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua else { return base }
+            var resolved = base
+            a.performAsCurrentDrawingAppearance { resolved = base.usingColorSpace(.sRGB) ?? base }
+            return resolved.blended(withFraction: 0.38, of: .white) ?? resolved
+        })
+    }
+
+    /// Akıllı Temizlik rengi: koyu temada mor zemin üstünde okunsun diye açık lavanta, açıkta indigo.
+    static let smartAccent = Color(nsColor: NSColor(name: nil) { a in
+        a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(red: 0.74, green: 0.70, blue: 1.0, alpha: 1) : .systemIndigo
+    })
+}
+
+/// Pencere zemini: koyu (ya da açık) zemin üstünde yumuşak mor, pembe ve turkuaz ışık lekeleri.
+/// Açılışta bir kez bitmap olarak çizilir; sonra yalnızca ölçeklenir (GPU), her karede hesaplanmaz.
+enum Aurora {
+    static let dark = render(dark: true)
+    static let light = render(dark: false)
+
+    private static func render(dark: Bool) -> NSImage {
+        let w = 1200, h = 800
+        let space = CGColorSpace(name: CGColorSpace.sRGB)!
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.setFillColor(dark ? CGColor(red: 0.09, green: 0.07, blue: 0.16, alpha: 1) : CGColor(red: 0.95, green: 0.94, blue: 0.98, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        // (x, y, yarıçap, r, g, b) — y aşağıdan yukarı
+        let blobs: [(CGFloat, CGFloat, CGFloat, CGFloat, CGFloat, CGFloat)] = [
+            (180, 700, 520, 0.43, 0.36, 0.99),   // mor, sol üst
+            (1080, 560, 460, 1.00, 0.44, 0.66),  // pembe, sağ
+            (560, 60, 520, 0.13, 0.76, 0.71),    // turkuaz, alt
+            (900, 120, 300, 0.36, 0.55, 1.00),   // mavi, sağ alt
+        ]
+        let alpha: CGFloat = dark ? 0.75 : 0.42
+        for (x, y, r, cr, cg, cb) in blobs {
+            let g = CGGradient(colorsSpace: space, colors: [
+                CGColor(red: cr, green: cg, blue: cb, alpha: alpha),
+                CGColor(red: cr, green: cg, blue: cb, alpha: alpha * 0.35),
+                CGColor(red: cr, green: cg, blue: cb, alpha: 0),
+            ] as CFArray, locations: [0, 0.5, 1])!
+            ctx.drawRadialGradient(g, startCenter: CGPoint(x: x, y: y), startRadius: 0,
+                                   endCenter: CGPoint(x: x, y: y), endRadius: r, options: [])
+        }
+        return NSImage(cgImage: ctx.makeImage()!, size: NSSize(width: w, height: h))
+    }
+}
+
+struct AuroraBackground: View {
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Image(nsImage: scheme == .dark ? Aurora.dark : Aurora.light)
+            .resizable()
+            .interpolation(.medium)
+            .scaledToFill()
+            .allowsHitTesting(false)
+    }
 }
 
 /// Yumuşak renkli zemin üzerinde SF Symbol (Apple'ın "tinted" ikon stili).
@@ -138,7 +214,7 @@ struct IconTile: View {
     var body: some View {
         Image(systemName: symbol)
             .font(.system(size: size * 0.48, weight: .medium))
-            .foregroundStyle(color)
+            .foregroundStyle(color.readable)
             .frame(width: size, height: size)
             .background(
                 RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
@@ -200,7 +276,7 @@ private struct GlassButtonBody: View {
     private func fill(pressed: Bool) -> AnyShapeStyle {
         let boost = pressed ? 0.1 : hovering ? 0.05 : 0
         if prominent {
-            return AnyShapeStyle(TintShapeStyle.tint.opacity(pressed ? 0.8 : hovering ? 1 : 0.88))
+            return AnyShapeStyle(Surface.accentGradient.opacity(pressed ? 0.8 : hovering ? 1 : 0.92))
         }
         if destructive { return AnyShapeStyle(Color.red.opacity(0.12 + boost * 1.5)) }
         return AnyShapeStyle(Color.primary.opacity(0.07 + boost))
@@ -308,7 +384,7 @@ struct LegendRow: View {
             Spacer(minLength: 8)
             Text(Fmt.percent(fraction))
                 .font(.callout.weight(.semibold).monospacedDigit())
-                .foregroundStyle(color)
+                .foregroundStyle(color.readable)
                 .frame(minWidth: 40, alignment: .trailing)
             Text(value)
                 .font(.callout.monospacedDigit())
@@ -363,7 +439,7 @@ struct GaugeCard: View {
                     Image(systemName: "chevron.right").font(.caption2.weight(.bold))
                 }
                 .font(.caption.weight(.medium))
-                .foregroundStyle(color)
+                .foregroundStyle(color.readable)
             }
             Spacer(minLength: 0)
         }
@@ -391,14 +467,14 @@ struct PillButton: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .foregroundStyle(color)
+        .foregroundStyle(color.readable)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(color.opacity(active ? 0.2 : hovering ? 0.12 : 0.07))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(color.opacity(active ? 0.55 : 0.12), lineWidth: 1)
+                .strokeBorder(color.readable.opacity(active ? 0.55 : 0.25), lineWidth: 1)
         )
         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .onHover { hovering = $0 }

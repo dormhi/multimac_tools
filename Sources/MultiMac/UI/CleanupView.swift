@@ -269,6 +269,7 @@ struct CleanupView: View {
                 emptyFilterNote
             }
             .listStyle(.inset)
+            .scrollContentBackground(.hidden)
             .disabled(cleanup.isCleaning)
             .onChange(of: scrollTarget) { _, target in
                 guard let target else { return }
@@ -311,6 +312,7 @@ struct CleanupView: View {
             }
         }
         .listStyle(.inset)
+            .scrollContentBackground(.hidden)
         .disabled(cleanup.isCleaning)
     }
 

@@ -5,41 +5,25 @@ struct MainWindow: View {
     @EnvironmentObject private var state: AppState
     /// Kenar çubuğu düğmesi kenar çubuğunu gizlemek yerine ince simge rayına geçirir.
     @AppStorage("sidebarCompact") private var compact = false
-    @State private var visibility: NavigationSplitViewVisibility = .all
 
     /// Ray genişliği: VS Code / Slack simge şeritleriyle aynı oranda.
     static let railWidth: CGFloat = 52
+    static let sidebarWidth: CGFloat = 224
 
     var body: some View {
-        Group {
-            if compact {
-                // Dar düzen: başlık çubuğu pencere boyunca uzanır (trafik ışıkları + düğme + başlık),
-                // ray onun altından başlar. Tam boy kenar çubuğu dar halde trafik ışıklarına sığmıyordu.
-                HStack(spacing: 0) {
-                    SidebarView(compact: true)
-                        .frame(width: Self.railWidth)
-                        .frame(maxHeight: .infinity)
-                        .background(SidebarMaterial())
-                    Divider()
-                    detail
-                }
-            } else {
-                NavigationSplitView(columnVisibility: $visibility) {
-                    SidebarView(compact: false)
-                        .navigationSplitViewColumnWidth(min: 205, ideal: 220, max: 280)
-                        // Sistemin düğmesi kenar çubuğunu tamamen gizliyor; yerine kendi düğmemiz (başlığın solunda).
-                        .toolbar(removing: .sidebarToggle)
-                } detail: {
-                    detail
-                }
-                .onChange(of: visibility) { _, new in
-                    // Kenar çubuğu hiçbir yoldan (menü, kısayol) tamamen gizlenmesin: raya geçsin.
-                    guard new != .all else { return }
-                    visibility = .all
-                    compact = true
-                }
-            }
+        // Tek düzen: renkli zemin pencerenin tamamında (başlık çubuğu dahil), kenar çubuğu üstünde cam şerit.
+        HStack(spacing: 0) {
+            SidebarView(compact: compact)
+                .frame(width: compact ? Self.railWidth : Self.sidebarWidth)
+                .frame(maxHeight: .infinity)
+                .background(Surface.rail.ignoresSafeArea())
+            Rectangle().fill(Surface.edge).frame(width: 1).ignoresSafeArea()
+            detail
         }
+        .background(AuroraBackground().ignoresSafeArea())
+        .toolbarBackground(.hidden, for: .windowToolbar)
+        // Başlık çubuğunda sekme adı yok: kenar çubuğunun üstüne taşıyordu. Her sayfanın kendi başlığı var.
+        .toolbar(removing: .title)
         .frame(minWidth: 980, minHeight: 640)
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -77,21 +61,8 @@ struct MainWindow: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle(state.tab.title)
     }
-}
-
-/// Kenar çubuğunun pencere arkasını hafifçe gösteren sistem malzemesi (NavigationSplitView'dakiyle aynı).
-private struct SidebarMaterial: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let v = NSVisualEffectView()
-        v.material = .sidebar
-        v.blendingMode = .behindWindow
-        v.state = .followsWindowActiveState
-        return v
-    }
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
 /// Kenar çubuğu ayrı görünüm: RAM/disk her güncellendiğinde yalnızca bu kısım yeniden çizilir.
@@ -127,7 +98,7 @@ private struct SidebarView: View {
         } label: {
             Image(systemName: tab.symbol)
                 .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                .foregroundStyle(selected ? Color.primary : Color.secondary)
                 .frame(width: 36, height: 32)
                 .overlay(alignment: .topTrailing) {
                     if let b = badge(for: tab) {
@@ -138,7 +109,7 @@ private struct SidebarView: View {
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Color.primary.opacity(selected ? 0.09 : 0))
+                        .fill(selected ? Surface.selected : Color.clear)
                 )
                 .contentShape(Rectangle())
         }
@@ -160,7 +131,7 @@ private struct SidebarView: View {
             HStack(spacing: 10) {
                 Image(systemName: tab.symbol)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(selected ? Color.primary : Color.secondary)
                     .frame(width: 20)
                 Text(tab.title)
                     .fontWeight(selected ? .medium : .regular)
@@ -184,7 +155,7 @@ private struct SidebarView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(Color.primary.opacity(selected ? 0.09 : 0))
+                    .fill(selected ? Surface.selected : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -205,7 +176,7 @@ private struct SidebarView: View {
             return p == .normal ? nil : (p.title, p.color)
         case .smart:
             let n = smart.suggestions.count
-            return n == 0 ? nil : ("\(n)", .indigo)
+            return n == 0 ? nil : ("\(n)", .smartAccent)
         default:
             return nil
         }
@@ -242,7 +213,7 @@ private struct SidebarView: View {
                     color: d.available < 15_000_000_000 ? .red : d.available < 40_000_000_000 ? .orange : .green)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Surface.inset))
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Surface.card))
         .padding(10)
         .onTapGesture { state.tab = .overview }
     }

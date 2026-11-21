@@ -281,6 +281,7 @@ struct StorageInspector: View {
                     }
             }
             .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .id(storage.version)
         }
     }

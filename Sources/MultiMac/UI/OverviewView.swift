@@ -23,6 +23,12 @@ struct OverviewView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(MainTab.overview.title).font(.system(size: 26, weight: .bold))
+                    Text(L("Mac'in şu an nasıl, tek bakışta", "How your Mac is doing, at a glance", "Как дела у вашего Mac — с одного взгляда"))
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                .padding(.top, -6)
                 OverviewHealthCard()
                 OverviewGauges()
                 OverviewDiskRow()
@@ -32,7 +38,6 @@ struct OverviewView: View {
             .frame(maxWidth: 1200)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
         .task { await processes.autoRefresh(every: 4) }
         .task {
             if cleanup.items.isEmpty && !cleanup.isScanning { await cleanup.scanAll() }

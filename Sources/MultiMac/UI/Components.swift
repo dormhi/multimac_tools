@@ -61,7 +61,7 @@ struct Badge: View {
         .font(.system(size: 10, weight: .semibold))
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .foregroundStyle(color)
+        .foregroundStyle(color.readable)
         .background(color.opacity(0.15), in: Capsule())
     }
 }

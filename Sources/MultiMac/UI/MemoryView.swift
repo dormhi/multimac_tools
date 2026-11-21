@@ -39,7 +39,6 @@ struct MemoryView: View {
                     }
                     .padding(20)
                 }
-                .background(Color(nsColor: .windowBackgroundColor))
                 .onChange(of: scrollTarget) { _, t in
                     guard let t else { return }
                     withAnimation { proxy.scrollTo(t, anchor: .top) }
