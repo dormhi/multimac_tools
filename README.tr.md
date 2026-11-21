@@ -277,7 +277,16 @@ MultiMac şüphede kalınca silmez:
 
 ## Kurulum
 
-### Gereksinimler
+### İndir (en kolayı)
+
+1. [Son sürümden](https://github.com/dormhi/multimac_tools/releases/latest) `MultiMac-<sürüm>.dmg` dosyasını indir.
+2. Aç ve **MultiMac**'i **Applications** (Uygulamalar) klasörüne sürükle.
+3. Uygulama notarize edilmediği için ilk açılış engellenir. *Sistem Ayarları › Gizlilik ve Güvenlik*'i aç, aşağı
+   kaydır ve **Yine de Aç**'a tıkla (aşağıdaki [Gatekeeper](#gatekeeper-imzasız-uygulamayı-açmak) bölümüne bak).
+
+macOS 15 Sequoia veya üstü ve Apple silicon gerekir.
+
+### Derlemek için gereksinimler
 
 - macOS 15 Sequoia veya üstü, Apple silicon
 - Xcode **Command Line Tools** (`xcode-select --install`). Xcode'un kendisi **gerekmez**.
@@ -297,8 +306,8 @@ Bu komut uygulamayı derler, `/Applications/MultiMac.app`'e kopyalar ve başlat�
 
 ## Gatekeeper: imzasız uygulamayı açmak
 
-MultiMac ad-hoc imzalıdır ve notarize edilmemiştir. Kendin derlediğinde normal açılır. Başka bir Mac'ten derlenmiş
-`MultiMac.app` kopyalarsan ve macOS *açılamıyor* derse:
+MultiMac ad-hoc imzalıdır ve notarize edilmemiştir. Kendin derlediğinde normal açılır. Sürüm DMG'sinden kurarsan
+ya da başka bir Mac'ten derlenmiş `MultiMac.app` kopyalarsan ve macOS *açılamıyor* derse:
 
 1. *Sistem Ayarları › Gizlilik ve Güvenlik* → aşağı kaydır → **Yine de Aç**, ya da
 2. karantina işaretini kaldır:
@@ -369,6 +378,7 @@ yerleştirmez; uzun listeler lazy'dir.
 ```bash
 ./scripts/build.sh            # → build/app.noindex/MultiMac.app
 ./scripts/build.sh --install  # ayrıca /Applications'a kopyala ve başlat
+./scripts/make-dmg.sh         # kurulum görüntüsü: build/MultiMac-<sürüm>.dmg
 DEBUG=1 ./scripts/build.sh    # daha hızlı, optimizasyonsuz derleme
 SIGN_IDENTITY="MultiMac Local" ./scripts/build.sh --install   # izinler derlemeler arasında korunsun
 ./scripts/make-icon.sh        # ikonu yeniden üret (kodda çiziliyor)
@@ -415,7 +425,7 @@ Sources/MultiMac/
 ├── Smart/      Akıllı Temizlik: özellikler ve model, boyut geçmişi, dedektörler, analiz ve geri bildirim store'u
 └── UI/         Menü paneli, ana pencere, Genel Bakış, Temizlik, Depolama, Bellek, Otomasyon, Akıllı Temizlik, Ayarlar, tema
 Resources/      Info.plist, AppIcon.icns
-scripts/        build.sh, make-icon.sh / .swift, toolchain-fix (bozuk CLT için VFS overlay)
+scripts/        build.sh, make-dmg.sh, make-icon.sh / .swift, toolchain-fix (bozuk CLT için VFS overlay)
 docs/images/    README görselleri (İngilizce, açık tema; tr/ altında Türkçe, koyu tema)
 ```
 
