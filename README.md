@@ -273,7 +273,16 @@ MultiMac errs on the side of not deleting:
 
 ## Installation
 
-### Requirements
+### Download (easiest)
+
+1. Download `MultiMac-<version>.dmg` from the [latest release](https://github.com/dormhi/multimac_tools/releases/latest).
+2. Open it and drag **MultiMac** onto **Applications**.
+3. The first launch is blocked because the app is not notarised. Open *System Settings › Privacy & Security*, scroll
+   down and click **Open Anyway** (see [Gatekeeper](#opening-an-unsigned-app-gatekeeper) below).
+
+Requires macOS 15 Sequoia or later on Apple silicon.
+
+### Requirements for building
 
 - macOS 15 Sequoia or later, Apple silicon
 - Xcode **Command Line Tools** (`xcode-select --install`). Xcode itself is **not** needed.
@@ -293,8 +302,8 @@ appears in the menu bar; keep it in the Dock with *right-click › Options › K
 
 ## Opening an unsigned app (Gatekeeper)
 
-MultiMac is ad-hoc signed and not notarised. When you build it yourself it opens normally. If you copy a built
-`MultiMac.app` from another Mac and macOS says it *can't be opened*:
+MultiMac is ad-hoc signed and not notarised. When you build it yourself it opens normally. If you install it from the
+release DMG, or copy a built `MultiMac.app` from another Mac, and macOS says it *can't be opened*:
 
 1. *System Settings › Privacy & Security* → scroll down → **Open Anyway**, or
 2. remove the quarantine flag:
@@ -364,6 +373,7 @@ window's minimum-size computation is cut off so live updates don't re-layout the
 ```bash
 ./scripts/build.sh            # → build/app.noindex/MultiMac.app
 ./scripts/build.sh --install  # also copy to /Applications and launch
+./scripts/make-dmg.sh         # installer image: build/MultiMac-<version>.dmg
 DEBUG=1 ./scripts/build.sh    # faster, unoptimised build
 SIGN_IDENTITY="MultiMac Local" ./scripts/build.sh --install   # keep permissions between builds
 ./scripts/make-icon.sh        # regenerate the icon (drawn in code)
@@ -410,7 +420,7 @@ Sources/MultiMac/
 ├── Smart/      Smart Cleanup: features & model, size history, detectors, analysis & feedback store
 └── UI/         Menu bar panel, main window, Overview, Cleanup, Storage, Memory, Automation, Smart Cleanup, Settings, theme
 Resources/      Info.plist, AppIcon.icns
-scripts/        build.sh, make-icon.sh / .swift, toolchain-fix (VFS overlay for broken CLT)
+scripts/        build.sh, make-dmg.sh, make-icon.sh / .swift, toolchain-fix (VFS overlay for broken CLT)
 docs/images/    README images (English, light theme; tr/ holds the Turkish, dark theme set)
 ```
 
